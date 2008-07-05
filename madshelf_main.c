@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <Eet.h>
 #include <libintl.h>
+#include <fcntl.h>
 
 #include "IniFile.h"
 #include "madshelf.h"
@@ -498,7 +499,7 @@ void refresh_state()
 int main ( int argc, char ** argv )
 {	
 	
-	
+	int file_desc;
 	//char *eetfilename;
 	char tempname1[20];
 	char tempname2[20];
@@ -541,10 +542,22 @@ int main ( int argc, char ** argv )
 	homedir=getenv("HOME");
 	configfile=(char *)calloc(strlen(homedir) + 1+18 + 1, sizeof(char));
 	strcat(configfile,homedir);
-	strcat(configfile,"/.madshelf/config");
+	strcat(configfile,"/.madshelf/");
+	if(!ecore_file_path_dir_exists(configfile))
+	{
+		ecore_file_mkpath(configfile);
+	}
+	strcat(configfile,"config");
+	if(!ecore_file_exists(configfile))
+	{
+		file_desc=open(configfile, O_CREAT |O_RDWR | O_CREAT,S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+		write(file_desc,"[roots]\nfirst=Home,/home/\n[apps]", 32*sizeof(char));
+		close(file_desc);
+
+	}
 	OpenIniFile (configfile);
 	free(configfile);
-	tempstr=ReadString("roots","first","notfound");
+	tempstr=ReadString("roots","first","/home/");
 	
 	tempstr2=(char *)calloc(strlen(tempstr) +1, sizeof(char));
 	strcat(tempstr2,tempstr);
