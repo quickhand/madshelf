@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------
- Copyright (C) 2008 by Marc Lajoie <quickhand@openinkpot.org>
+ Copyright (C) 2008 by Marc Lajoie
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -583,6 +583,7 @@ int main ( int argc, char ** argv )
 	//strcat(curdir,crudehack);
 	
 	win = ewl_window_new();
+	ewl_window_title_set ( EWL_WINDOW ( win ), "EWL_WINDOW" );
 	ewl_window_name_set ( EWL_WINDOW ( win ), "EWL_WINDOW" );
 	ewl_window_class_set ( EWL_WINDOW ( win ), "EWLWindow" );
 	ewl_object_size_request ( EWL_OBJECT ( win ), 600, 800 );
