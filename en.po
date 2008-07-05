@@ -1,0 +1,49 @@
+# English translations for madshelf package.
+# Copyright (C) 2008 THE madshelf'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the madshelf package.
+# Marc Lajoie <manorapide@hotmail.com>, 2008.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: madshelf 1.10.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-07-04 15:56-0400\n"
+"PO-Revision-Date: 2008-07-05 00:01-0400\n"
+"Last-Translator: Marc Lajoie <manorapide@hotmail.com>\n"
+"Language-Team: English\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: madshelf_main.c:147
+msgid "reverse-sorted by name"
+msgstr "reverse-sorted by name"
+
+#: madshelf_main.c:149
+msgid "sorted by name"
+msgstr "sorted by name"
+
+#: madshelf_main.c:154
+msgid "reverse-sorted by time"
+msgstr "reverse-sorted by time"
+
+#: madshelf_main.c:156
+msgid "sorted by time"
+msgstr "sorted by time"
+
+#: madshelf_main.c:593
+msgid "Menu (OK)"
+msgstr "Menu (OK)"
+
+#: madshelf_main.c:600
+msgid "1. Sort by Name"
+msgstr "1. Sort by Name"
+
+#: madshelf_main.c:605
+msgid "2. Sort by Time"
+msgstr "2. Sort by Time"
+
+#: madshelf_main.c:610
+msgid "3. Reverse Sort Order"
+msgstr "3. Reverse Sort Order"
