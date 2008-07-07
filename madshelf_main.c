@@ -88,11 +88,11 @@ void update_list()
 
 		
 
-		if(strlen(file)>65)
+		if(strlen(file)>45)
 		{
 			tempfilename=(char *)calloc(strlen(file) + 3+1, sizeof(char));
-			strncpy(tempfilename,file,35);
-			tempfilename[35]='\0';
+			strncpy(tempfilename,file,45);
+			tempfilename[45]='\0';
 			strcat(tempfilename,"...");
 			ewl_label_text_set(EWL_LABEL(curwidget),tempfilename);
 			free(tempfilename);
