@@ -16,7 +16,9 @@
  ------------------------------------------------------------------------ */
 
 #include <Ewl.h>
+#include <ewl_macros.h>
 #include <ewl_list.h>
+#include <Edje.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -50,6 +52,7 @@ int sort_order=ECORE_SORT_MIN;
 
 void update_list()
 {
+	int backflag=0;
 	int count=0;
 	Ewl_Widget* curwidget;
 	char *file;
@@ -58,7 +61,9 @@ void update_list()
 	char *tempfilename;
 	char prefix[4];
 	char *tempo;
-
+	char *imagefile;
+	char *pointptr;
+	const char *tempstr2;
 	struct stat stat_p;
 	
 	if(curindex>=ecore_list_count(filelist))
@@ -86,14 +91,14 @@ void update_list()
 		if(strlen(file)>65)
 		{
 			tempfilename=(char *)calloc(strlen(file) + 3+1, sizeof(char));
-			strncpy(tempfilename,file,65);
-			tempfilename[66]='\0';
+			strncpy(tempfilename,file,35);
+			tempfilename[35]='\0';
 			strcat(tempfilename,"...");
-			ewl_text_text_set(EWL_TEXT(curwidget),tempfilename);
+			ewl_label_text_set(EWL_LABEL(curwidget),tempfilename);
 			free(tempfilename);
 		}
 		else
-			ewl_text_text_set(EWL_TEXT(curwidget),file);//finalstr);
+			ewl_label_text_set(EWL_LABEL(curwidget),file);//finalstr);
 		ewl_widget_show(curwidget);		
 
 		sprintf (tempname, "button%d",count);
@@ -110,14 +115,30 @@ void update_list()
 		strcat(tempo,file);
            	if(!ecore_file_is_dir(tempo))
 		{
-			ewl_image_file_path_set(EWL_IMAGE(curwidget),"book.png");
+			pointptr=strrchr(tempo,'.');
+			if(pointptr==NULL)
+				tempstr2=ReadString("icons",".","default.png");
+			else 
+				tempstr2=ReadString("icons",pointptr,"default.png");
+			imagefile=(char *)calloc(strlen(tempstr2)+20+1, sizeof(char));
+			strcat(imagefile,"/usr/share/madshelf/");
+			strcat(imagefile,tempstr2);
+			ewl_image_file_path_set(EWL_IMAGE(curwidget),imagefile);
+			free(imagefile);
+		
 		}
 		else
 		{
-			ewl_image_file_path_set(EWL_IMAGE(curwidget),"folder.png");
+			
+			ewl_image_file_path_set(EWL_IMAGE(curwidget),"/usr/share/madshelf/folder.png");
 		}
 		
 		ewl_widget_show(curwidget);
+
+		
+
+
+
 		free(tempo);
 		
 
@@ -139,9 +160,36 @@ void update_list()
 		ewl_widget_hide(curwidget);
 		sprintf (tempname, "label%d",count);
 		curwidget = ewl_widget_name_find(tempname);
-		ewl_text_text_set(EWL_TEXT(curwidget),"");
+		ewl_label_text_set(EWL_LABEL(curwidget),"");
 		ewl_widget_hide(curwidget);
 	}
+	if(curindex>0)
+	{
+		curwidget = ewl_widget_name_find("backarr");
+		ewl_widget_show(curwidget);
+		backflag=1;
+	}
+	else
+	{
+		curwidget = ewl_widget_name_find("backarr");
+		ewl_widget_hide(curwidget);
+		backflag=0;
+	}
+	if((curindex+8)>=ecore_list_count(filelist))
+	{
+		curwidget = ewl_widget_name_find("forwardarr");
+		ewl_widget_hide(curwidget);
+	}
+	else
+	{
+		curwidget = ewl_widget_name_find("forwardarr");
+		if(backflag==1)
+			ewl_object_padding_set(EWL_OBJECT(curwidget),0,0,0,0);
+		else
+			ewl_object_padding_set(EWL_OBJECT(curwidget),32,0,0,0);
+		ewl_widget_show(curwidget);
+	}
+	
 
 }
 void update_title()
@@ -157,24 +205,52 @@ void update_title()
 		strcat(titletext,&(curdir[initdirstrlen]));
 
 	}
-	strcat(titletext," | ");
-	
+//	strcat(titletext," | ");
+//	
+//	if(sort_type==SORT_BY_NAME)
+//	{
+//		if(sort_order==ECORE_SORT_MAX)
+//			strcat(titletext,gettext("reverse-sorted by name"));
+//		else
+//			strcat(titletext,gettext("sorted by name"));
+//	}
+//	else if(sort_type==SORT_BY_TIME) 
+//	{
+//		if(sort_order==ECORE_SORT_MAX)
+//			strcat(titletext,gettext("reverse-sorted by time"));
+//		else
+//			strcat(titletext,gettext("sorted by time"));
+//	}
+	curwidget = ewl_widget_name_find("mainborder");
+	ewl_border_label_set(EWL_BORDER(curwidget),titletext);
+}
+void update_sort_label()
+{
+
+	Ewl_Widget *curwidget;
+
+	curwidget = ewl_widget_name_find("sortlabel");
 	if(sort_type==SORT_BY_NAME)
 	{
 		if(sort_order==ECORE_SORT_MAX)
-			strcat(titletext,gettext("reverse-sorted by name"));
+			ewl_label_text_set(EWL_LABEL(curwidget),gettext("reverse-sorted by name"));
 		else
-			strcat(titletext,gettext("sorted by name"));
+			ewl_label_text_set(EWL_LABEL(curwidget),gettext("sorted by name"));
 	}
 	else if(sort_type==SORT_BY_TIME) 
 	{
 		if(sort_order==ECORE_SORT_MAX)
-			strcat(titletext,gettext("reverse-sorted by time"));
+			ewl_label_text_set(EWL_LABEL(curwidget),gettext("reverse-sorted by time"));
 		else
-			strcat(titletext,gettext("sorted by time"));
+			ewl_label_text_set(EWL_LABEL(curwidget),gettext("sorted by time"));
 	}
-	curwidget = ewl_widget_name_find("mainborder");
-	ewl_border_label_set(EWL_BORDER(curwidget),titletext);
+	
+	
+
+
+
+
+
 }
 void cleanup()
 {
@@ -239,6 +315,7 @@ void doActionForNum(unsigned int num)
 	const char *tempstr;
 	char *pointptr;
 	char *theargv[1];
+	char *homepoint;
 	if(curindex+(num-1)>=ecore_list_count(filelist))
 	{
 		return;
@@ -259,10 +336,13 @@ void doActionForNum(unsigned int num)
 			tempstr=ReadString("apps",pointptr,"not found");
 			if(strcmp(tempstr,"not found")==0)
 				return;
-			scriptname=(char *)calloc(strlen(tempstr)+1, sizeof(char));
+			homepoint=getenv("HOME");
+			scriptname=(char *)calloc(strlen(tempstr)+strlen(homepoint)+19+1, sizeof(char));
+			strcat(scriptname,homepoint);
+			strcat(scriptname,"/.madshelf/scripts/");
 			strcat(scriptname,tempstr);
 			argument[0]=(char *)calloc(strlen(tempstr)+1, sizeof(char));
-			strcat(argument[0],scriptname);
+			strcat(argument[0],tempstr);
 			argument[1]=tempo;
 			argument[2]=NULL;
 			winwidget=ewl_widget_name_find("mainwindow");
@@ -419,7 +499,7 @@ void cb_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		sort_type=SORT_BY_NAME;
 		curindex=0;
 		update_list();
-		update_title();
+		update_sort_label();
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
 		
@@ -431,7 +511,7 @@ void cb_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		sort_type=SORT_BY_TIME;
 		curindex=0;
 		update_list();
-		update_title();
+		update_sort_label();
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
 	}
@@ -447,7 +527,7 @@ void cb_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 			ecore_list_sort(filelist,file_date_compare,sort_order);
 		curindex=0;
 		update_list();
-		update_title();
+		update_sort_label();
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
 	}
@@ -513,6 +593,7 @@ int main ( int argc, char ** argv )
 	Ewl_Widget *box3=NULL;
 	Ewl_Widget *box4=NULL;
 	Ewl_Widget *box5=NULL;
+	Ewl_Widget *box6=NULL;
 	Ewl_Widget *list = NULL;
 	Ewl_Widget *label[8];
 	Ewl_Widget *iconimage[8];
@@ -520,8 +601,11 @@ int main ( int argc, char ** argv )
 	Ewl_Widget *borderimage;
 	Ewl_Widget *menubar=NULL;
 	Ewl_Widget *numlabel=NULL;
+	Ewl_Widget *forwardarr=NULL;
+	Ewl_Widget *backarr=NULL;
+	Ewl_Widget *sorttypetext;
 	int w,h;
-	char imgfile[10];
+	char imgfile[100];
 	char flun[200];
 	char *homedir;
 	char *configfile;
@@ -529,12 +613,19 @@ int main ( int argc, char ** argv )
 	const char *tempstr;
 	char *tempstr2;
 	char *tempstr3;
+
+
+
+
+
 	if ( !ewl_init ( &argc, argv ) )
 	{
 		return 1;
 	}
 	eet_init();
-	
+
+
+
 	setlocale( LC_ALL, "" );
 	//bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain("madshelf");
@@ -557,7 +648,7 @@ int main ( int argc, char ** argv )
 	}
 	OpenIniFile (configfile);
 	free(configfile);
-	tempstr=ReadString("roots","first","/home/");
+	tempstr=ReadString("roots","first",getenv("HOME"));
 	
 	tempstr2=(char *)calloc(strlen(tempstr) +1, sizeof(char));
 	strcat(tempstr2,tempstr);
@@ -604,8 +695,11 @@ int main ( int argc, char ** argv )
 	ewl_object_fill_policy_set(EWL_OBJECT(border), EWL_FLAG_FILL_ALL);
 	ewl_container_child_append(EWL_CONTAINER(box2),border);
 	ewl_widget_name_set(border,"mainborder");
-	ewl_theme_data_reset(EWL_WIDGET(border));
-	
+	//ewl_theme_data_str_set(EWL_WIDGET(border),"/border/file","/usr/share/madshelf/subtheme.edj");
+	//ewl_theme_data_str_set(EWL_WIDGET(border),"/border/file","/usr/share/madshelf/bordertheme.edj");
+	//ewl_theme_data_str_set(EWL_WIDGET(EWL_WIDGET(border)),"/border/label/file","/usr/share/madshelf/subtheme.edj");
+	//ewl_theme_data_str_set(EWL_WIDGET(border),"/border/label/group","ewl/border/label");
+	//"/border/label/group" "ewl/border/label"
 	ewl_widget_show(border);
 	
 	update_title();
@@ -615,10 +709,26 @@ int main ( int argc, char ** argv )
 	ewl_object_fill_policy_set(EWL_OBJECT(box3), EWL_FLAG_FILL_VSHRINK|EWL_FLAG_FILL_HFILL);
 	ewl_widget_show(box3);	
 	
-	box4 = ewl_vbox_new();
+	box4 = ewl_hbox_new();
 	ewl_container_child_append(EWL_CONTAINER(border),box4);
 	ewl_object_fill_policy_set(EWL_OBJECT(box4), EWL_FLAG_FILL_HFILL|EWL_FLAG_FILL_VSHRINK);
 	ewl_widget_show(box4);	
+
+	backarr = ewl_image_new();
+	ewl_image_file_path_set(EWL_IMAGE(backarr),"/usr/share/madshelf/backarr.png");
+	ewl_container_child_append(EWL_CONTAINER(box4), backarr);
+	//ewl_object_size_request ( EWL_OBJECT ( iconimage[count] ), 32,200 );
+	ewl_widget_name_set(backarr,"backarr");
+	ewl_object_alignment_set(EWL_OBJECT(backarr),EWL_FLAG_ALIGN_LEFT|EWL_FLAG_ALIGN_TOP);
+	
+	forwardarr = ewl_image_new();
+	ewl_image_file_path_set(EWL_IMAGE(forwardarr),"/usr/share/madshelf/forwardarr.png");
+	ewl_container_child_append(EWL_CONTAINER(box4), forwardarr);
+	//ewl_object_size_request ( EWL_OBJECT ( iconimage[count] ), 32,200 );
+	ewl_widget_name_set(forwardarr,"forwardarr");
+	
+
+
 
 	menubar=ewl_hmenubar_new();
 	{
@@ -629,25 +739,39 @@ int main ( int argc, char ** argv )
 		ewl_container_child_append(EWL_CONTAINER(menubar),temp);
 		ewl_widget_name_set(temp,"okmenu");
 		ewl_callback_append(EWL_MENU(temp)->popup, EWL_CALLBACK_KEY_DOWN, cb_menu_key_down, NULL);
+		
+		
+		
 		ewl_widget_show(temp);
 		
 		temp2=ewl_menu_item_new();
 		ewl_button_label_set(EWL_BUTTON(temp2),gettext("1. Sort by Name"));
 		ewl_container_child_append(EWL_CONTAINER(temp),temp2);
+		
 		ewl_widget_show(temp2);
 
 		temp2=ewl_menu_item_new();
 		ewl_button_label_set(EWL_BUTTON(temp2),gettext("2. Sort by Time"));
+		
 		ewl_container_child_append(EWL_CONTAINER(temp),temp2);
 		ewl_widget_show(temp2);
 
 		temp2=ewl_menu_item_new();
 		ewl_button_label_set(EWL_BUTTON(temp2),gettext("3. Reverse Sort Order"));
+		
 		ewl_container_child_append(EWL_CONTAINER(temp),temp2);
 		ewl_widget_show(temp2);
 	}
 	ewl_container_child_append(EWL_CONTAINER(box2),menubar);
+	
 	ewl_widget_show(menubar);
+
+	sorttypetext=ewl_label_new();
+	ewl_container_child_append(EWL_CONTAINER(box3), sorttypetext);
+	ewl_widget_name_set(sorttypetext,"sortlabel");
+	update_sort_label();
+	ewl_widget_show(sorttypetext);
+
 	for(count=0;count<8;count++)
 	{
 		box = ewl_hbox_new();
@@ -655,13 +779,14 @@ int main ( int argc, char ** argv )
 		
 		ewl_widget_show(box);
 		
-		sprintf(imgfile,"img%d.png",count+1);
+		sprintf(imgfile,"/usr/share/madshelf/img%d.png",count+1);
 		sprintf(tempname1,"button%d",count);
 		buttonimage[count] = ewl_image_new();
 		ewl_image_file_path_set(EWL_IMAGE(buttonimage[count]),imgfile);
 		ewl_container_child_append(EWL_CONTAINER(box), buttonimage[count]);
 		ewl_object_size_request ( EWL_OBJECT ( buttonimage[count] ), 32,64 );
 		ewl_widget_name_set(buttonimage[count],tempname1 );
+		ewl_object_alignment_set(EWL_OBJECT(buttonimage[count]),EWL_FLAG_ALIGN_LEFT|EWL_FLAG_ALIGN_BOTTOM);
 		ewl_widget_show(buttonimage[count]);
 		
 		sprintf (tempname2, "type%d",count);
@@ -670,6 +795,7 @@ int main ( int argc, char ** argv )
 		ewl_container_child_append(EWL_CONTAINER(box), iconimage[count]);
 		ewl_object_size_request ( EWL_OBJECT ( iconimage[count] ), 64,64 );
 		ewl_widget_name_set(iconimage[count],tempname2 );
+		ewl_object_alignment_set(EWL_OBJECT(iconimage[count]),EWL_FLAG_ALIGN_LEFT|EWL_FLAG_ALIGN_BOTTOM);
 		ewl_widget_show(iconimage[count]);
 		
 		
@@ -682,14 +808,15 @@ int main ( int argc, char ** argv )
 
 		sprintf (tempname3, "label%d",count);
 
-		label[count] = ewl_text_new();
+		label[count] = ewl_label_new();
 		ewl_container_child_append(EWL_CONTAINER(box5), label[count]);
 		
 		ewl_widget_name_set(label[count],tempname3 );
-		ewl_text_text_set(EWL_TEXT(label[count]), "");
-		
+		ewl_label_text_set(EWL_LABEL(label[count]), "");
+		ewl_object_padding_set(EWL_OBJECT(label[count]),3,0,0,0);
+		//ewl_text_font_size_set(EWL_LABEL(label[count]),15);
 		//ewl_widget_color_set(EWL_WIDGET(label),255,255,255,0);
-		ewl_object_padding_set(EWL_OBJECT(label[count]), 12, 0, 5, 0);
+		//ewl_object_padding_set(EWL_OBJECT(label[count]), 12, 0, 5, 0);
 		//ewl_text_styles_set(EWL_TEXT(label[count]), EWL_TEXT_STYLE_SOFT_SHADOW);
 		//ewl_text_font_size_set(EWL_TEXT(label[count]),80);
 		
@@ -697,13 +824,13 @@ int main ( int argc, char ** argv )
 		//free(tempname);
 		sprintf (tempname4, "divider%d",count);
 		borderimage = ewl_image_new();
-		ewl_image_file_path_set(EWL_IMAGE(borderimage),"border.png");
+		ewl_image_file_path_set(EWL_IMAGE(borderimage),"/usr/share/madshelf/border.png");
 		ewl_container_child_append(EWL_CONTAINER(box5), borderimage);
 		ewl_object_size_request ( EWL_OBJECT ( iconimage[count] ), 32,200 );
 		ewl_widget_name_set(borderimage,tempname4 );
 		
-		ewl_object_alignment_set(EWL_OBJECT(borderimage),1u);
-		
+		ewl_object_alignment_set(EWL_OBJECT(borderimage),EWL_FLAG_ALIGN_LEFT|EWL_FLAG_ALIGN_BOTTOM);
+		ewl_object_position_request(EWL_OBJECT(borderimage),0,32);
 		
 		ewl_widget_show(borderimage);
 	}
@@ -722,6 +849,7 @@ int main ( int argc, char ** argv )
 	
 	if(scriptname!=NULL)
 	{	
+		
 		save_state();
 		free(statefilename);
 		eet_shutdown();
