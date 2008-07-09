@@ -606,7 +606,7 @@ void cb_lang_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		update_menu();
 
 	}
-	else if(!strcmp(e->base.keyname,"2"))
+	else if(!strcmp(e->base.keyname,"3"))
 	{
 		/* Change language.  */
             	setenv ("LANGUAGE", "ru", 1);
