@@ -578,9 +578,9 @@ void cb_lang_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		++_nl_msg_cat_cntr;
 		}
 		
-		curwidget = ewl_widget_name_find("okmenu");
-		ewl_menu_collapse(EWL_MENU(curwidget));
 		curwidget = ewl_widget_name_find("menuitem4");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
 		update_title();
 		update_sort_label();
@@ -597,7 +597,7 @@ void cb_lang_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		++_nl_msg_cat_cntr;
 		}
 		
-		curwidget = ewl_widget_name_find("okmenu");
+		curwidget = ewl_widget_name_find("menuitem4");
 		ewl_menu_collapse(EWL_MENU(curwidget));
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
@@ -617,7 +617,7 @@ void cb_lang_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		++_nl_msg_cat_cntr;
 		}
 		
-		curwidget = ewl_widget_name_find("okmenu");
+		curwidget = ewl_widget_name_find("menuitem4");
 		ewl_menu_collapse(EWL_MENU(curwidget));
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
@@ -637,7 +637,7 @@ void cb_lang_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		++_nl_msg_cat_cntr;
 		}
 		
-		curwidget = ewl_widget_name_find("okmenu");
+		curwidget = ewl_widget_name_find("menuitem4");
 		ewl_menu_collapse(EWL_MENU(curwidget));
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
@@ -901,7 +901,7 @@ int main ( int argc, char ** argv )
 		ewl_widget_show(temp3);
 
 		temp3=ewl_menu_item_new();
-		ewl_button_label_set(EWL_BUTTON(temp3),"3. русский");
+		ewl_button_label_set(EWL_BUTTON(temp3),"3. Русский");
 		ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
 		ewl_widget_show(temp3);
 
