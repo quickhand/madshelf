@@ -1,6 +1,6 @@
 AC_INIT(configure.in)
 
-AM_CONFIG_HEADER(config.h)
+AM_CONFIG_HEADER(src/config.h)
 AM_INIT_AUTOMAKE(madshelf, 0.1)
 
 AC_PROG_CC
@@ -11,4 +11,4 @@ PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES(EWL, [ewl >= 0.5.2.042])
 PKG_CHECK_MODULES(EET, [eet >= 1.0.1])
 
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile src/Makefile)
