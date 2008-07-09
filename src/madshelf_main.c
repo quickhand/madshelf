@@ -469,12 +469,12 @@ void cb_key_down(Ewl_Widget *w, void *ev, void *data)
 	{
 		doActionForNum(8);
 	}
-	else if(!strcmp(e->base.keyname,"="))
+	else if(!strcmp(e->base.keyname,"Enter"))
 	{
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_cb_expand(curwidget,NULL,NULL);
 	}
-	else if(!strcmp(e->base.keyname,"-"))
+	else if(!strcmp(e->base.keyname,"Escape"))
 	{
 		if(depth==0)
 			return;
@@ -500,7 +500,7 @@ void cb_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 	Ewl_Widget *curwidget;
 
 	e = (Ewl_Event_Key_Down*)ev;
-	if(!strcmp(e->base.keyname,"-"))
+	if(!strcmp(e->base.keyname,"Escape"))
 	{
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
@@ -562,9 +562,11 @@ void cb_lang_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 	Ewl_Widget *curwidget;
 
 	e = (Ewl_Event_Key_Down*)ev;
-	if(!strcmp(e->base.keyname,"-"))
+	if(!strcmp(e->base.keyname,"Escape"))
 	{
 		curwidget = ewl_widget_name_find("menuitem4");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
 		
 	}
