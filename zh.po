@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: madshelf 1.10.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-04 15:56-0400\n"
+"POT-Creation-Date: 2008-07-09 01:05-0400\n"
 "PO-Revision-Date: 2008-07-05 00:39-0400\n"
 "Last-Translator: Marc Lajoie <manorapide@hotmail.com>\n"
 "Language-Team: Chinese\n"
@@ -15,34 +15,38 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: madshelf_main.c:147
+#: madshelf_main.c:236
 msgid "reverse-sorted by name"
 msgstr "逆转名字排列"
 
-#: madshelf_main.c:149
+#: madshelf_main.c:238
 msgid "sorted by name"
 msgstr "按名字排列"
 
-#: madshelf_main.c:154
+#: madshelf_main.c:243
 msgid "reverse-sorted by time"
 msgstr "逆转时间排列"
 
-#: madshelf_main.c:156
+#: madshelf_main.c:245
 msgid "sorted by time"
 msgstr "按时间排列"
 
-#: madshelf_main.c:593
+#: madshelf_main.c:259
 msgid "Menu (OK)"
 msgstr "菜单 (OK)"
 
-#: madshelf_main.c:600
+#: madshelf_main.c:261
 msgid "1. Sort by Name"
 msgstr "1. 按名字排列"
 
-#: madshelf_main.c:605
+#: madshelf_main.c:263
 msgid "2. Sort by Time"
 msgstr "2. 按时间排列"
 
-#: madshelf_main.c:610
+#: madshelf_main.c:265
 msgid "3. Reverse Sort Order"
 msgstr "3. 逆转排列顺序"
+
+#: madshelf_main.c:267
+msgid "4. Language Settings"
+msgstr "4. 语言设置"
