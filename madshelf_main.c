@@ -252,6 +252,20 @@ void update_sort_label()
 
 
 }
+void update_menu()
+{
+	Ewl_Widget *curwidget;
+	curwidget = ewl_widget_name_find("okmenu");
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("Menu (OK)"));
+	curwidget = ewl_widget_name_find("menuitem1");
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("1. Sort by Name"));
+	curwidget = ewl_widget_name_find("menuitem2");	
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("2. Sort by Time"));
+	curwidget = ewl_widget_name_find("menuitem3");	
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("3. Reverse Sort Order"));
+	curwidget = ewl_widget_name_find("menuitem4");
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("4. Language Settings"));
+}
 void cleanup()
 {
 
@@ -531,6 +545,107 @@ void cb_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
 	}
+	else if(!strcmp(e->base.keyname,"4"))
+	{
+		curwidget = ewl_widget_name_find("menuitem4");
+		ewl_menu_cb_expand(curwidget,NULL,NULL);
+		ewl_widget_focus_send(EWL_WIDGET(EWL_MENU(curwidget)->popup));
+		//ewl_object_alignment_set(EWL_OBJECT(EWL_CONTEXT_MENU(EWL_MENU_ITEM(curwidget)->inmenu)->container),EWL_FLAG_ALIGN_TOP);
+		
+		//ewl_popup_offset_set(EWL_POPUP(EWL_MENU(curwidget)->popup),50, 0);
+	}
+	
+}
+void cb_lang_menu_key_down(Ewl_Widget *w, void *ev, void *data)
+{
+	Ewl_Event_Key_Down *e;
+	Ewl_Widget *curwidget;
+
+	e = (Ewl_Event_Key_Down*)ev;
+	if(!strcmp(e->base.keyname,"-"))
+	{
+		curwidget = ewl_widget_name_find("menuitem4");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		
+	}
+	else if(!strcmp(e->base.keyname,"1"))
+	{/* Change language.  */
+            	setenv ("LANGUAGE", "en", 1);
+          
+		/* Make change known.  */
+		{
+		extern int  _nl_msg_cat_cntr;
+		++_nl_msg_cat_cntr;
+		}
+		
+		curwidget = ewl_widget_name_find("okmenu");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		curwidget = ewl_widget_name_find("menuitem4");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		update_title();
+		update_sort_label();
+		update_menu();
+	}
+	else if(!strcmp(e->base.keyname,"2"))
+	{
+		/* Change language.  */
+            	setenv ("LANGUAGE", "fr", 1);
+          
+		/* Make change known.  */
+		{
+		extern int  _nl_msg_cat_cntr;
+		++_nl_msg_cat_cntr;
+		}
+		
+		curwidget = ewl_widget_name_find("okmenu");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		curwidget = ewl_widget_name_find("okmenu");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		update_title();
+		update_sort_label();
+		update_menu();
+
+	}
+	else if(!strcmp(e->base.keyname,"2"))
+	{
+		/* Change language.  */
+            	setenv ("LANGUAGE", "ru", 1);
+          
+		/* Make change known.  */
+		{
+		extern int  _nl_msg_cat_cntr;
+		++_nl_msg_cat_cntr;
+		}
+		
+		curwidget = ewl_widget_name_find("okmenu");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		curwidget = ewl_widget_name_find("okmenu");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		update_title();
+		update_sort_label();
+		update_menu();
+
+	}
+	else if(!strcmp(e->base.keyname,"4"))
+	{
+		/* Change language.  */
+            	setenv ("LANGUAGE", "zh_CN", 1);
+          
+		/* Make change known.  */
+		{
+		extern int  _nl_msg_cat_cntr;
+		++_nl_msg_cat_cntr;
+		}
+		
+		curwidget = ewl_widget_name_find("okmenu");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		curwidget = ewl_widget_name_find("okmenu");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		update_title();
+		update_sort_label();
+		update_menu();
+
+	}
 
 	
 }
@@ -734,8 +849,9 @@ int main ( int argc, char ** argv )
 	{
 		Ewl_Widget *temp=NULL;
 		Ewl_Widget *temp2=NULL;
+		Ewl_Widget *temp3=NULL;
 		temp=ewl_menu_new();	
-		ewl_button_label_set(EWL_BUTTON(temp),gettext("Menu (OK)"));
+
 		ewl_container_child_append(EWL_CONTAINER(menubar),temp);
 		ewl_widget_name_set(temp,"okmenu");
 		ewl_callback_append(EWL_MENU(temp)->popup, EWL_CALLBACK_KEY_DOWN, cb_menu_key_down, NULL);
@@ -744,26 +860,59 @@ int main ( int argc, char ** argv )
 		
 		ewl_widget_show(temp);
 		
+
 		temp2=ewl_menu_item_new();
-		ewl_button_label_set(EWL_BUTTON(temp2),gettext("1. Sort by Name"));
+		ewl_widget_name_set(temp2,"menuitem1");
+
 		ewl_container_child_append(EWL_CONTAINER(temp),temp2);
 		
 		ewl_widget_show(temp2);
 
 		temp2=ewl_menu_item_new();
-		ewl_button_label_set(EWL_BUTTON(temp2),gettext("2. Sort by Time"));
-		
+
+		ewl_widget_name_set(temp2,"menuitem2");
 		ewl_container_child_append(EWL_CONTAINER(temp),temp2);
 		ewl_widget_show(temp2);
 
 		temp2=ewl_menu_item_new();
-		ewl_button_label_set(EWL_BUTTON(temp2),gettext("3. Reverse Sort Order"));
-		
+
+		ewl_widget_name_set(temp2,"menuitem3");
 		ewl_container_child_append(EWL_CONTAINER(temp),temp2);
 		ewl_widget_show(temp2);
+
+		temp2=ewl_menu_new();
+
+		ewl_container_child_append(EWL_CONTAINER(temp),temp2);
+		
+		ewl_widget_name_set(temp2,"menuitem4");
+		ewl_callback_append(EWL_MENU(temp2)->popup, EWL_CALLBACK_KEY_DOWN, cb_lang_menu_key_down, NULL);
+		
+		//ewl_object_alignment_set(EWL_OBJECT(temp2),EWL_FLAG_ALIGN_BOTTOM);
+		ewl_widget_show(temp2);
+
+		temp3=ewl_menu_item_new();
+		ewl_button_label_set(EWL_BUTTON(temp3),"1. English");
+		ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
+		ewl_widget_show(temp3);
+	
+		temp3=ewl_menu_item_new();
+		ewl_button_label_set(EWL_BUTTON(temp3),"2. Français");
+		ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
+		ewl_widget_show(temp3);
+
+		temp3=ewl_menu_item_new();
+		ewl_button_label_set(EWL_BUTTON(temp3),"3. русский");
+		ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
+		ewl_widget_show(temp3);
+
+		temp3=ewl_menu_item_new();
+		ewl_button_label_set(EWL_BUTTON(temp3),"4. 简体中文");
+		ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
+		ewl_widget_show(temp3);
+		
 	}
 	ewl_container_child_append(EWL_CONTAINER(box2),menubar);
-	
+	update_menu();
 	ewl_widget_show(menubar);
 
 	sorttypetext=ewl_label_new();
