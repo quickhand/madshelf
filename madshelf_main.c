@@ -566,6 +566,8 @@ void cb_lang_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 	{
 		curwidget = ewl_widget_name_find("menuitem4");
 		ewl_menu_collapse(EWL_MENU(curwidget));
+		curwidget = ewl_widget_name_find("okmenu");
+		ewl_menu_collapse(EWL_MENU(curwidget));
 		
 	}
 	else if(!strcmp(e->base.keyname,"1"))
