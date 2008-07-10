@@ -72,7 +72,7 @@ bool	DeleteKey (cchr *Section, cchr *Key);
 
 void    CloseIniFile ();
 bool    WriteIniFile (cchr *FileName);
-
+struct ENTRY *FindSection (cchr * Section);
 #endif
 
 
