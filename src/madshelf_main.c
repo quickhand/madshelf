@@ -15,6 +15,8 @@
  Place - Suite 330, Boston, MA 02111-1307, USA.
  ------------------------------------------------------------------------ */
 
+#define _GNU_SOURCE
+
 #include <Ewl.h>
 #include <ewl_macros.h>
 #include <ewl_list.h>
@@ -28,16 +30,28 @@
 #include <Eet.h>
 #include <libintl.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <locale.h>
 
 #include "IniFile.h"
 #include "madshelf.h"
 #define _(String) gettext (String)
 
+#define SCRIPTS_DIR "/.madshelf/scripts/"
+
 char **rootstrlist;
 char *statefilename=NULL;
 Ecore_List *filelist;
-char *scriptname=NULL;
-char *argument[3];
+
+/*
+ * Not need to be freed.
+ */
+const char* g_handler;
+/*
+ * Need to be free(3)ed.
+ */
+const char* g_file;
+
 char titletext[200];
 
 //***********these variables need to be saved and restored in order to restore the state
@@ -323,9 +337,27 @@ void destroy_cb ( Ewl_Widget *w, void *event, void *data )
 	ewl_widget_destroy ( w );
 	ewl_main_quit();
 }
+
+/*
+ * Looks up handler for given absolute file path. Returns string with filename
+ * of the program-handler.
+ *
+ * Returned string will be invalidated by the next call to IniFile.c::Read* or
+ * lookup_handler.
+ */
+const char* lookup_handler(const char* file_path)
+{
+    const char* file_name = basename(file_path);
+
+    const char* extension = strrchr(file_name, '.');
+    if (!extension)
+        return NULL;
+
+    return ReadString("apps", extension, NULL);
+}
+
 void doActionForNum(unsigned int num)
 {
-	Ewl_Widget *winwidget;
 	char *file;
 	char *tempo;
 	const char *tempstr;
@@ -343,30 +375,19 @@ void doActionForNum(unsigned int num)
 	strcat(tempo,file);
 	if(!ecore_file_is_dir(tempo))
 	{
-		
-		pointptr=strrchr(file,'.');
-		if(pointptr==NULL)
-			printf("none");
-		else 
-		{
-			tempstr=ReadString("apps",pointptr,"not found");
-			if(strcmp(tempstr,"not found")==0)
-				return;
-			homepoint=getenv("HOME");
-			scriptname=(char *)calloc(strlen(tempstr)+strlen(homepoint)+19+1, sizeof(char));
-			strcat(scriptname,homepoint);
-			strcat(scriptname,"/.madshelf/scripts/");
-			strcat(scriptname,tempstr);
-			argument[0]=(char *)calloc(strlen(tempstr)+1, sizeof(char));
-			strcat(argument[0],tempstr);
-			argument[1]=tempo;
-			argument[2]=NULL;
-			winwidget=ewl_widget_name_find("mainwindow");
+        const char* handler = lookup_handler(tempo);
+        if (handler)
+        {
+            /* Sin */
+            g_handler = handler;
+            g_file = tempo;
 
-			ewl_main_quit();
-
-		}
-		
+            ewl_main_quit();
+        }
+        else
+        {
+            fprintf(stderr, "Unable to find handler for %s\n", file);
+        }
 	}
 	else
 	{
@@ -762,6 +783,15 @@ void refresh_state()
 	sort_order=*((int*)eet_read(state,"sort_order",&size));
 	eet_close(state);
 }
+
+int valid_dir(const char* dir)
+{
+   struct stat st;
+
+   int res = stat(dir, &st);
+   return res == 0 && S_ISDIR(st.st_mode) && ((S_IRUSR | S_IXUSR) & st.st_mode);
+}
+
 int main ( int argc, char ** argv )
 {	
 	
@@ -886,6 +916,16 @@ int main ( int argc, char ** argv )
 	
 	//state=eet_open(eetfilename,EET_FILE_MODE_READ_WRITE);
 	refresh_state();
+
+    if (!valid_dir(curdir))
+    {
+       free(curdir);
+
+       /*
+        * This dir may be invalid too. Oh, well...
+        */
+       curdir = strdup(rootstrlist[0]);
+    }
 
 	//curdir=(char *)calloc(strlen(crudehack) +1, sizeof(char));
 	//strcat(curdir,crudehack);
@@ -1112,42 +1152,42 @@ int main ( int argc, char ** argv )
 	//ecore_list_destroy(filelist);
 	//free(rootname);
 	//free(curdir);
-	
-	
-	
-	
-	if(scriptname!=NULL)
-	{	
-		
-		save_state();
-		free(statefilename);
-		eet_shutdown();
-		CloseIniFile ();
-		ecore_list_destroy(filelist);
-		free(rootname);
-		
-		free(rootstrlist);
-		free(curdir);
-		
-		//printf("%s %s",scriptname,argument[0]);
-		execvp(scriptname,argument);//,specialparm);
-	}
-	CloseIniFile ();
-	ecore_list_destroy(filelist);
-	eet_shutdown();
 
-	free(rootname);
-	
-	free(rootstrlist);
-	free(curdir);
-	
-	if(ecore_file_exists(statefilename))
-	{
-		remove(statefilename);
-	}
 
-	free(statefilename);
-	
+    save_state();
+    free(statefilename);
+    eet_shutdown();
+    CloseIniFile ();
+    ecore_list_destroy(filelist);
+    free(rootname);
+
+    free(rootstrlist);
+    free(curdir);
+
+    if (g_file)
+    {
+        const char* home = getenv("HOME");
+
+        if (home)
+        {
+            char* handler_path = malloc(strlen(home)
+                                        + sizeof(SCRIPTS_DIR)/sizeof(char)
+                                        + strlen(g_handler));
+            sprintf(handler_path, "%s%s%s", home, SCRIPTS_DIR, g_handler);
+
+            execl(handler_path, handler_path, g_file);
+
+            if (errno != ENOENT)
+            {
+                perror("madshelf: execl");
+                return 1;
+            }
+        }
+
+        execlp(g_handler, g_handler, g_file, NULL);
+        perror("madshelf: execlp");
+        return 1;
+    }
 	
 	return 0;
 }
