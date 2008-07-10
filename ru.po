@@ -51,10 +51,7 @@ msgstr "3. Отсортировать в обратном направлении
 #: madshelf_main.c:267
 msgid "4. Language Settings"
 msgstr "4. Выбор языка (Language Settings)"
-<<<<<<< HEAD:ru.po
-=======
 
 #: madshelf_main.c:269
 msgid "5. Go to"
-msgstr ""
->>>>>>> 9e59307fe39ab9b943996bdb92723261dbd5b220:ru.po
+msgstr "Выбрать"
