@@ -40,6 +40,7 @@
 #define SCRIPTS_DIR "/.madshelf/scripts/"
 
 char **rootstrlist;
+char **scriptstrlist;
 char *statefilename=NULL;
 Ecore_List *filelist;
 
@@ -91,10 +92,7 @@ void update_list()
 	
 	for(count=0;count<8&&(file = (char*)ecore_list_next(filelist));count++)
 	{
-		//finalstr = (char *)calloc(strlen(file) + 3 + 1, sizeof(char));
-		//sprintf(prefix,"%d. ",count+1);
-		//strcat(finalstr,prefix);
-		//strcat(finalstr, file);
+
 
 		sprintf (tempname, "label%d",count);
 		
@@ -115,10 +113,7 @@ void update_list()
 			ewl_label_text_set(EWL_LABEL(curwidget),file);//finalstr);
 		ewl_widget_show(curwidget);		
 
-		sprintf (tempname, "button%d",count);
-		curwidget = ewl_widget_name_find(tempname);
-		ewl_widget_show(curwidget);
-		sprintf (tempname, "divider%d",count);
+		sprintf (tempname, "bookbox%d",count);
 		curwidget = ewl_widget_name_find(tempname);
 		ewl_widget_show(curwidget);
 		sprintf (tempname, "type%d",count);
@@ -154,19 +149,10 @@ void update_list()
 
 
 		free(tempo);
-		
-
-
-		//free(finalstr);
-		//free(file);
-	
 	}
 	for(;count<8;count++)
 	{
-		sprintf (tempname, "button%d",count);
-		curwidget = ewl_widget_name_find(tempname);
-		ewl_widget_hide(curwidget);
-		sprintf (tempname, "divider%d",count);
+		sprintf (tempname, "bookbox%d",count);
 		curwidget = ewl_widget_name_find(tempname);
 		ewl_widget_hide(curwidget);
 		sprintf (tempname, "type%d",count);
@@ -219,22 +205,7 @@ void update_title()
 		strcat(titletext,&(curdir[initdirstrlen]));
 
 	}
-//	strcat(titletext," | ");
-//	
-//	if(sort_type==SORT_BY_NAME)
-//	{
-//		if(sort_order==ECORE_SORT_MAX)
-//			strcat(titletext,gettext("reverse-sorted by name"));
-//		else
-//			strcat(titletext,gettext("sorted by name"));
-//	}
-//	else if(sort_type==SORT_BY_TIME) 
-//	{
-//		if(sort_order==ECORE_SORT_MAX)
-//			strcat(titletext,gettext("reverse-sorted by time"));
-//		else
-//			strcat(titletext,gettext("sorted by time"));
-//	}
+
 	curwidget = ewl_widget_name_find("mainborder");
 	ewl_border_label_set(EWL_BORDER(curwidget),titletext);
 }
@@ -281,6 +252,9 @@ void update_menu()
 	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("4. Language Settings"));
 	curwidget = ewl_widget_name_find("menuitem5");
 	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("5. Go to"));
+	curwidget = ewl_widget_name_find("menuitem6");
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("6. Scripts"));
+
 }
 void cleanup()
 {
@@ -587,7 +561,15 @@ void cb_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		
 		//ewl_popup_offset_set(EWL_POPUP(EWL_MENU(curwidget)->popup),50, 0);
 	}
-	
+	else if(!strcmp(e->base.keyname,"6"))
+	{
+		curwidget = ewl_widget_name_find("menuitem6");
+		ewl_menu_cb_expand(curwidget,NULL,NULL);
+		ewl_widget_focus_send(EWL_WIDGET(EWL_MENU(curwidget)->popup));
+		//ewl_object_alignment_set(EWL_OBJECT(EWL_CONTEXT_MENU(EWL_MENU_ITEM(curwidget)->inmenu)->container),EWL_FLAG_ALIGN_TOP);
+		
+		//ewl_popup_offset_set(EWL_POPUP(EWL_MENU(curwidget)->popup),50, 0);
+	}	
 }
 void cb_lang_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 {
@@ -741,6 +723,74 @@ void cb_goto_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 	update_title();
 	update_list();
 }
+void cb_script_menu_key_down(Ewl_Widget *w, void *ev, void *data)
+{
+	Ewl_Event_Key_Down *e;
+	Ewl_Widget *curwidget;
+	int index=-1;
+	int count=0;
+	const char *tempstr;
+	char* handler_path;
+	e = (Ewl_Event_Key_Down*)ev;
+	if(!strcmp(e->base.keyname,"Escape"))
+	{
+		curwidget = ewl_widget_name_find("menuitem6");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		curwidget = ewl_widget_name_find("okmenu");
+		ewl_menu_collapse(EWL_MENU(curwidget));
+		
+	}
+	else if(!strcmp(e->base.keyname,"1"))
+		index=0;
+	else if(!strcmp(e->base.keyname,"2"))
+		index=1;
+	else if(!strcmp(e->base.keyname,"3"))
+		index=2;
+	else if(!strcmp(e->base.keyname,"4"))
+		index=3;
+	else if(!strcmp(e->base.keyname,"5"))
+		index=4;
+	else if(!strcmp(e->base.keyname,"6"))
+		index=5;
+	else if(!strcmp(e->base.keyname,"7"))
+		index=6;
+	else if(!strcmp(e->base.keyname,"8"))
+		index=7;	
+	if(index==-1)
+		return;
+	curwidget = ewl_widget_name_find("menuitem5");
+	ewl_menu_collapse(EWL_MENU(curwidget));
+	curwidget = ewl_widget_name_find("okmenu");
+	ewl_menu_collapse(EWL_MENU(curwidget));
+	for(count=0;count<=index;count++)
+	{
+		if(rootstrlist[count]==NULL)
+			return;
+	}
+	tempstr=ReadString("scripts",scriptstrlist[index],NULL);
+	handler_path = malloc(strlen(getenv("HOME"))+sizeof(SCRIPTS_DIR)/sizeof(char)+strlen(tempstr));
+        sprintf(handler_path, "%s%s%s", getenv("HOME"), SCRIPTS_DIR,tempstr);
+
+        system(handler_path);
+	/*for(count=0;count<=index;count++)
+	{
+		if(rootstrlist[count]==NULL)
+			return;
+	}
+	tempstr=ReadString("roots",rootstrlist[index],getenv("HOME"));
+	free(curdir);
+	curdir=(char *)calloc(strlen(tempstr)+1,sizeof(char));
+	strcpy(curdir,tempstr);	
+	free(rootname);
+	rootname=(char *)calloc(strlen(rootstrlist[index]) +1, sizeof(char));
+	strcpy(rootname,rootstrlist[index]);
+	initdirstrlen=strlen(curdir);
+	depth=0;
+	curindex=0;
+	init_filelist();
+	update_title();
+	update_list();*/
+}
 void save_state()
 {
 	Eet_File *state;
@@ -801,6 +851,7 @@ int main ( int argc, char ** argv )
 	char tempname2[20];
 	char tempname3[20];
 	char tempname4[20];
+	char tempname5[20];
 	Ewl_Widget *win = NULL;
 	Ewl_Widget *border = NULL;
 
@@ -827,13 +878,15 @@ int main ( int argc, char ** argv )
 	char *homedir;
 	char *configfile;
 	int count=0;
+	int count2=0;
 	const char *tempstr;
 	char *tempstr2;
 	char *tempstr3;
 	char *tempstr4;
 	char *tempstr5;
+	char *tempstr6;
 	struct ENTRY *rootlist;
-
+	struct ENTRY *scriptlist;
 
 
 
@@ -863,12 +916,43 @@ int main ( int argc, char ** argv )
 		file_desc=open(configfile, O_CREAT |O_RDWR | O_CREAT,S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 		write(file_desc,"[roots]\nHome=", 13*sizeof(char));
 		write(file_desc,getenv("HOME"),strlen(getenv("HOME"))*sizeof(char));
-		write(file_desc,"\n[apps]\n[icons]",15*sizeof(char));
+		write(file_desc,"\n[apps]\n[icons]\n[scripts]",15*sizeof(char));
 		close(file_desc);
 
 	}
 	OpenIniFile (configfile);
 	free(configfile);
+	//load scripts
+	count2=0;
+	scriptlist=FindSection("scripts");
+	if(scriptlist->pNext!=NULL)
+		scriptlist=scriptlist->pNext;
+	while(scriptlist!=NULL &&scriptlist->Type!=tpSECTION &&count2<8)
+	{	
+		if(scriptlist->Type!=tpKEYVALUE)
+			continue;
+		count2++;
+		scriptlist=scriptlist->pNext;
+	}
+	scriptstrlist=(char **)calloc(count2 +  1, sizeof(char *));	
+	count2=0;
+	scriptlist=FindSection("scripts");
+	if(scriptlist->pNext!=NULL)
+		scriptlist=scriptlist->pNext;
+	while(scriptlist!=NULL &&scriptlist->Type!=tpSECTION && count2<8)
+	{	
+		if(scriptlist->Type!=tpKEYVALUE)
+			continue;
+		tempstr6=(char *)calloc(strlen(scriptlist->Text)+1,sizeof(char));
+		strcat(tempstr6,scriptlist->Text);
+		scriptstrlist[count2]=strtok(tempstr6,"=");		
+		count2++;
+		scriptlist=scriptlist->pNext;
+	}
+	scriptstrlist[count2]=NULL;
+	
+	//load locations
+	count=0;
 	rootlist=FindSection("roots");
 	if(rootlist->pNext!=NULL)
 		rootlist=rootlist->pNext;
@@ -884,7 +968,7 @@ int main ( int argc, char ** argv )
 	rootlist=FindSection("roots");
 	if(rootlist->pNext!=NULL)
 		rootlist=rootlist->pNext;
-	while(rootlist!=NULL &&rootlist->Type!=tpSECTION)
+	while(rootlist!=NULL &&rootlist->Type!=tpSECTION && count<8)
 	{	
 		if(rootlist->Type!=tpKEYVALUE)
 			continue;
@@ -948,15 +1032,10 @@ int main ( int argc, char ** argv )
 	ewl_widget_show(box2);
 	
 	border=ewl_border_new();
-	//ewl_border_label_set(EWL_BORDER(border),"MadShelf - listed by filename");
 	ewl_object_fill_policy_set(EWL_OBJECT(border), EWL_FLAG_FILL_ALL);
 	ewl_container_child_append(EWL_CONTAINER(box2),border);
 	ewl_widget_name_set(border,"mainborder");
-	//ewl_theme_data_str_set(EWL_WIDGET(border),"/border/file","/usr/share/madshelf/subtheme.edj");
-	//ewl_theme_data_str_set(EWL_WIDGET(border),"/border/file","/usr/share/madshelf/bordertheme.edj");
-	//ewl_theme_data_str_set(EWL_WIDGET(EWL_WIDGET(border)),"/border/label/file","/usr/share/madshelf/subtheme.edj");
-	//ewl_theme_data_str_set(EWL_WIDGET(border),"/border/label/group","ewl/border/label");
-	//"/border/label/group" "ewl/border/label"
+	ewl_object_maximum_w_set(EWL_OBJECT(EWL_BORDER(border)->label),500);
 	ewl_widget_show(border);
 	
 	update_title();
@@ -975,14 +1054,12 @@ int main ( int argc, char ** argv )
 	backarr = ewl_image_new();
 	ewl_image_file_path_set(EWL_IMAGE(backarr),"/usr/share/madshelf/backarr.png");
 	ewl_container_child_append(EWL_CONTAINER(box4), backarr);
-	//ewl_object_size_request ( EWL_OBJECT ( iconimage[count] ), 32,200 );
 	ewl_widget_name_set(backarr,"backarr");
 	ewl_object_alignment_set(EWL_OBJECT(backarr),EWL_FLAG_ALIGN_LEFT|EWL_FLAG_ALIGN_TOP);
 	
 	forwardarr = ewl_image_new();
 	ewl_image_file_path_set(EWL_IMAGE(forwardarr),"/usr/share/madshelf/forwardarr.png");
 	ewl_container_child_append(EWL_CONTAINER(box4), forwardarr);
-	//ewl_object_size_request ( EWL_OBJECT ( iconimage[count] ), 32,200 );
 	ewl_widget_name_set(forwardarr,"forwardarr");
 	
 
@@ -1073,6 +1150,26 @@ int main ( int argc, char ** argv )
 			ewl_widget_show(temp3);
 			count++;
 		}
+
+		temp2=ewl_menu_new();
+		ewl_container_child_append(EWL_CONTAINER(temp),temp2);
+		ewl_widget_name_set(temp2,"menuitem6");
+		
+		ewl_callback_append(EWL_MENU(temp2)->popup, EWL_CALLBACK_KEY_DOWN, cb_script_menu_key_down, NULL);
+		ewl_widget_show(temp2);
+
+		count=0;
+		while(scriptstrlist[count]!=NULL)
+		{
+			temp3=ewl_menu_item_new();
+			tempstr4=(char *)calloc(strlen(scriptstrlist[count])+3+1,sizeof(char));
+			sprintf(tempstr4,"%d. %s",count+1,scriptstrlist[count]);
+			ewl_button_label_set(EWL_BUTTON(temp3),tempstr4);
+			free(tempstr4);
+			ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
+			ewl_widget_show(temp3);
+			count++;
+		}
 	}
 	ewl_container_child_append(EWL_CONTAINER(box2),menubar);
 	update_menu();
@@ -1086,26 +1183,21 @@ int main ( int argc, char ** argv )
 
 	for(count=0;count<8;count++)
 	{
+		sprintf(tempname1,"bookbox%d",count);
 		box = ewl_hbox_new();
 		ewl_container_child_append(EWL_CONTAINER(box3), box);
-		
+		sprintf(tempname5,"ewl/box/bookbox%d",count+1);
+		ewl_theme_data_str_set(EWL_WIDGET(box),"/hbox/group",tempname5);
+		ewl_widget_name_set(box,tempname1 );
 		ewl_widget_show(box);
-		
-		sprintf(imgfile,"/usr/share/madshelf/img%d.png",count+1);
-		sprintf(tempname1,"button%d",count);
-		buttonimage[count] = ewl_image_new();
-		ewl_image_file_path_set(EWL_IMAGE(buttonimage[count]),imgfile);
-		ewl_container_child_append(EWL_CONTAINER(box), buttonimage[count]);
-		ewl_object_size_request ( EWL_OBJECT ( buttonimage[count] ), 32,64 );
-		ewl_widget_name_set(buttonimage[count],tempname1 );
-		ewl_object_alignment_set(EWL_OBJECT(buttonimage[count]),EWL_FLAG_ALIGN_LEFT|EWL_FLAG_ALIGN_BOTTOM);
-		ewl_widget_show(buttonimage[count]);
 		
 		sprintf (tempname2, "type%d",count);
 		iconimage[count] = ewl_image_new();
 		
 		ewl_container_child_append(EWL_CONTAINER(box), iconimage[count]);
-		ewl_object_size_request ( EWL_OBJECT ( iconimage[count] ), 64,64 );
+		//ewl_object_size_request ( EWL_OBJECT ( iconimage[count] ), 64,64 );
+		ewl_object_insets_set(EWL_OBJECT ( iconimage[count] ),32,0,0,0);
+		ewl_object_padding_set(EWL_OBJECT ( iconimage[count] ),0,0,0,0);
 		ewl_widget_name_set(iconimage[count],tempname2 );
 		ewl_object_alignment_set(EWL_OBJECT(iconimage[count]),EWL_FLAG_ALIGN_LEFT|EWL_FLAG_ALIGN_BOTTOM);
 		ewl_widget_show(iconimage[count]);
@@ -1116,32 +1208,17 @@ int main ( int argc, char ** argv )
 		ewl_object_fill_policy_set(EWL_OBJECT(box5), EWL_FLAG_FILL_ALL);
 		ewl_widget_show(box5);
 
-		box7 = ewl_vbox_new();
-		ewl_container_child_append(EWL_CONTAINER(box5),box7);
-		ewl_object_fill_policy_set(EWL_OBJECT(box7), EWL_FLAG_FILL_ALL);
-		ewl_widget_show(box7);
-		
 		sprintf (tempname3, "label%d",count);
 
 		label[count] = ewl_label_new();
-		ewl_container_child_append(EWL_CONTAINER(box7), label[count]);
-		
+		ewl_container_child_append(EWL_CONTAINER(box5), label[count]);
 		ewl_widget_name_set(label[count],tempname3 );
 		ewl_label_text_set(EWL_LABEL(label[count]), "");
 		ewl_object_padding_set(EWL_OBJECT(label[count]),3,0,0,0);
 
 		
 		ewl_widget_show(label[count]);
-		sprintf (tempname4, "divider%d",count);
-		borderimage = ewl_image_new();
-		ewl_image_file_path_set(EWL_IMAGE(borderimage),"/usr/share/madshelf/border.png");
-		ewl_container_child_append(EWL_CONTAINER(box5), borderimage);
-		ewl_object_size_request ( EWL_OBJECT ( iconimage[count] ), 32,200 );
-		ewl_widget_name_set(borderimage,tempname4 );
-		
-		ewl_object_alignment_set(EWL_OBJECT(borderimage),EWL_FLAG_ALIGN_LEFT|EWL_FLAG_ALIGN_BOTTOM);
-		
-		ewl_widget_show(borderimage);
+	
 	}
 	update_list();
 	ewl_widget_focus_send(EWL_WIDGET(border));
@@ -1162,6 +1239,7 @@ int main ( int argc, char ** argv )
     free(rootname);
 
     free(rootstrlist);
+    free(scriptstrlist);
     free(curdir);
 
     if (g_file)
