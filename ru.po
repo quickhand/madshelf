@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-10 09:44-0400\n"
+"POT-Creation-Date: 2008-07-11 17:34-0400\n"
 "PO-Revision-Date: 2008-07-09 11:16+0700\n"
 "Last-Translator: Mikhail Gusarov <dottedmag@dottedmag.net>\n"
 "Language-Team: \n"
@@ -16,42 +16,46 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: madshelf_main.c:236
+#: madshelf_main.c:221
 msgid "reverse-sorted by name"
 msgstr "Обратная сортировка по имени"
 
-#: madshelf_main.c:238
+#: madshelf_main.c:223
 msgid "sorted by name"
 msgstr "Сортировка по имени"
 
-#: madshelf_main.c:243
+#: madshelf_main.c:228
 msgid "reverse-sorted by time"
 msgstr "Обратная сортировка по дате"
 
-#: madshelf_main.c:245
+#: madshelf_main.c:230
 msgid "sorted by time"
 msgstr "Сортировка по дате"
 
-#: madshelf_main.c:259
+#: madshelf_main.c:244
 msgid "Menu (OK)"
 msgstr "Меню (OK)"
 
-#: madshelf_main.c:261
+#: madshelf_main.c:246
 msgid "1. Sort by Name"
 msgstr "1. Отсортировать по имени"
 
-#: madshelf_main.c:263
+#: madshelf_main.c:248
 msgid "2. Sort by Time"
 msgstr "2. Отсортировать по дате"
 
-#: madshelf_main.c:265
+#: madshelf_main.c:250
 msgid "3. Reverse Sort Order"
 msgstr "3. Отсортировать в обратном направлении"
 
-#: madshelf_main.c:267
+#: madshelf_main.c:252
 msgid "4. Language Settings"
 msgstr "4. Выбор языка (Language Settings)"
 
-#: madshelf_main.c:269
+#: madshelf_main.c:254
 msgid "5. Go to"
+msgstr ""
+
+#: madshelf_main.c:256
+msgid "6. Scripts"
 msgstr ""
