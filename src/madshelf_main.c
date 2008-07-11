@@ -925,8 +925,8 @@ int main ( int argc, char ** argv )
 	//load scripts
 	count2=0;
 	scriptlist=FindSection("scripts");
-	if(scriptlist->pNext!=NULL)
-		scriptlist=scriptlist->pNext;
+	if (scriptlist && scriptlist->pNext)
+		scriptlist = scriptlist->pNext;
 	while(scriptlist!=NULL &&scriptlist->Type!=tpSECTION &&count2<8)
 	{	
 		if(scriptlist->Type!=tpKEYVALUE)
@@ -937,8 +937,8 @@ int main ( int argc, char ** argv )
 	scriptstrlist=(char **)calloc(count2 +  1, sizeof(char *));	
 	count2=0;
 	scriptlist=FindSection("scripts");
-	if(scriptlist->pNext!=NULL)
-		scriptlist=scriptlist->pNext;
+	if (scriptlist && scriptlist->pNext)
+		scriptlist = scriptlist->pNext;
 	while(scriptlist!=NULL &&scriptlist->Type!=tpSECTION && count2<8)
 	{	
 		if(scriptlist->Type!=tpKEYVALUE)
