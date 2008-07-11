@@ -344,7 +344,7 @@ const char *
 ReadString (cchr * Section, cchr * pKey, cchr * Default)
 {
 	EFIND List;
-	if (ArePtrValid (Section, pKey, Default) == FALSE)
+	if (IsConfigKeyValid (Section, pKey) == FALSE)
 	{
 		return Default;
 	}

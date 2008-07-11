@@ -54,6 +54,8 @@ typedef struct
 /* Macros */
 #define ArePtrValid(Sec,Key,Val) ((Sec!=NULL)&&(Key!=NULL)&&(Val!=NULL))
 
+#define IsConfigKeyValid(Sec,Key) ((Sec!=NULL)&&(Key!=NULL))
+
 /* Connectors of this file (Prototypes) */
 
 bool    OpenIniFile (cchr *FileName);
