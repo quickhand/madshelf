@@ -67,7 +67,7 @@ int sort_order=ECORE_SORT_MIN;
 
 void update_list()
 {
-	int backflag=0;
+	int forflag=0;
 	int count=0;
 	Ewl_Widget* curwidget;
 	char *file;
@@ -144,7 +144,9 @@ void update_list()
 		
 		ewl_widget_show(curwidget);
 
-		
+		sprintf (tempname, "separator%d",count);
+		curwidget = ewl_widget_name_find(tempname);
+		ewl_widget_show(curwidget);
 
 
 
@@ -162,32 +164,41 @@ void update_list()
 		curwidget = ewl_widget_name_find(tempname);
 		ewl_label_text_set(EWL_LABEL(curwidget),"");
 		ewl_widget_hide(curwidget);
-	}
-	if(curindex>0)
-	{
-		curwidget = ewl_widget_name_find("backarr");
-		ewl_widget_show(curwidget);
-		backflag=1;
-	}
-	else
-	{
-		curwidget = ewl_widget_name_find("backarr");
+		sprintf (tempname, "separator%d",count);
+		curwidget = ewl_widget_name_find(tempname);
 		ewl_widget_hide(curwidget);
-		backflag=0;
 	}
 	if((curindex+8)>=ecore_list_count(filelist))
 	{
 		curwidget = ewl_widget_name_find("forwardarr");
 		ewl_widget_hide(curwidget);
+		forflag=0;
 	}
 	else
 	{
 		curwidget = ewl_widget_name_find("forwardarr");
-		if(backflag==1)
+		/*if(backflag==1)
 			ewl_object_padding_set(EWL_OBJECT(curwidget),0,0,0,0);
 		else
-			ewl_object_padding_set(EWL_OBJECT(curwidget),32,0,0,0);
+			ewl_object_padding_set(EWL_OBJECT(curwidget),32,0,0,0);*/
 		ewl_widget_show(curwidget);
+		forflag=1;
+	}
+	if(curindex>0)
+	{
+		curwidget = ewl_widget_name_find("backarr");
+		ewl_widget_show(curwidget);
+		//backflag=1;
+		if(forflag==1)
+			ewl_object_padding_set(EWL_OBJECT(curwidget),0,0,0,0);
+		else
+			ewl_object_padding_set(EWL_OBJECT(curwidget),0,32,0,0);
+	}
+	else
+	{
+		curwidget = ewl_widget_name_find("backarr");
+		ewl_widget_hide(curwidget);
+		//backflag=0;
 	}
 	
 
@@ -872,6 +883,7 @@ int main ( int argc, char ** argv )
 	Ewl_Widget *forwardarr=NULL;
 	Ewl_Widget *backarr=NULL;
 	Ewl_Widget *sorttypetext;
+	Ewl_Widget *dividewidget;
 	int w,h;
 	char imgfile[100];
 	char flun[200];
@@ -1029,6 +1041,7 @@ int main ( int argc, char ** argv )
 	box2 = ewl_vbox_new();
 	ewl_container_child_append(EWL_CONTAINER(win),box2);
 	ewl_object_fill_policy_set(EWL_OBJECT(box2), EWL_FLAG_FILL_ALL);
+	ewl_theme_data_str_set(EWL_WIDGET(box2),"/vbox/group","ewl/box/mainbox");
 	ewl_widget_show(box2);
 	
 	border=ewl_border_new();
@@ -1047,8 +1060,8 @@ int main ( int argc, char ** argv )
 	
 	box4 = ewl_hbox_new();
 	ewl_container_child_append(EWL_CONTAINER(border),box4);
-	ewl_object_fill_policy_set(EWL_OBJECT(box4), EWL_FLAG_FILL_HFILL|EWL_FLAG_FILL_VSHRINK);
-	
+	ewl_object_fill_policy_set(EWL_OBJECT(box4), EWL_FLAG_FILL_HSHRINK|EWL_FLAG_FILL_VSHRINK);
+	ewl_object_alignment_set(EWL_OBJECT(box4),EWL_FLAG_ALIGN_RIGHT);
 	ewl_widget_show(box4);	
 
 	backarr = ewl_image_new();
@@ -1075,7 +1088,7 @@ int main ( int argc, char ** argv )
 		ewl_container_child_append(EWL_CONTAINER(menubar),temp);
 		ewl_widget_name_set(temp,"okmenu");
 		ewl_callback_append(EWL_MENU(temp)->popup, EWL_CALLBACK_KEY_DOWN, cb_menu_key_down, NULL);
-		
+		ewl_object_fill_policy_set(EWL_OBJECT(temp), EWL_FLAG_FILL_HSHRINK);
 		
 		
 		ewl_widget_show(temp);
@@ -1172,7 +1185,9 @@ int main ( int argc, char ** argv )
 		}
 	}
 	ewl_container_child_append(EWL_CONTAINER(box2),menubar);
+	
 	update_menu();
+	ewl_theme_data_str_set(EWL_WIDGET(menubar),"/menubar/group","ewl/menu/shelfmenu");
 	ewl_widget_show(menubar);
 
 	sorttypetext=ewl_label_new();
@@ -1215,10 +1230,16 @@ int main ( int argc, char ** argv )
 		ewl_widget_name_set(label[count],tempname3 );
 		ewl_label_text_set(EWL_LABEL(label[count]), "");
 		ewl_object_padding_set(EWL_OBJECT(label[count]),3,0,0,0);
-
-		
 		ewl_widget_show(label[count]);
 	
+		sprintf(tempname4,"separator%d",count);
+		dividewidget = ewl_hseparator_new();
+		ewl_container_child_append(EWL_CONTAINER(box3), dividewidget);
+		ewl_theme_data_str_set(EWL_WIDGET(dividewidget),"/hseparator/group","ewl/separator/bookseparator");
+		//sprintf(tempname5,"ewl/box/bookbox%d",count+1);
+		//ewl_theme_data_str_set(EWL_WIDGET(box),"/hbox/group",tempname5);
+		ewl_widget_name_set(dividewidget,tempname4 );
+		ewl_widget_show(dividewidget);
 	}
 	update_list();
 	ewl_widget_focus_send(EWL_WIDGET(border));
