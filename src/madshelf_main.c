@@ -39,6 +39,8 @@
 #define _(String) gettext (String)
 
 #define SCRIPTS_DIR "/.madshelf/scripts/"
+#define DEFAULT_PLUGIN_DIR "/.madshelf/plugins/"
+#define MAX_PLUGINS 100
 #define DEFAULT_THEME "/usr/share/madshelf/madshelf.edj"
 
 /*
@@ -61,6 +63,7 @@ typedef struct
 
 roots_t* g_roots;
 char **scriptstrlist;
+sdl_init_function_type plugins[MAX_PLUGINS];
 char *statefilename=NULL;
 Ecore_List *filelist;
 
@@ -205,7 +208,9 @@ void update_list()
 	int filelistcount;
 	double f_size;
 	char sizestr[50];
+	int plugnum;
 	count=0;
+	info_struct mystruct;
 	filelistcount=ecore_list_count(filelist);
 	if(filelistcount>0)
 	{
@@ -221,8 +226,12 @@ void update_list()
 		
 		for(count=0;count<8&&(file = (char*)ecore_list_next(filelist));count++)
 		{
-	
-	
+			/*plugnum=ReadInt("bookinfo",strrchr(file, '.'),-1);
+			if(plugnum!=(-1))
+			{
+				if(plugins[plugnum]!=NULL)
+					(*plugins[plugnum])("bla",&mystruct);
+			}*/
 			sprintf (tempname, "titlelabel%d",count);
 			curwidget = ewl_widget_name_find(tempname);
 	
@@ -239,6 +248,7 @@ void update_list()
 			}
 			else
 				ewl_label_text_set(EWL_LABEL(curwidget),ecore_file_strip_ext(file));//finalstr);
+			ewl_widget_hide(curwidget);
 			ewl_widget_show(curwidget);		
 	
 			fileconcat=(char *)calloc(strlen(file)+strlen(curdir)+1,sizeof(char));
@@ -277,12 +287,21 @@ void update_list()
 				sprintf (tempname, "infolabel%d",count);
 				curwidget = ewl_widget_name_find(tempname);
 				ewl_label_text_set(EWL_LABEL(curwidget),infostr);
+				ewl_widget_hide(curwidget);
 				ewl_widget_show(curwidget);
 				free(infostr);
 	
 				sprintf (tempname, "authorlabel%d",count);
 				curwidget = ewl_widget_name_find(tempname);
-				ewl_label_text_set(EWL_LABEL(curwidget),_("Unknown Author"));
+				/*if(mystruct.set)
+				{
+					ewl_label_text_set(EWL_LABEL(curwidget),mystruct.author);
+				}
+				else
+				{*/
+					ewl_label_text_set(EWL_LABEL(curwidget),gettext("Unknown Author"));
+				//}
+				ewl_widget_hide(curwidget);
 				ewl_widget_show(curwidget);
 			}
 			else
@@ -298,12 +317,14 @@ void update_list()
 				sprintf (tempname, "infolabel%d",count);
 				curwidget = ewl_widget_name_find(tempname);
 				ewl_label_text_set(EWL_LABEL(curwidget),infostr);
+				ewl_widget_hide(curwidget);
 				ewl_widget_show(curwidget);
 				free(infostr);
 	
 				sprintf (tempname, "authorlabel%d",count);
 				curwidget = ewl_widget_name_find(tempname);
 				ewl_label_text_set(EWL_LABEL(curwidget),"Folder");
+				ewl_widget_hide(curwidget);
 				ewl_widget_show(curwidget);
 			}
 			
@@ -311,6 +332,7 @@ void update_list()
 	
 			sprintf (tempname, "bookbox%d",count);
 			curwidget = ewl_widget_name_find(tempname);
+			ewl_widget_hide(curwidget);
 			ewl_widget_show(curwidget);
 			sprintf (tempname, "type%d",count);
 			curwidget = ewl_widget_name_find(tempname);
@@ -334,7 +356,7 @@ void update_list()
 				
 				ewl_image_file_path_set(EWL_IMAGE(curwidget),"/usr/share/madshelf/folder.png");
 			}
-			
+			ewl_widget_hide(curwidget);
 			ewl_widget_show(curwidget);
 	
 			sprintf (tempname, "separator%d",count);
@@ -359,8 +381,10 @@ void update_list()
 	if((curindex+8)>=ecore_list_count(filelist))
 	{
 		curwidget = ewl_widget_name_find("forwardarr");
-		offset=ewl_object_current_w_get(EWL_OBJECT(curwidget));
+		//offset=ewl_object_current_w_get(EWL_OBJECT(curwidget));
+		
 		ewl_widget_hide(curwidget);
+		
 	}
 	else
 	{
@@ -371,8 +395,12 @@ void update_list()
 	if(curindex>0)
 	{
 		curwidget = ewl_widget_name_find("backarr");
+		//ewl_object_padding_set(EWL_OBJECT(curwidget),0,offset,0,0);
+		ewl_widget_hide(curwidget);
 		ewl_widget_show(curwidget);
-		ewl_object_padding_set(EWL_OBJECT(curwidget),0,offset,0,0);
+		//backflag=1;
+		
+		
 	}
 	else
 	{
@@ -1048,12 +1076,57 @@ int main ( int argc, char ** argv )
         */
        curdir = strdup(g_roots->roots[0]->path);
     }
+	//load info plugins
+	for(count=0;count<MAX_PLUGINS;count++)
+		plugins[count]=NULL;
+
+	tempstr7=ReadString("bookinfo","plugins",NULL);
+	
+	if(tempstr7!=NULL)
+	{
+		count=0;
+		strcpy(tempstr8,strtok(tempstr7,","));
+		
+		while(tempstr8!=NULL&&strlen(tempstr8)>0&&count<1)
+		{
+			plugstr=(char *)calloc(strlen(tempstr8)+strlen(getenv("HOME"))+strlen(DEFAULT_PLUGIN_DIR)+1,sizeof(char));
+			sprintf("%s%s%s",getenv("HOME"),DEFAULT_PLUGIN_DIR,tempstr8);
+			pluginlib=dlopen(plugstr, RTLD_LAZY);
+			
+
+			if(pluginlib==NULL)
+			{
+				plugins[count]=NULL;
+			}
+			else
+			{
+				initializer = dlsym(pluginlib,"getInfo");
+				if(initializer == NULL) {
+					plugins[count]=NULL;			
+				} else {
+   					plugins[count]=*((sdl_init_function_type*)(&initializer));
+				}
+				
+			}
+			dlclose(pluginlib);
+			free(plugstr);		
+			strcpy(tempstr8,strtok(NULL,","));	
+			
+			count++;
+		}
+	}
+
+
+	//curdir=(char *)calloc(strlen(crudehack) +1, sizeof(char));
+	//strcat(curdir,crudehack);
 
 	win = ewl_window_new();
 	ewl_window_title_set ( EWL_WINDOW ( win ), "EWL_WINDOW" );
 	ewl_window_name_set ( EWL_WINDOW ( win ), "EWL_WINDOW" );
 	ewl_window_class_set ( EWL_WINDOW ( win ), "EWLWindow" );
-	ewl_object_size_request ( EWL_OBJECT ( win ), 600, 800 );
+	//ewl_object_size_request ( EWL_OBJECT ( win ), 600, 800 );
+	ewl_object_minimum_size_set(EWL_OBJECT(win),600,800);
+	ewl_object_maximum_size_set(EWL_OBJECT(win),600,800);
 	ewl_callback_append ( win, EWL_CALLBACK_DELETE_WINDOW, destroy_cb, NULL );
 	ewl_callback_append(win, EWL_CALLBACK_KEY_DOWN, cb_key_down, NULL);
 	ewl_widget_name_set(win,"mainwindow");
@@ -1232,6 +1305,10 @@ int main ( int argc, char ** argv )
 		ewl_object_fill_policy_set(EWL_OBJECT(box5), EWL_FLAG_FILL_ALL);
 		ewl_widget_show(box5);
 
+		box5innerw=CURRENT_W(win)-INSET_HORIZONTAL(win)-PADDING_HORIZONTAL(win)-INSET_HORIZONTAL(box2)-PADDING_HORIZONTAL(box2)-INSET_HORIZONTAL(border)-PADDING_HORIZONTAL(border)-INSET_HORIZONTAL(box3)-PADDING_HORIZONTAL(box3)-INSET_HORIZONTAL(box)-PADDING_HORIZONTAL(box)-INSET_HORIZONTAL(box5)-PADDING_HORIZONTAL(box5)-CURRENT_W(iconimage[count])-INSET_HORIZONTAL(iconimage[count])-PADDING_HORIZONTAL(iconimage[count]);
+
+		
+
 		sprintf (tempname3, "authorlabel%d",count);
 		authorlabel[count] = ewl_label_new();
 		ewl_container_child_append(EWL_CONTAINER(box5), authorlabel[count]);
@@ -1239,7 +1316,10 @@ int main ( int argc, char ** argv )
 		ewl_label_text_set(EWL_LABEL(authorlabel[count]), "Unknown Author");
 		ewl_object_padding_set(EWL_OBJECT(authorlabel[count]),3,0,0,0);
 		ewl_theme_data_str_set(EWL_WIDGET(authorlabel[count]),"/label/textpart","ewl/oi_label/authortext");
-		ewl_object_fill_policy_set(EWL_OBJECT(authorlabel[count]), EWL_FLAG_FILL_VSHRINK);
+		ewl_object_fill_policy_set(EWL_OBJECT(authorlabel[count]),
+		 EWL_FLAG_FILL_SHRINK);
+		
+		ewl_object_maximum_w_set(EWL_OBJECT(authorlabel[count]),box5innerw-PADDING_HORIZONTAL(authorlabel[count])-INSET_HORIZONTAL(authorlabel[count]));
 		ewl_widget_show(authorlabel[count]);
 
 		sprintf (tempname3, "titlelabel%d",count);
@@ -1249,8 +1329,8 @@ int main ( int argc, char ** argv )
 		ewl_label_text_set(EWL_LABEL(titlelabel[count]), "");
 		ewl_object_padding_set(EWL_OBJECT(titlelabel[count]),3,0,0,0);
 		ewl_theme_data_str_set(EWL_WIDGET(titlelabel[count]),"/label/textpart","ewl/oi_label/titletext");
-		ewl_object_fill_policy_set(EWL_OBJECT(titlelabel[count]), EWL_FLAG_FILL_VSHRINK);
-
+		ewl_object_fill_policy_set(EWL_OBJECT(titlelabel[count]), EWL_FLAG_FILL_SHRINK);
+		ewl_object_maximum_w_set(EWL_OBJECT(titlelabel[count]),box5innerw-PADDING_HORIZONTAL(titlelabel[count])-INSET_HORIZONTAL(titlelabel[count]));// CURRENT_W(box5)-INSET_HORIZONTAL(box5)-PADDING_HORIZONTAL(box5));
 		ewl_widget_show(titlelabel[count]);
 		sprintf (tempname3, "infolabel%d",count);
 		infolabel[count] = ewl_label_new();
@@ -1259,9 +1339,9 @@ int main ( int argc, char ** argv )
 		ewl_label_text_set(EWL_LABEL(infolabel[count]), "blala");
 		ewl_object_padding_set(EWL_OBJECT(infolabel[count]),0,3,0,0);
 		ewl_object_alignment_set(EWL_OBJECT(infolabel[count]),EWL_FLAG_ALIGN_RIGHT|EWL_FLAG_ALIGN_BOTTOM);
-
+		ewl_object_maximum_w_set(EWL_OBJECT(infolabel[count]),box5innerw-PADDING_HORIZONTAL(infolabel[count])-INSET_HORIZONTAL(infolabel[count]));
 		ewl_theme_data_str_set(EWL_WIDGET(infolabel[count]),"/label/textpart","ewl/oi_label/infotext");
-		ewl_object_fill_policy_set(EWL_OBJECT(infolabel[count]), EWL_FLAG_FILL_VSHRINK);
+		ewl_object_fill_policy_set(EWL_OBJECT(infolabel[count]), EWL_FLAG_FILL_SHRINK);
 		ewl_widget_show(infolabel[count]);
 	
 		sprintf(tempname4,"separator%d",count);
