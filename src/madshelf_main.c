@@ -39,7 +39,26 @@
 
 #define SCRIPTS_DIR "/.madshelf/scripts/"
 #define DEFAULT_THEME "/usr/share/madshelf/madshelf.edj"
-char **rootstrlist;
+
+/*
+ * Single "root"
+ */
+typedef struct
+{
+   const char* name;
+   const char* path;
+} root_t;
+
+/*
+ * All "roots" defined in config file
+ */
+typedef struct
+{
+    int nroots;
+    root_t** roots;
+} roots_t;
+
+roots_t* g_roots;
 char **scriptstrlist;
 char *statefilename=NULL;
 Ecore_List *filelist;
@@ -58,12 +77,108 @@ char titletext[200];
 //***********these variables need to be saved and restored in order to restore the state
 int curindex=0;
 int depth=0;
-char *rootname;
+
+int current_root;
+
 char *curdir;
 int initdirstrlen;
 int sort_type=SORT_BY_NAME;
 int sort_order=ECORE_SORT_MIN;
 //***********
+
+
+/*
+ * roots_create() helper
+ */
+int count_roots()
+{
+   int count = 0;
+   struct ENTRY* p = FindSection("roots");
+   if (p)
+       p = p->pNext;
+
+   while (p && p->Type != tpSECTION)
+   {
+      if(p->Type != tpKEYVALUE) continue;
+      count++;
+      p = p->pNext;
+   }
+   return count;
+}
+
+/*
+ * roots_create() helper
+ */
+void fill_roots(int count, root_t** roots)
+{
+   int i;
+   struct ENTRY* p = FindSection("roots");
+   if (p)
+       p = p->pNext;
+
+   for (i = 0; i < count; ++i)
+   {
+       char* name;
+       const char* conf_line;
+       const char* line_sep;
+       
+       while (p->Type != tpKEYVALUE)
+           p = p->pNext;
+      
+       conf_line = p->Text;
+       line_sep = strchr(conf_line, '=');
+
+       if (!line_sep)
+       {
+           /*
+            * Sin
+            */
+           fprintf(stderr, "Malformed configuration line: %s\n", conf_line);
+           roots[i] = NULL;
+           continue;
+       }
+       
+       roots[i] = malloc(sizeof(root_t));
+       name = malloc((line_sep - conf_line + 1) * sizeof(char));
+       strncpy(name, conf_line, line_sep - conf_line);
+       name[line_sep - conf_line] = 0; /* 0-terminate after strncpy */
+       roots[i]->name = name;
+      
+       roots[i]->path = strdup(line_sep+1);
+       
+       p = p->pNext;
+   }
+}
+
+/*
+ * Parses and returns list of "roots" from the config file.
+ *
+ * Returned pointer need to be passed to roots_destroy function.
+ */
+roots_t* roots_create()
+{
+   roots_t* roots = malloc(sizeof(roots_t));
+   roots->nroots = count_roots();
+   roots->roots = malloc(sizeof(root_t*) * roots->nroots);
+   fill_roots(roots->nroots, roots->roots);
+   return roots;
+}
+
+/*
+ * Destroys the passed roots info.
+ */
+void roots_destroy(roots_t* roots)
+{
+    int i;
+    for (i = 0; i < roots->nroots; ++i)
+    {
+        free(roots->roots[i]->name);
+        free(roots->roots[i]->path);
+        free(roots->roots[i]);
+    }
+    free(roots->roots);
+    free(roots);
+}
 
 void update_list()
 {
@@ -284,7 +399,7 @@ void update_title()
 	titletext[0]='\0';
 	Ewl_Widget *curwidget;
 	strcat(titletext,"Madshelf | ");
-	strcat(titletext,rootname);
+	strcat(titletext, g_roots->roots[current_root]->name);
 	if(!(strlen(curdir)==initdirstrlen))
 	{
 		strcat(titletext,"://");
@@ -789,18 +904,13 @@ void cb_goto_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 	ewl_menu_collapse(EWL_MENU(curwidget));
 	curwidget = ewl_widget_name_find("okmenu");
 	ewl_menu_collapse(EWL_MENU(curwidget));
-	for(count=0;count<=index;count++)
-	{
-		if(rootstrlist[count]==NULL)
-			return;
-	}
-	tempstr=ReadString("roots",rootstrlist[index],getenv("HOME"));
-	free(curdir);
-	curdir=(char *)calloc(strlen(tempstr)+1,sizeof(char));
-	strcpy(curdir,tempstr);	
-	free(rootname);
-	rootname=(char *)calloc(strlen(rootstrlist[index]) +1, sizeof(char));
-	strcpy(rootname,rootstrlist[index]);
+
+    if (g_roots->nroots < index)
+       return;
+
+    curdir = strdup(g_roots->roots[index]->path);
+    current_root = index;
+
 	initdirstrlen=strlen(curdir);
 	depth=0;
 	curindex=0;
@@ -847,11 +957,10 @@ void cb_script_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 	ewl_menu_collapse(EWL_MENU(curwidget));
 	curwidget = ewl_widget_name_find("okmenu");
 	ewl_menu_collapse(EWL_MENU(curwidget));
-	for(count=0;count<=index;count++)
-	{
-		if(rootstrlist[count]==NULL)
-			return;
-	}
+
+    if (g_roots->nroots < index)
+        return;
+
 	tempstr=ReadString("scripts",scriptstrlist[index],NULL);
 	handler_path = malloc(strlen(getenv("HOME"))+sizeof(SCRIPTS_DIR)/sizeof(char)+strlen(tempstr));
         sprintf(handler_path, "%s%s%s", getenv("HOME"), SCRIPTS_DIR,tempstr);
@@ -866,9 +975,6 @@ void cb_script_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 	free(curdir);
 	curdir=(char *)calloc(strlen(tempstr)+1,sizeof(char));
 	strcpy(curdir,tempstr);	
-	free(rootname);
-	rootname=(char *)calloc(strlen(rootstrlist[index]) +1, sizeof(char));
-	strcpy(rootname,rootstrlist[index]);
 	initdirstrlen=strlen(curdir);
 	depth=0;
 	curindex=0;
@@ -884,7 +990,8 @@ void save_state()
 	eet_write(state,"statesaved",(void *)&a, sizeof(int),0);
 	eet_write(state,"curindex",(void *)&curindex,sizeof(int),0);
 	eet_write(state,"depth",(void *)&depth,sizeof(int),0);
-	eet_write(state,"rootname",(void *)rootname,sizeof(char)*(strlen(rootname)+1),0);
+	eet_write(state,"rootname",(void *)g_roots->roots[current_root]->name,
+              sizeof(char)*(strlen(g_roots->roots[current_root]->name)+1),0);
 	eet_write(state,"curdir",curdir,sizeof(char)*(strlen(curdir)+1),0);
 	eet_write(state,"initdirstrlen",(void *)&initdirstrlen,sizeof(int),0);
 	eet_write(state,"sort_type",(void *)&sort_type,sizeof(int),0);
@@ -898,6 +1005,7 @@ void refresh_state()
 	int size;
 	state=eet_open(statefilename,EET_FILE_MODE_READ);
 	int a=0;
+    int i;
 	if(eet_read(state,"statesaved",&size)==NULL)
 	{
 		eet_close(state);
@@ -905,10 +1013,16 @@ void refresh_state()
 	}
 	curindex=*((int*)eet_read(state,"curindex",&size));
 	depth=*((int*)eet_read(state,"depth",&size));
+
+    current_root = 0;
 	temp=(char *)eet_read(state,"rootname",&size);
-	free(rootname);
-	rootname=(char *)calloc(strlen(temp) + 1, sizeof(char));
-	strcpy(rootname,temp);
+    for(i = 0; i < g_roots->nroots; ++i)
+        if (!strcmp(temp, g_roots->roots[i]->name))
+        {
+            current_root = i;
+            break;
+        }
+        
 	temp=(char *)eet_read(state,"curdir",&size);
 	free(curdir);
 	curdir=(char *)calloc(strlen(temp) + 1, sizeof(char));
@@ -1040,48 +1154,12 @@ int main ( int argc, char ** argv )
 	}
 	scriptstrlist[count2]=NULL;
 	
-	//load locations
-	count=0;
-	rootlist=FindSection("roots");
-	if(rootlist->pNext!=NULL)
-		rootlist=rootlist->pNext;
-	while(rootlist!=NULL &&rootlist->Type!=tpSECTION &&count<8)
-	{	
-		if(rootlist->Type!=tpKEYVALUE)
-			continue;
-		count++;
-		rootlist=rootlist->pNext;
-	}
-	rootstrlist=(char **)calloc(count +  1, sizeof(char *));	
-	count=0;
-	rootlist=FindSection("roots");
-	if(rootlist->pNext!=NULL)
-		rootlist=rootlist->pNext;
-	while(rootlist!=NULL &&rootlist->Type!=tpSECTION && count<8)
-	{	
-		if(rootlist->Type!=tpKEYVALUE)
-			continue;
-		tempstr5=(char *)calloc(strlen(rootlist->Text)+1,sizeof(char));
-		strcat(tempstr5,rootlist->Text);
-		//tempstr5=(char *)calloc(strlen(tempstr4)+1,sizeof(char));
-		//strcat(tempstr5,tempstr4);
-		rootstrlist[count]=strtok(tempstr5,"=");//rootlist->Text;//strtok(rootlist->Text,"=");
-		
-		count++;
-		rootlist=rootlist->pNext;
-	}
-	rootstrlist[count]=NULL;
+    g_roots = roots_create();
+    current_root = 0;
 
-	tempstr=ReadString("roots",rootstrlist[0],getenv("HOME"));
-	
-	curdir=(char *)calloc(strlen(tempstr)+1,sizeof(char));
-	strcat(curdir,tempstr);	
-	
-	rootname=(char *)calloc(strlen(rootstrlist[0]) +1, sizeof(char));
-	strcat(rootname,rootstrlist[0]);
+    curdir = strdup(g_roots->roots[current_root]->path);
 	
 	initdirstrlen=strlen(curdir);
-	
 	
 	statefilename=(char *)calloc(strlen(homedir) + 1+21 + 1, sizeof(char));
 	strcat(statefilename,homedir);
@@ -1097,7 +1175,7 @@ int main ( int argc, char ** argv )
        /*
         * This dir may be invalid too. Oh, well...
         */
-       curdir = strdup(rootstrlist[0]);
+       curdir = strdup(g_roots->roots[0]->path);
     }
 
 	//curdir=(char *)calloc(strlen(crudehack) +1, sizeof(char));
@@ -1157,6 +1235,7 @@ int main ( int argc, char ** argv )
 
 	menubar=ewl_hmenubar_new();
 	{
+        int i;
 		Ewl_Widget *temp=NULL;
 		Ewl_Widget *temp2=NULL;
 		Ewl_Widget *temp3=NULL;
@@ -1228,12 +1307,11 @@ int main ( int argc, char ** argv )
 		ewl_callback_append(EWL_MENU(temp2)->popup, EWL_CALLBACK_KEY_DOWN, cb_goto_menu_key_down, NULL);
 		ewl_widget_show(temp2);
 
-		count=0;
-		while(rootstrlist[count]!=NULL)
-		{
+        for(i = 0; i < MIN(g_roots->nroots, 8); ++i)
+        {
 			temp3=ewl_menu_item_new();
-			tempstr4=(char *)calloc(strlen(rootstrlist[count])+3+1,sizeof(char));
-			sprintf(tempstr4,"%d. %s",count+1,rootstrlist[count]);
+			tempstr4=(char *)calloc(strlen(g_roots->roots[i]->name)+3+1,sizeof(char));
+			sprintf(tempstr4,"%d. %s",i+1, g_roots->roots[i]->name);
 			ewl_button_label_set(EWL_BUTTON(temp3),tempstr4);
 			free(tempstr4);
 			ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
@@ -1360,9 +1438,9 @@ int main ( int argc, char ** argv )
     eet_shutdown();
     CloseIniFile ();
     ecore_list_destroy(filelist);
-    free(rootname);
 
-    free(rootstrlist);
+    roots_destroy(g_roots);
+
     free(scriptstrlist);
     free(curdir);
 
