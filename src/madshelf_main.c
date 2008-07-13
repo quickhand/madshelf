@@ -1377,7 +1377,7 @@ int main ( int argc, char ** argv )
                                         + strlen(g_handler));
             sprintf(handler_path, "%s%s%s", home, SCRIPTS_DIR, g_handler);
 
-            execl(handler_path, handler_path, g_file);
+            execl(handler_path, handler_path, g_file, NULL);
 
             if (errno != ENOENT)
             {
