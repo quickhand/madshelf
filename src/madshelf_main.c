@@ -17,24 +17,25 @@
 
 #define _GNU_SOURCE
 
-#include <Ewl.h>
-#include <ewl_macros.h>
-#include <ewl_list.h>
 #include <Edje.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <math.h>
-#include <unistd.h>
 #include <Eet.h>
-#include <libintl.h>
-#include <fcntl.h>
 #include <errno.h>
-#include <locale.h>
-#include <time.h>
+#include <Ewl.h>
+#include <ewl_list.h>
+#include <ewl_macros.h>
+#include <fcntl.h>
 #include "IniFile.h"
+#include <libintl.h>
+#include <locale.h>
 #include "madshelf.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
+
 #define _(String) gettext (String)
 
 #define SCRIPTS_DIR "/.madshelf/scripts/"
