@@ -315,9 +315,6 @@ void update_list()
 			sprintf (tempname, "type%d",count);
 			curwidget = ewl_widget_name_find(tempname);
 			
-			//tempo=(char *)calloc(strlen(file) + strlen(curdir)+1, sizeof(char));
-			//strcat(tempo,curdir);
-			//strcat(tempo,file);
 			if(!ecore_file_is_dir(fileconcat))
 			{
 				pointptr=strrchr(fileconcat,'.');
@@ -364,15 +361,10 @@ void update_list()
 		curwidget = ewl_widget_name_find("forwardarr");
 		offset=ewl_object_current_w_get(EWL_OBJECT(curwidget));
 		ewl_widget_hide(curwidget);
-		
 	}
 	else
 	{
 		curwidget = ewl_widget_name_find("forwardarr");
-		/*if(backflag==1)
-			ewl_object_padding_set(EWL_OBJECT(curwidget),0,0,0,0);
-		else
-			ewl_object_padding_set(EWL_OBJECT(curwidget),32,0,0,0);*/
 		ewl_widget_show(curwidget);
 		offset=0;
 	}
@@ -380,20 +372,15 @@ void update_list()
 	{
 		curwidget = ewl_widget_name_find("backarr");
 		ewl_widget_show(curwidget);
-		//backflag=1;
 		ewl_object_padding_set(EWL_OBJECT(curwidget),0,offset,0,0);
-		
 	}
 	else
 	{
 		curwidget = ewl_widget_name_find("backarr");
 		ewl_widget_hide(curwidget);
-		//backflag=0;
 	}
-	
-	
-
 }
+
 void update_title()
 {
 	char temptext[100];
@@ -405,7 +392,6 @@ void update_title()
 	{
 		strcat(titletext,"://");
 		strcat(titletext,&(curdir[initdirstrlen]));
-
 	}
 
 	curwidget = ewl_widget_name_find("mainborder");
@@ -413,7 +399,6 @@ void update_title()
 }
 void update_sort_label()
 {
-
 	Ewl_Widget *curwidget;
 
 	curwidget = ewl_widget_name_find("sortlabel");
@@ -431,14 +416,8 @@ void update_sort_label()
 		else
 			ewl_label_text_set(EWL_LABEL(curwidget),_("sorted by time"));
 	}
-	
-	
-
-
-
-
-
 }
+
 void update_menu()
 {
 	Ewl_Widget *curwidget;
@@ -456,13 +435,8 @@ void update_menu()
 	ewl_button_label_set(EWL_BUTTON(curwidget),_("5. Go to"));
 	curwidget = ewl_widget_name_find("menuitem6");
 	ewl_button_label_set(EWL_BUTTON(curwidget),_("6. Scripts"));
-
 }
-void cleanup()
-{
 
-
-}
 int file_name_compare(const void *data1, const void *data2)
 {
 	int counter;
@@ -508,6 +482,7 @@ void init_filelist()
 	else if(sort_type==SORT_BY_TIME)
 		ecore_list_sort(filelist,file_date_compare,sort_order);
 }
+
 void destroy_cb ( Ewl_Widget *w, void *event, void *data )
 {
 	ewl_widget_destroy ( w );
@@ -541,20 +516,20 @@ void doActionForNum(unsigned int num)
 	char *theargv[1];
 	char *homepoint;
 	if(curindex+(num-1)>=ecore_list_count(filelist))
-	{
 		return;
-	}
+
 	ecore_list_index_goto(filelist,curindex+num-1);
 	file = (char*)ecore_list_next(filelist);
 	tempo=(char *)calloc(strlen(file) + strlen(curdir)+2, sizeof(char));
 	strcat(tempo,curdir);
 	strcat(tempo,file);
+
 	if(!ecore_file_is_dir(tempo))
 	{
 		const char* handler = lookup_handler(tempo);
 		if (handler)
 		{
-		/* Sin */
+            /* Sin */
 			g_handler = handler;
 			g_file = tempo;
 			ewl_main_quit();
@@ -566,7 +541,6 @@ void doActionForNum(unsigned int num)
 	}
 	else
 	{
-
 		free(curdir);
 		strcat(tempo,"/");
 		curdir=tempo;
@@ -576,11 +550,9 @@ void doActionForNum(unsigned int num)
 		curindex=0;
 		update_list();
 		update_title();
-		
 	}
-
-
 }
+
 char *getUpLevelDir(char *thedir)
 {
 	char *strippeddir;
@@ -678,10 +650,9 @@ void cb_key_down(Ewl_Widget *w, void *ev, void *data)
 		curindex=0;
 		update_list();
 		update_title();
-
 	}
-	
 }
+
 void cb_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 {
 	Ewl_Event_Key_Down *e;
@@ -705,7 +676,6 @@ void cb_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		update_sort_label();
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
-		
 	}
 	else if(k == 2)
 	{
@@ -739,27 +709,18 @@ void cb_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		curwidget = ewl_widget_name_find("menuitem4");
 		ewl_menu_cb_expand(curwidget,NULL,NULL);
 		ewl_widget_focus_send(EWL_WIDGET(EWL_MENU(curwidget)->popup));
-		//ewl_object_alignment_set(EWL_OBJECT(EWL_CONTEXT_MENU(EWL_MENU_ITEM(curwidget)->inmenu)->container),EWL_FLAG_ALIGN_TOP);
-		
-		//ewl_popup_offset_set(EWL_POPUP(EWL_MENU(curwidget)->popup),50, 0);
 	}
 	else if(k == 5)
 	{
 		curwidget = ewl_widget_name_find("menuitem5");
 		ewl_menu_cb_expand(curwidget,NULL,NULL);
 		ewl_widget_focus_send(EWL_WIDGET(EWL_MENU(curwidget)->popup));
-		//ewl_object_alignment_set(EWL_OBJECT(EWL_CONTEXT_MENU(EWL_MENU_ITEM(curwidget)->inmenu)->container),EWL_FLAG_ALIGN_TOP);
-		
-		//ewl_popup_offset_set(EWL_POPUP(EWL_MENU(curwidget)->popup),50, 0);
 	}
 	else if(k == 6)
 	{
 		curwidget = ewl_widget_name_find("menuitem6");
 		ewl_menu_cb_expand(curwidget,NULL,NULL);
 		ewl_widget_focus_send(EWL_WIDGET(EWL_MENU(curwidget)->popup));
-		//ewl_object_alignment_set(EWL_OBJECT(EWL_CONTEXT_MENU(EWL_MENU_ITEM(curwidget)->inmenu)->container),EWL_FLAG_ALIGN_TOP);
-		
-		//ewl_popup_offset_set(EWL_POPUP(EWL_MENU(curwidget)->popup),50, 0);
 	}	
 }
 
@@ -825,22 +786,21 @@ void cb_goto_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 	int count=0;
 	const char *tempstr;
 	e = (Ewl_Event_Key_Down*)ev;
+
 	if(!strcmp(e->base.keyname,"Escape"))
 	{
 		curwidget = ewl_widget_name_find("menuitem5");
 		ewl_menu_collapse(EWL_MENU(curwidget));
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
-		
-	}
-    else
-    {
-        if (isdigit(e->base.keyname[0]) && !e->base.keyname[1])
-            index = e->base.keyname[0] - '0';
+        return;
     }
 
-	if(index==-1)
-		return;
+    if (isdigit(e->base.keyname[0]) && !e->base.keyname[1])
+        index = e->base.keyname[0] - '0';
+    else
+        return;
+
 	curwidget = ewl_widget_name_find("menuitem5");
 	ewl_menu_collapse(EWL_MENU(curwidget));
 	curwidget = ewl_widget_name_find("okmenu");
@@ -875,15 +835,14 @@ void cb_script_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 		ewl_menu_collapse(EWL_MENU(curwidget));
 		curwidget = ewl_widget_name_find("okmenu");
 		ewl_menu_collapse(EWL_MENU(curwidget));
-	}
-    else
-    {
-        if(isdigit(e->base.keyname[0]) && !e->base.keyname[1])
-            index = e->base.keyname[0] - '0';
+        return;
     }
 
-	if(index==-1)
+    if (isdigit(e->base.keyname[0]) && !e->base.keyname[1])
+        index = e->base.keyname[0] - '0';
+    else
 		return;
+
 	curwidget = ewl_widget_name_find("menuitem5");
 	ewl_menu_collapse(EWL_MENU(curwidget));
 	curwidget = ewl_widget_name_find("okmenu");
@@ -894,24 +853,9 @@ void cb_script_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 
 	tempstr=ReadString("scripts",scriptstrlist[index],NULL);
 	handler_path = malloc(strlen(getenv("HOME"))+sizeof(SCRIPTS_DIR)/sizeof(char)+strlen(tempstr));
-        sprintf(handler_path, "%s%s%s", getenv("HOME"), SCRIPTS_DIR,tempstr);
+    sprintf(handler_path, "%s%s%s", getenv("HOME"), SCRIPTS_DIR,tempstr);
 
-        system(handler_path);
-	/*for(count=0;count<=index;count++)
-	{
-		if(rootstrlist[count]==NULL)
-			return;
-	}
-	tempstr=ReadString("roots",rootstrlist[index],getenv("HOME"));
-	free(curdir);
-	curdir=(char *)calloc(strlen(tempstr)+1,sizeof(char));
-	strcpy(curdir,tempstr);	
-	initdirstrlen=strlen(curdir);
-	depth=0;
-	curindex=0;
-	init_filelist();
-	update_title();
-	update_list();*/
+    system(handler_path);
 }
 
 void save_state()
@@ -976,7 +920,6 @@ int valid_dir(const char* dir)
 
 int main ( int argc, char ** argv )
 {	
-	
 	int file_desc;
 	//char *eetfilename;
 	char tempname1[20];
@@ -1023,19 +966,14 @@ int main ( int argc, char ** argv )
 	struct ENTRY *rootlist;
 	struct ENTRY *scriptlist;
 
-
-
 	if ( !ewl_init ( &argc, argv ) )
 	{
 		return 1;
 	}
 	eet_init();
 	ewl_theme_theme_set(DEFAULT_THEME);
-	
 
-
-	setlocale( LC_ALL, "" );
-	//bindtextdomain(PACKAGE, LOCALEDIR);
+	setlocale(LC_ALL, "");
 	textdomain("madshelf");
 	
 	homedir=getenv("HOME");
@@ -1054,10 +992,10 @@ int main ( int argc, char ** argv )
 		write(file_desc,getenv("HOME"),strlen(getenv("HOME"))*sizeof(char));
 		write(file_desc,"\n[apps]\n[icons]\n[scripts]",15*sizeof(char));
 		close(file_desc);
-
 	}
 	OpenIniFile (configfile);
 	free(configfile);
+
 	//load scripts
 	count2=0;
 	scriptlist=FindSection("scripts");
@@ -1086,7 +1024,8 @@ int main ( int argc, char ** argv )
 		scriptlist=scriptlist->pNext;
 	}
 	scriptstrlist[count2]=NULL;
-	
+
+    // load roots
     g_roots = roots_create();
     current_root = 0;
 
@@ -1098,7 +1037,6 @@ int main ( int argc, char ** argv )
 	strcat(statefilename,homedir);
 	strcat(statefilename,"/.madshelf/state.eet");
 	
-	//state=eet_open(eetfilename,EET_FILE_MODE_READ_WRITE);
 	refresh_state();
 
     if (!valid_dir(curdir))
@@ -1111,9 +1049,6 @@ int main ( int argc, char ** argv )
        curdir = strdup(g_roots->roots[0]->path);
     }
 
-	//curdir=(char *)calloc(strlen(crudehack) +1, sizeof(char));
-	//strcat(curdir,crudehack);
-	
 	win = ewl_window_new();
 	ewl_window_title_set ( EWL_WINDOW ( win ), "EWL_WINDOW" );
 	ewl_window_name_set ( EWL_WINDOW ( win ), "EWL_WINDOW" );
@@ -1164,9 +1099,8 @@ int main ( int argc, char ** argv )
 	ewl_widget_name_set(forwardarr,"forwardarr");
 	ewl_object_alignment_set(EWL_OBJECT(forwardarr),EWL_FLAG_ALIGN_RIGHT|EWL_FLAG_ALIGN_TOP);
 
-
-
 	menubar=ewl_hmenubar_new();
+
 	{
         int i;
 		Ewl_Widget *temp=NULL;
@@ -1262,7 +1196,6 @@ int main ( int argc, char ** argv )
 	ewl_container_child_append(EWL_CONTAINER(box2),menubar);
 	
 	update_menu();
-	//ewl_theme_data_str_set(EWL_WIDGET(menubar),"/menubar/group","ewl/menu/shelfmenu");
 	ewl_widget_show(menubar);
 
 	sorttypetext=ewl_label_new();
@@ -1307,7 +1240,6 @@ int main ( int argc, char ** argv )
 		ewl_object_padding_set(EWL_OBJECT(authorlabel[count]),3,0,0,0);
 		ewl_theme_data_str_set(EWL_WIDGET(authorlabel[count]),"/label/textpart","ewl/oi_label/authortext");
 		ewl_object_fill_policy_set(EWL_OBJECT(authorlabel[count]), EWL_FLAG_FILL_VSHRINK);
-		//ewl_object_maximum_w_set(EWL_OBJECT(authorlabel[count]),500);// CURRENT_W(box5)-INSET_HORIZONTAL(box5)-PADDING_HORIZONTAL(box5));
 		ewl_widget_show(authorlabel[count]);
 
 		sprintf (tempname3, "titlelabel%d",count);
@@ -1318,7 +1250,7 @@ int main ( int argc, char ** argv )
 		ewl_object_padding_set(EWL_OBJECT(titlelabel[count]),3,0,0,0);
 		ewl_theme_data_str_set(EWL_WIDGET(titlelabel[count]),"/label/textpart","ewl/oi_label/titletext");
 		ewl_object_fill_policy_set(EWL_OBJECT(titlelabel[count]), EWL_FLAG_FILL_VSHRINK);
-		//ewl_object_maximum_w_set(EWL_OBJECT(titlelabel[count]),500);// CURRENT_W(box5)-INSET_HORIZONTAL(box5)-PADDING_HORIZONTAL(box5));
+
 		ewl_widget_show(titlelabel[count]);
 		sprintf (tempname3, "infolabel%d",count);
 		infolabel[count] = ewl_label_new();
@@ -1327,31 +1259,22 @@ int main ( int argc, char ** argv )
 		ewl_label_text_set(EWL_LABEL(infolabel[count]), "blala");
 		ewl_object_padding_set(EWL_OBJECT(infolabel[count]),0,3,0,0);
 		ewl_object_alignment_set(EWL_OBJECT(infolabel[count]),EWL_FLAG_ALIGN_RIGHT|EWL_FLAG_ALIGN_BOTTOM);
-		//ewl_object_maximum_w_set(EWL_OBJECT(infolabel[count]),500);// CURRENT_W(box5)-INSET_HORIZONTAL(box5)-PADDING_HORIZONTAL(box5));
+
 		ewl_theme_data_str_set(EWL_WIDGET(infolabel[count]),"/label/textpart","ewl/oi_label/infotext");
 		ewl_object_fill_policy_set(EWL_OBJECT(infolabel[count]), EWL_FLAG_FILL_VSHRINK);
 		ewl_widget_show(infolabel[count]);
-
 	
 		sprintf(tempname4,"separator%d",count);
 		dividewidget = ewl_hseparator_new();
 		ewl_container_child_append(EWL_CONTAINER(box3), dividewidget);
-		//ewl_theme_data_str_set(EWL_WIDGET(dividewidget),"/hseparator/group","ewl/separator/bookseparator");
-		//sprintf(tempname5,"ewl/box/bookbox%d",count+1);
-		//ewl_theme_data_str_set(EWL_WIDGET(box),"/hbox/group",tempname5);
+
 		ewl_widget_name_set(dividewidget,tempname4 );
 		ewl_widget_show(dividewidget);
 	}
 	update_list();
 	ewl_widget_focus_send(EWL_WIDGET(border));
-
 	
 	ewl_main();
-	//CloseIniFile ();
-	//ecore_list_destroy(filelist);
-	//free(rootname);
-	//free(curdir);
-
 
     save_state();
     free(statefilename);
