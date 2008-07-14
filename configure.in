@@ -11,4 +11,4 @@ PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES(EWL, [ewl >= 0.5.2.042])
 PKG_CHECK_MODULES(EET, [eet >= 1.0.1])
 
-AC_OUTPUT(Makefile src/Makefile)
+AC_OUTPUT(Makefile src/Makefile themes/Makefile po/Makefile)
