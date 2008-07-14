@@ -250,7 +250,7 @@ void update_list()
 				stat(fileconcat,&stat_p);
 				
 				atime = localtime(&(stat_p.st_mtime));
-				strftime(timeStr, 100, _("%m-%d-%y"), atime);
+				strftime(timeStr, 100, gettext("%m-%d-%y"), atime);
 				if(stat_p.st_size>=1048576)
 				{
 					sprintf(sizestr,"%.1fM",((double)(stat_p.st_size))/((double)1048576.0));
@@ -282,7 +282,7 @@ void update_list()
 	
 				sprintf (tempname, "authorlabel%d",count);
 				curwidget = ewl_widget_name_find(tempname);
-				ewl_label_text_set(EWL_LABEL(curwidget),_("Unknown Author"));
+				ewl_label_text_set(EWL_LABEL(curwidget),gettext("Unknown Author"));
 				ewl_widget_show(curwidget);
 			}
 			else
@@ -290,7 +290,7 @@ void update_list()
 				stat(fileconcat,&stat_p);
 				
 				atime = localtime(&(stat_p.st_mtime));
-				strftime(timeStr, 100, _("%m-%d-%y"), atime);
+				strftime(timeStr, 100, gettext("%m-%d-%y"), atime);
 				
 				extension = strrchr(file, '.');
 				infostr=(char *)calloc(strlen(timeStr)+1,sizeof(char));
@@ -405,16 +405,16 @@ void update_sort_label()
 	if(sort_type==SORT_BY_NAME)
 	{
 		if(sort_order==ECORE_SORT_MAX)
-			ewl_label_text_set(EWL_LABEL(curwidget),_("reverse-sorted by name"));
+			ewl_label_text_set(EWL_LABEL(curwidget),gettext("reverse-sorted by name"));
 		else
-			ewl_label_text_set(EWL_LABEL(curwidget),_("sorted by name"));
+			ewl_label_text_set(EWL_LABEL(curwidget),gettext("sorted by name"));
 	}
 	else if(sort_type==SORT_BY_TIME) 
 	{
 		if(sort_order==ECORE_SORT_MAX)
-			ewl_label_text_set(EWL_LABEL(curwidget),_("reverse-sorted by time"));
+			ewl_label_text_set(EWL_LABEL(curwidget),gettext("reverse-sorted by time"));
 		else
-			ewl_label_text_set(EWL_LABEL(curwidget),_("sorted by time"));
+			ewl_label_text_set(EWL_LABEL(curwidget),gettext("sorted by time"));
 	}
 }
 
@@ -422,19 +422,19 @@ void update_menu()
 {
 	Ewl_Widget *curwidget;
 	curwidget = ewl_widget_name_find("okmenu");
-	ewl_button_label_set(EWL_BUTTON(curwidget),_("Menu (OK)"));
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("Menu (OK)"));
 	curwidget = ewl_widget_name_find("menuitem1");
-	ewl_button_label_set(EWL_BUTTON(curwidget),_("1. Sort by Name"));
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("1. Sort by Name"));
 	curwidget = ewl_widget_name_find("menuitem2");	
-	ewl_button_label_set(EWL_BUTTON(curwidget),_("2. Sort by Time"));
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("2. Sort by Time"));
 	curwidget = ewl_widget_name_find("menuitem3");	
-	ewl_button_label_set(EWL_BUTTON(curwidget),_("3. Reverse Sort Order"));
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("3. Reverse Sort Order"));
 	curwidget = ewl_widget_name_find("menuitem4");
-	ewl_button_label_set(EWL_BUTTON(curwidget),_("4. Language Settings"));
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("4. Language Settings"));
 	curwidget = ewl_widget_name_find("menuitem5");
-	ewl_button_label_set(EWL_BUTTON(curwidget),_("5. Go to"));
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("5. Go to"));
 	curwidget = ewl_widget_name_find("menuitem6");
-	ewl_button_label_set(EWL_BUTTON(curwidget),_("6. Scripts"));
+	ewl_button_label_set(EWL_BUTTON(curwidget),gettext("6. Scripts"));
 }
 
 int file_name_compare(const void *data1, const void *data2)
