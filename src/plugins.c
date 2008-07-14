@@ -19,31 +19,19 @@
  * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef PLUGIN_H
-#define PLUGIN_H
-
-/*
- * Every plugin must export three functions:
- *
- * plugin_init_t init
- * plugin_fini_t fini
- * plugin_parse_meta_t parse_meta
- */
+#include "plugins.c"
 
 typedef struct
 {
-    /* Name of plugin */
-    const char* name;
+    void *handle;
+} plugin_t;
 
-    /* File extensions handled by plugin */
-    int nexts;
-    const char** exts;
-} plugin_info_t;
+typedef struct
+{
+    const char* file_ext;
+    plugin_t* plugin;
+} handler_t;
 
-typedef plugin_info_t (*plugin_init_t)();
-
-typedef void (*plugin_fini_t)(plugin_info_t* plugin_info);
-
-typedef book_meta_t* (*plugin_parse_meta_t)(const char* filename);
-
-#endif
+void init_plugins()
+{
+}

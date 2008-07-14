@@ -19,31 +19,40 @@
  * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef PLUGIN_H
-#define PLUGIN_H
+#ifndef PLUGINS_H
+#define PLUGINS_H
 
 /*
- * Every plugin must export three functions:
- *
- * plugin_init_t init
- * plugin_fini_t fini
- * plugin_parse_meta_t parse_meta
+ * Must be called before invoking get_handler() or parse_meta()
  */
+void init_plugins();
+
+/*
+ * Frees all resources associated with plugins system
+ */
+void fini_plugins();
 
 typedef struct
 {
-    /* Name of plugin */
-    const char* name;
+    const char* title; /* Must be not-NULL */
+    const char* author; /* NULL means "N/A" */
+    const char* series; /* NULL means "N/A" */
+    const int series_n; /* irrelevant if series == NULL */
+} book_meta_t;
 
-    /* File extensions handled by plugin */
-    int nexts;
-    const char** exts;
-} plugin_info_t;
+/*
+ * Parses the passed file and returns metadata.
+ * May return NULL if file can't be parsed.
+ *
+ * Returned value must be freed by passing to free_meta() function.
+ *
+ * @arg path full path to the file
+ */
+book_meta_t* get_meta(const char* path);
 
-typedef plugin_info_t (*plugin_init_t)();
-
-typedef void (*plugin_fini_t)(plugin_info_t* plugin_info);
-
-typedef book_meta_t* (*plugin_parse_meta_t)(const char* filename);
+/*
+ * Frees all resources associated with passed book metadata.
+ */
+void free_meta(book_meta_t* meta);
 
 #endif
