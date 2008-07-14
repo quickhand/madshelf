@@ -476,7 +476,23 @@ int file_date_compare(const void *data1, const void *data2)
 
 void init_filelist()
 {
+	int i;
+	int listcount;
+	char *file;
 	filelist = ecore_file_ls(curdir);
+	listcount=ecore_list_count(filelist);
+	ecore_list_index_goto(filelist,0);
+
+	for(i=0;i<listcount;i++)
+	{
+                file = (char*)ecore_list_current(filelist);
+		if(file[0]=='.')
+		{
+			ecore_list_remove_destroy(filelist);
+		}
+		else
+			ecore_list_next(filelist);
+	}
 	if(sort_type==SORT_BY_NAME)
 		ecore_list_sort(filelist,file_name_compare,sort_order);
 	else if(sort_type==SORT_BY_TIME)
@@ -990,6 +1006,8 @@ int main ( int argc, char ** argv )
 		file_desc=open(configfile, O_CREAT |O_RDWR | O_CREAT,S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 		write(file_desc,"[roots]\nHome=", 13*sizeof(char));
 		write(file_desc,getenv("HOME"),strlen(getenv("HOME"))*sizeof(char));
+                if(homedir&&homedir[strlen(homedir)-1]!='/')
+                    write(file_desc,"/",sizeof(char));
 		write(file_desc,"\n[apps]\n[icons]\n[scripts]",15*sizeof(char));
 		close(file_desc);
 	}
