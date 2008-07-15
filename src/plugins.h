@@ -21,7 +21,8 @@
 
 #ifndef PLUGINS_H
 #define PLUGINS_H
-
+#include "book_meta.h"
+#include "plugin.h"
 /*
  * Must be called before invoking get_handler() or parse_meta()
  */
@@ -32,13 +33,7 @@ void init_plugins();
  */
 void fini_plugins();
 
-typedef struct
-{
-    const char* title; /* Must be not-NULL */
-    const char* author; /* NULL means "N/A" */
-    const char* series; /* NULL means "N/A" */
-    const int series_n; /* irrelevant if series == NULL */
-} book_meta_t;
+
 
 /*
  * Parses the passed file and returns metadata.

@@ -21,7 +21,7 @@
 
 #ifndef PLUGIN_H
 #define PLUGIN_H
-
+#include "book_meta.h"
 /*
  * Every plugin must export three functions:
  *
@@ -33,14 +33,14 @@
 typedef struct
 {
     /* Name of plugin */
-    const char* name;
+    char* name;
 
     /* File extensions handled by plugin */
     int nexts;
-    const char** exts;
+    char** exts;
 } plugin_info_t;
 
-typedef plugin_info_t (*plugin_init_t)();
+typedef plugin_info_t* (*plugin_init_t)();
 
 typedef void (*plugin_fini_t)(plugin_info_t* plugin_info);
 
