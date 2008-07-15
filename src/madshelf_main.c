@@ -561,7 +561,7 @@ void doActionForNum(unsigned int num)
 		strcat(tempo,"/");
 		curdir=tempo;
 		ecore_list_destroy(filelist);
-		filelist = ecore_file_ls(curdir);
+		init_filelist();
 		depth++;
 		curindex=0;
 		update_list();
@@ -661,7 +661,7 @@ void cb_key_down(Ewl_Widget *w, void *ev, void *data)
 		free(curdir);
 		curdir=tmpchrptr;
 		ecore_list_destroy(filelist);
-		filelist = ecore_file_ls(curdir);
+		init_filelist();
 		depth--;
 		curindex=0;
 		update_list();
