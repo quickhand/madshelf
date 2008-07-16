@@ -822,6 +822,9 @@ void cb_goto_menu_key_down(Ewl_Widget *w, void *ev, void *data)
 	curwidget = ewl_widget_name_find("okmenu");
 	ewl_menu_collapse(EWL_MENU(curwidget));
 
+    /* roots are counted from zero */
+    index--;
+
     if (g_roots->nroots < index)
        return;
 
