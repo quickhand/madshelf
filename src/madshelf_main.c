@@ -35,6 +35,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#include <extractor.h>
 
 #define _(String) gettext (String)
 
@@ -72,6 +73,11 @@ const char* g_handler;
  * Need to be free(3)ed.
  */
 const char* g_file;
+/*
+ * Need to be freed by own methods.
+ */
+
+EXTRACTOR_ExtractorList *extractors;
 
 char titletext[200];
 
@@ -100,10 +106,11 @@ int count_roots()
 
    while (p && p->Type != tpSECTION)
    {
-      if(p->Type != tpKEYVALUE) continue;
-      count++;
+      if(p->Type == tpKEYVALUE)
+          count++;
       p = p->pNext;
    }
+   fprintf(stderr,"count=%d\n",count);
    return count;
 }
 
@@ -127,6 +134,11 @@ void fill_roots(int count, root_t** roots)
            p = p->pNext;
       
        conf_line = p->Text;
+       char *bla=(char *)calloc(100,sizeof(char));
+       strncpy(bla,p->Text,10);
+       bla[10]='\0';
+       if(p->Text)
+           fprintf("vla:%s",bla);
        line_sep = strchr(conf_line, '=');
 
        if (!line_sep)
@@ -205,6 +217,9 @@ void update_list()
 	int filelistcount;
 	double f_size;
 	char sizestr[50];
+    const char *extracted_title;
+    const char *extracted_author;
+    EXTRACTOR_KeywordList *mykeys;
 	count=0;
 	filelistcount=ecore_list_count(filelist);
 	if(filelistcount>0)
@@ -221,35 +236,60 @@ void update_list()
 		
 		for(count=0;count<8&&(file = (char*)ecore_list_next(filelist));count++)
 		{
-	
-	
+            fileconcat=(char *)calloc(strlen(file)+strlen(curdir)+1,sizeof(char));
+			sprintf(fileconcat,"%s%s",curdir,file);
+            
+            if(!ecore_file_is_dir(fileconcat))
+			{
+                mykeys=EXTRACTOR_getKeywords(extractors,fileconcat);
+		      
+				extracted_title=EXTRACTOR_extractLast(EXTRACTOR_TITLE,mykeys);
+                extracted_author=EXTRACTOR_extractLast(EXTRACTOR_AUTHOR,mykeys);
+            }
 			sprintf (tempname, "titlelabel%d",count);
 			curwidget = ewl_widget_name_find(tempname);
 	
 			
-	
-			if(strlen(file)>45)
-			{
-				tempfilename=(char *)calloc(strlen(file) + 3+1, sizeof(char));
-				strncpy(tempfilename,ecore_file_strip_ext(file),45);
-				tempfilename[45]='\0';
-				strcat(tempfilename,"...");
-				ewl_label_text_set(EWL_LABEL(curwidget),tempfilename);
-				free(tempfilename);
-			}
-			else
-				ewl_label_text_set(EWL_LABEL(curwidget),ecore_file_strip_ext(file));//finalstr);
+            if(extracted_title!=NULL && strlen(extracted_title)>0 && !ecore_file_is_dir(fileconcat))
+            {
+                if(strlen(extracted_title)>45)
+                {
+                    tempfilename=(char *)calloc(strlen(extracted_title) + 3+1, sizeof(char));
+                    strncpy(tempfilename,extracted_title,45);
+                    tempfilename[45]='\0';
+                    strcat(tempfilename,"...");
+                    ewl_label_text_set(EWL_LABEL(curwidget),tempfilename);
+                    free(tempfilename);
+                }
+                else
+                    ewl_label_text_set(EWL_LABEL(curwidget),extracted_title);//finalstr);
+                
+                
+            }
+            else
+            {
+                if(strlen(file)>45)
+                {
+                    tempfilename=(char *)calloc(strlen(file) + 3+1, sizeof(char));
+                    strncpy(tempfilename,ecore_file_strip_ext(file),45);
+                    tempfilename[45]='\0';
+                    strcat(tempfilename,"...");
+                    ewl_label_text_set(EWL_LABEL(curwidget),tempfilename);
+                    free(tempfilename);
+                }
+                else
+                    ewl_label_text_set(EWL_LABEL(curwidget),ecore_file_strip_ext(file));//finalstr);
+            }
 			ewl_widget_show(curwidget);		
 	
-			fileconcat=(char *)calloc(strlen(file)+strlen(curdir)+1,sizeof(char));
-			sprintf(fileconcat,"%s%s",curdir,file);
+	
 			
 	
 			if(!ecore_file_is_dir(fileconcat))
 			{
 				stat(fileconcat,&stat_p);
 				
-				atime = localtime(&(stat_p.st_mtime));
+                atime = localtime(&(stat_p.st_mtime));
 				strftime(timeStr, 100, gettext("%m-%d-%y"), atime);
 				if(stat_p.st_size>=1048576)
 				{
@@ -282,7 +322,10 @@ void update_list()
 	
 				sprintf (tempname, "authorlabel%d",count);
 				curwidget = ewl_widget_name_find(tempname);
-				ewl_label_text_set(EWL_LABEL(curwidget),gettext("Unknown Author"));
+                if(extracted_author!=NULL && strlen(extracted_author)>0)
+                    ewl_label_text_set(EWL_LABEL(curwidget),extracted_author);
+                else
+                    ewl_label_text_set(EWL_LABEL(curwidget),gettext("Unknown Author"));
 				ewl_widget_show(curwidget);
 			}
 			else
@@ -1013,7 +1056,12 @@ int main ( int argc, char ** argv )
 	}
 	OpenIniFile (configfile);
 	free(configfile);
-
+    
+    //load extractors
+    extractors=EXTRACTOR_loadConfigLibraries(NULL,"libextractor_pdf:libextractor_html:libextractor_oo:libextractor_ps:libextractor_dvi");//EXTRACTOR_loadDefaultLibraries();
+    if(extractors==NULL)
+        fprintf(stderr,"Could not load extractors");
+    
 	//load scripts
 	count2=0;
 	scriptlist=FindSection("scripts");
@@ -1050,7 +1098,7 @@ int main ( int argc, char ** argv )
     curdir = strdup(g_roots->roots[current_root]->path);
 	
 	initdirstrlen=strlen(curdir);
-	
+	//fprintf("curdir=%s,initdirstrlen=%d",curdir,initdirstrlen);
 	statefilename=(char *)calloc(strlen(homedir) + 1+21 + 1, sizeof(char));
 	strcat(statefilename,homedir);
 	strcat(statefilename,"/.madshelf/state.eet");
@@ -1304,7 +1352,7 @@ int main ( int argc, char ** argv )
 
     free(scriptstrlist);
     free(curdir);
-
+    EXTRACTOR_removeAll(extractors);
     if (g_file)
     {
         const char* home = getenv("HOME");
