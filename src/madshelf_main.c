@@ -93,18 +93,18 @@ int sort_order=ECORE_SORT_MIN;
  */
 int count_roots()
 {
-   int count = 0;
-   struct ENTRY* p = FindSection("roots");
-   if (p)
-       p = p->pNext;
+    int count = 0;
+    struct ENTRY* p = FindSection("roots");
+    if (p)
+        p = p->pNext;
 
-   while (p && p->Type != tpSECTION)
-   {
-      if(p->Type != tpKEYVALUE) continue;
-      count++;
-      p = p->pNext;
-   }
-   return count;
+    while (p && p->Type != tpSECTION)
+    {
+        if(p->Type != tpKEYVALUE) p = p->pNext;
+        count++;
+        p = p->pNext;
+    }
+    return count;
 }
 
 /*
