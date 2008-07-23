@@ -305,33 +305,12 @@ void update_list()
                         
             if(extracted_title!=NULL && strlen(extracted_title)>0 && !ecore_file_is_dir(fileconcat))
             {
-                if(strlen(extracted_title)>45)
-                {
-                    tempfilename=(char *)calloc(strlen(extracted_title) + 3+1, sizeof(char));
-                    strncpy(tempfilename,extracted_title,45);
-                    tempfilename[45]='\0';
-                    strcat(tempfilename,"...");
-                    ewl_label_text_set(EWL_LABEL(titlelabel[count]),tempfilename);
-                    free(tempfilename);
-                }
-                else
-                    ewl_label_text_set(EWL_LABEL(titlelabel[count]),extracted_title);//finalstr);
-                
-                
+
+                ewl_label_text_set(EWL_LABEL(titlelabel[count]),extracted_title);
             }
             else
             {
-                if(strlen(file)>45)
-                {
-                    tempfilename=(char *)calloc(strlen(file) + 3+1, sizeof(char));
-                    strncpy(tempfilename,ecore_file_strip_ext(file),45);
-                    tempfilename[45]='\0';
-                    strcat(tempfilename,"...");
-                    ewl_label_text_set(EWL_LABEL(titlelabel[count]),tempfilename);
-                    free(tempfilename);
-                }
-                else
-                    ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));//finalstr);
+                ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));
             }
         
         
@@ -1232,7 +1211,7 @@ int main ( int argc, char ** argv )
         ewl_container_child_append(EWL_CONTAINER(menubar),temp);
         ewl_widget_name_set(temp,"okmenu");
         ewl_callback_append(EWL_MENU(temp)->popup, EWL_CALLBACK_KEY_DOWN, cb_menu_key_down, NULL);
-        ewl_object_fill_policy_set(EWL_OBJECT(temp), EWL_FLAG_FILL_HSHRINK);
+        
                 
                 
         ewl_widget_show(temp);
