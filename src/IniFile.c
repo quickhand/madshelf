@@ -52,7 +52,7 @@
 
  ------------------------------------------------------------------------
   Copyright (c) 2000 Carsten Breuer
-/************************************************************************/
+ ************************************************************************/
 
 /* defines for, or consts and inline functions for C++ */
 
@@ -87,7 +87,7 @@ struct ENTRY *MakeNewEntry (void);
    strupr -de-
   -------------------------------------------------------------------------
    Job : String to Uppercase 22.03.2001 Dieter Engelbrecht dieter@wintop.net
-/*========================================================================*/
+  ========================================================================*/
 //#ifdef DONT_HAVE_STRUPR
 /* DONT_HAVE_STRUPR is set when INI_REMOVE_CR is defined */
 void strupr( char *str )
@@ -112,7 +112,7 @@ void strupr( char *str )
 
    Att : Be sure to call CloseIniFile to free all mem allocated during
          operation!
-/*========================================================================*/
+  ========================================================================*/
 
 //char *strupr (char *a)
 //{
@@ -214,7 +214,7 @@ OpenIniFile (cchr * FileName)
    Job : Frees the memory and closes the ini file without any
          modifications. If you want to write the file use
          WriteIniFile instead.
-/*========================================================================*/
+  ========================================================================*/
 void 
 CloseIniFile (void)
 {
@@ -231,7 +231,7 @@ CloseIniFile (void)
   -------------------------------------------------------------------------
    Job : Writes the iniFile to the disk and close it. Frees all memory
          allocated by WriteIniFile;
-/*========================================================================*/
+  ========================================================================*/
 bool 
 WriteIniFile (const char *FileName)
 {
