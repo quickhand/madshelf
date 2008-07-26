@@ -45,8 +45,8 @@ Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 typedef struct
 {
-    const char* name;
-    const char* path;
+    char* name;
+    char* path;
 } root_t;
 
 /*
@@ -55,7 +55,7 @@ typedef struct
 typedef struct
 {
     int nroots;
-    root_t** roots;
+    root_t* roots;
 } roots_t;
 
 roots_t* g_roots;
@@ -114,7 +114,7 @@ int count_roots()
 /*
 * roots_create() helper
 */
-void fill_roots(int count, root_t** roots)
+void fill_roots(int count, root_t* roots)
 {
     int i;
     struct ENTRY* p = FindSection("roots");
@@ -139,17 +139,15 @@ void fill_roots(int count, root_t** roots)
              * Sin
              */
             fprintf(stderr, "Malformed configuration line: %s\n", conf_line);
-            roots[i] = NULL;
             continue;
         }
     
-        roots[i] = malloc(sizeof(root_t));
         name = malloc((line_sep - conf_line + 1) * sizeof(char));
         strncpy(name, conf_line, line_sep - conf_line);
         name[line_sep - conf_line] = 0; /* 0-terminate after strncpy */
-        roots[i]->name = name;
+        roots[i].name = name;
     
-        roots[i]->path = strdup(line_sep+1);
+        roots[i].path = strdup(line_sep+1);
     
         p = p->pNext;
     }
@@ -164,7 +162,7 @@ roots_t* roots_create()
 {
     roots_t* roots = malloc(sizeof(roots_t));
     roots->nroots = count_roots();
-    roots->roots = malloc(sizeof(root_t*) * roots->nroots);
+    roots->roots = malloc(sizeof(root_t) * roots->nroots);
     fill_roots(roots->nroots, roots->roots);
     return roots;
 }
@@ -177,9 +175,8 @@ void roots_destroy(roots_t* roots)
     int i;
     for (i = 0; i < roots->nroots; ++i)
     {
-        free(roots->roots[i]->name);
-        free(roots->roots[i]->path);
-        free(roots->roots[i]);
+        free(roots->roots[i].name);
+        free(roots->roots[i].path);
     }
     free(roots->roots);
     free(roots);
@@ -456,7 +453,7 @@ void update_title()
     titletext[0]='\0';
     Ewl_Widget *curwidget;
     strcat(titletext,"Madshelf | ");
-    strcat(titletext, g_roots->roots[current_root]->name);
+    strcat(titletext, g_roots->roots[current_root].name);
     if(!(strlen(curdir)==initdirstrlen))
     {
         strcat(titletext,"://");
@@ -897,7 +894,7 @@ void cb_goto_menu_key_down(Ewl_Widget *w, void *ev, void *data)
     if (g_roots->nroots < index)
         return;
 
-    curdir = strdup(g_roots->roots[index]->path);
+    curdir = strdup(g_roots->roots[index].path);
     current_root = index;
 
     initdirstrlen=strlen(curdir);
@@ -960,8 +957,8 @@ void save_state()
     eet_write(state,"statesaved",(void *)&a, sizeof(int),0);
     eet_write(state,"curindex",(void *)&curindex,sizeof(int),0);
     eet_write(state,"depth",(void *)&depth,sizeof(int),0);
-    eet_write(state,"rootname",(void *)g_roots->roots[current_root]->name,
-              sizeof(char)*(strlen(g_roots->roots[current_root]->name)+1),0);
+    eet_write(state,"rootname",(void *)g_roots->roots[current_root].name,
+              sizeof(char)*(strlen(g_roots->roots[current_root].name)+1),0);
     eet_write(state,"curdir",curdir,sizeof(char)*(strlen(curdir)+1),0);
     eet_write(state,"initdirstrlen",(void *)&initdirstrlen,sizeof(int),0);
     eet_write(state,"sort_type",(void *)&sort_type,sizeof(int),0);
@@ -988,7 +985,7 @@ void refresh_state()
     current_root = 0;
     temp=(char *)eet_read(state,"rootname",&size);
     for(i = 0; i < g_roots->nroots; ++i)
-        if (!strcmp(temp, g_roots->roots[i]->name))
+        if (!strcmp(temp, g_roots->roots[i].name))
     {
         current_root = i;
         break;
@@ -1130,7 +1127,7 @@ int main ( int argc, char ** argv )
     g_roots = roots_create();
     current_root = 0;
 
-    curdir = strdup(g_roots->roots[current_root]->path);
+    curdir = strdup(g_roots->roots[current_root].path);
         
     initdirstrlen=strlen(curdir);
         
@@ -1147,7 +1144,7 @@ int main ( int argc, char ** argv )
     /*
         * This dir may be invalid too. Oh, well...
     */
-        curdir = strdup(g_roots->roots[0]->path);
+        curdir = strdup(g_roots->roots[0].path);
     }
 
     win = ewl_window_new();
@@ -1265,8 +1262,8 @@ int main ( int argc, char ** argv )
         for(i = 0; i < MIN(g_roots->nroots, 8); ++i)
         {
             temp3=ewl_menu_item_new();
-            tempstr4=(char *)calloc(strlen(g_roots->roots[i]->name)+3+1,sizeof(char));
-            sprintf(tempstr4,"%d. %s",i+1, g_roots->roots[i]->name);
+            tempstr4=(char *)calloc(strlen(g_roots->roots[i].name)+3+1,sizeof(char));
+            sprintf(tempstr4,"%d. %s",i+1, g_roots->roots[i].name);
             ewl_button_label_set(EWL_BUTTON(temp3),tempstr4);
             free(tempstr4);
             ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
