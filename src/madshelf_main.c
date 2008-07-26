@@ -18,6 +18,7 @@ Place - Suite 330, Boston, MA 02111-1307, USA.
 #define _GNU_SOURCE
 
 #include <ctype.h>
+#include <dirent.h>
 #include <Ecore_File.h>
 #include <Edje.h>
 #include <Eet.h>
@@ -68,7 +69,9 @@ typedef struct
 roots_t* g_roots;
 char **scriptstrlist;
 char *statefilename=NULL;
-Ecore_List *filelist;
+
+int g_nfileslist;
+struct dirent** g_fileslist;
 
 /*
 * Not need to be freed.
@@ -224,11 +227,9 @@ void update_list()
 {
     int offset=0;
     int count=0;
-    char *file;
     char tempname[20];
     char *pointptr;
     const char *tempstr2;
-    int filelistcount;
     Ewl_Widget *labelsbox[8];
     Ewl_Widget *titlelabel[8];
     Ewl_Widget *authorlabel[8];
@@ -244,8 +245,8 @@ void update_list()
     const char *extracted_title = NULL;
     const char *extracted_author = NULL;
     count=0;
-    filelistcount=ecore_list_count(filelist);
-    if(filelistcount>0 && curindex>=filelistcount)
+
+    if(g_nfileslist > 0 && curindex >= g_nfileslist)
     {
         curindex-=8;
         return;
@@ -288,18 +289,20 @@ void update_list()
     ewl_widget_hide(forwardarr);
     ewl_widget_hide(backarr);
 
-    if(filelistcount>0)
+    if(g_nfileslist > 0)
     {
-        if(curindex>=filelistcount)
+        if(curindex >= g_nfileslist)
         {
             curindex-=8;
             return;
         }
 
-        ecore_list_index_goto(filelist,curindex);
-
-        for(count=0; count < 8 && (file = (char*)ecore_list_next(filelist)); count++)
+        for(count = 0; count < 8; count++)
         {
+            if(curindex + count >= g_nfileslist)
+                break;
+            char* file = g_fileslist[curindex+count]->d_name;
+
             char* fileconcat;
             struct stat stat_p;
             char* time_str;
@@ -368,11 +371,11 @@ void update_list()
             free(fileconcat);
         }
 
-        for(;count<8;count++)
+        for(; count < 8; count++)
         {
             showflag[count]=0;
         }
-        if((curindex+8)>=ecore_list_count(filelist))
+        if(curindex+8 >= g_nfileslist)
         {
             forwardarrshowflag=0;
         }
@@ -481,55 +484,73 @@ void update_menu()
     ewl_button_label_set(EWL_BUTTON(curwidget),gettext("6. Scripts"));
 }
 
-static int file_name_compare(const void *data1, const void *data2)
+static int rev_alphasort(const void* lhs, const void* rhs)
 {
-    return strcmp((const char*)data1, (const char*)data2);
+    return alphasort(rhs, lhs);
 }
 
-int file_date_compare(const void *data1, const void *data2)
+static long long rel_file_mtime(const char* f)
 {
-    char *fname1,*fname2;
-    fname1=(char *)calloc(strlen((char*)data1) + strlen(curdir)+1, sizeof(char));
-    strcat(fname1,curdir);
-    strcat(fname1,(char*)data1);
-    fname2=(char *)calloc(strlen((char*)data2) + strlen(curdir)+1, sizeof(char));
-    strcat(fname2,curdir);
-    strcat(fname2,(char*)data2);
-    long long ftime1=ecore_file_mod_time(fname1);
-    long long ftime2=ecore_file_mod_time(fname2);
-    free(fname1);
-    free(fname2);
-    if(ftime1>ftime2)
-        return 1;
-    else if(ftime1<ftime2)
-        return -1;
-    else
-        return 0;
+    char* filename;
+    struct stat st;
+    asprintf(&filename, "%s%s", curdir, f);
+    stat(filename, &st);
+    free(filename);
+    return st.st_mtime;
 }
+
+static int date_cmp(const struct dirent** lhs, const struct dirent** rhs)
+{
+    long long lhs_mtime = rel_file_mtime((*lhs)->d_name);
+    long long rhs_mtime = rel_file_mtime((*rhs)->d_name);
+
+    if(lhs_mtime > rhs_mtime) return 1;
+    if(lhs_mtime < rhs_mtime) return -1;
+    return 0;
+}
+
+static int rev_date_cmp(const struct dirent** lhs, const struct dirent** rhs)
+{
+    return date_cmp(rhs, lhs);
+}
+
+static int filter_dotfiles(const struct dirent* f)
+{
+    return (f->d_type == DT_REG || f->d_type == DT_DIR)
+        && (f->d_name[0] != '.');
+}
+
+typedef int (*compar_t)(const void*, const void*);
 
 void init_filelist()
 {
-    int i;
-    int listcount;
-    char *file;
-    filelist = ecore_file_ls(curdir);
-    listcount=ecore_list_count(filelist);
-    ecore_list_index_goto(filelist,0);
+    compar_t cmp;
 
-    for(i=0;i<listcount;i++)
+    if(sort_type == SORT_BY_NAME)
+        cmp = (compar_t)(sort_order == ECORE_SORT_MIN ? alphasort : rev_alphasort);
+    else
+        cmp = (compar_t)(sort_order == ECORE_SORT_MIN ? date_cmp : rev_date_cmp);
+
+    g_nfileslist = scandir(curdir, &g_fileslist,
+                           &filter_dotfiles,
+                           cmp);
+
+    if(g_nfileslist == -1)
     {
-        file = (char*)ecore_list_current(filelist);
-        if(file[0]=='.')
-        {
-            ecore_list_remove_destroy(filelist);
-        }
-        else
-            ecore_list_next(filelist);
+        /* FIXME: handle somehow */
+
+        g_nfileslist = 0;
     }
-    if(sort_type==SORT_BY_NAME)
-        ecore_list_sort(filelist,file_name_compare,sort_order);
-    else if(sort_type==SORT_BY_TIME)
-        ecore_list_sort(filelist,file_date_compare,sort_order);
+}
+
+void fini_filelist()
+{
+    int i;
+    for(i = 0; i < g_nfileslist; ++i)
+        free(g_fileslist[i]);
+    free(g_fileslist);
+
+    g_nfileslist = 0;
 }
 
 void destroy_cb ( Ewl_Widget *w, void *event, void *data )
@@ -560,11 +581,12 @@ void doActionForNum(unsigned int num)
 {
     char *file;
     char *tempo;
-    if(curindex+(num-1)>=ecore_list_count(filelist))
+    if(curindex+(num-1)>= g_nfileslist)
         return;
 
-    ecore_list_index_goto(filelist,curindex+num-1);
-    file = (char*)ecore_list_next(filelist);
+    //ecore_list_index_goto(filelist,curindex+num-1);
+    file = g_fileslist[curindex + num - 1]->d_name;
+
     tempo=(char *)calloc(strlen(file) + strlen(curdir)+2, sizeof(char));
     strcat(tempo,curdir);
     strcat(tempo,file);
@@ -589,7 +611,7 @@ void doActionForNum(unsigned int num)
         free(curdir);
         strcat(tempo,"/");
         curdir=tempo;
-        ecore_list_destroy(filelist);
+        fini_filelist();
         init_filelist();
         depth++;
         curindex=0;
@@ -685,7 +707,7 @@ void main_esc()
 
     free(curdir);
     curdir=tmpchrptr;
-    ecore_list_destroy(filelist);
+    fini_filelist();
     init_filelist();
     depth--;
     curindex=0;
@@ -748,18 +770,24 @@ void main_menu_item(int item)
     switch(item)
     {
     case 1:
-        ecore_list_sort(filelist,file_name_compare,ECORE_SORT_MIN);
         sort_order=ECORE_SORT_MIN;
         sort_type=SORT_BY_NAME;
+
+        fini_filelist();
+        init_filelist();
+
         curindex=0;
         update_list();
         update_sort_label();
         hide_main_menu();
         break;
     case 2:
-        ecore_list_sort(filelist,file_date_compare,ECORE_SORT_MIN);
         sort_order=ECORE_SORT_MIN;
         sort_type=SORT_BY_TIME;
+
+        fini_filelist();
+        init_filelist();
+
         curindex=0;
         update_list();
         update_sort_label();
@@ -770,10 +798,10 @@ void main_menu_item(int item)
             sort_order=ECORE_SORT_MAX;
         else
             sort_order=ECORE_SORT_MIN;
-        if(sort_type==SORT_BY_NAME)
-            ecore_list_sort(filelist,file_name_compare,sort_order);
-        else if(sort_type==SORT_BY_TIME)
-            ecore_list_sort(filelist,file_date_compare,sort_order);
+
+        fini_filelist();
+        init_filelist();
+
         curindex=0;
         update_list();
         update_sort_label();
@@ -1345,7 +1373,7 @@ int main ( int argc, char ** argv )
     free(statefilename);
     eet_shutdown();
     CloseIniFile ();
-    ecore_list_destroy(filelist);
+    fini_filelist();
 
     roots_destroy(g_roots);
 
