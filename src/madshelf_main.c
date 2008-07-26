@@ -1137,9 +1137,9 @@ int main ( int argc, char ** argv )
     {
         free(curdir);
 
-    /*
-        * This dir may be invalid too. Oh, well...
-    */
+        /*
+         * This dir may be invalid too. Oh, well...
+         */
         curdir = strdup(g_roots->roots[0].path);
     }
 
