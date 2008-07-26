@@ -189,23 +189,34 @@ void roots_destroy(roots_t* roots)
     free(roots);
 }
 
+#define KILOBYTE (1024)
+#define MEGABYTE (1024*1024)
+
+/*
+ * Returns malloc(3)ed string.
+ */
+char* format_size(off_t size)
+{
+    char* res;
+
+    if(size >= MEGABYTE)
+        asprintf(&res, "%.1fM", ((double)size)/((double)MEGABYTE));
+    else
+        asprintf(&res, "%dk", (int)(((double)size)/((double)KILOBYTE)+0.5));
+
+    return res;
+}
+
 void update_list()
 {
     int offset=0;
     int count=0;
     char *file;
     char tempname[20];
-    char *imagefile;
     char *pointptr;
-    char *fileconcat;
     char *extension;
     const char *tempstr2;
-    char timeStr[101];
-    char *infostr;
-    struct tm* atime;
-    struct stat stat_p;
     int filelistcount;
-    char sizestr[50];
     Ewl_Widget *labelsbox[8];
     Ewl_Widget *titlelabel[8];
     Ewl_Widget *authorlabel[8];
@@ -218,9 +229,8 @@ void update_list()
     int backarrshowflag;
     int forwardarrshowflag;
     int showflag[8];
-    const char *extracted_title;
-    const char *extracted_author;
-    EXTRACTOR_KeywordList *mykeys;
+    const char *extracted_title = NULL;
+    const char *extracted_author = NULL;
     count=0;
     filelistcount=ecore_list_count(filelist);
     if(filelistcount>0 && curindex>=filelistcount)
@@ -228,8 +238,6 @@ void update_list()
         curindex-=8;
         return;
     }
-
-
 
     for(count=0;count<8;count++)
     {
@@ -278,101 +286,77 @@ void update_list()
 
         ecore_list_index_goto(filelist,curindex);
 
-        for(count=0;count<8&&(file = (char*)ecore_list_next(filelist));count++)
+        for(count=0; count < 8 && (file = (char*)ecore_list_next(filelist)); count++)
         {
-            fileconcat=(char *)calloc(strlen(file)+strlen(curdir)+1,sizeof(char));
-            sprintf(fileconcat,"%s%s",curdir,file);
+            char* fileconcat;
 
-            if(!ecore_file_is_dir(fileconcat))
-            {
-                mykeys=EXTRACTOR_getKeywords(extractors,fileconcat);
+            struct stat stat_p;
+            struct tm* atime;
+            char timeStr[101];
 
-                extracted_title=EXTRACTOR_extractLast(EXTRACTOR_TITLE,mykeys);
-                extracted_author=EXTRACTOR_extractLast(EXTRACTOR_AUTHOR,mykeys);
-            }
+            asprintf(&fileconcat, "%s%s", curdir, file);
+            stat(fileconcat,&stat_p);
+            atime = localtime(&(stat_p.st_mtime));
+            strftime(timeStr, 100, gettext("%m-%d-%y"), atime);
 
-            if(extracted_title!=NULL && strlen(extracted_title)>0 && !ecore_file_is_dir(fileconcat))
-            {
-
-                ewl_label_text_set(EWL_LABEL(titlelabel[count]),extracted_title);
-            }
-            else
+            if(ecore_file_is_dir(fileconcat))
             {
                 ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));
-            }
-
-            if(!ecore_file_is_dir(fileconcat))
-            {
-                stat(fileconcat,&stat_p);
-
-                atime = localtime(&(stat_p.st_mtime));
-                strftime(timeStr, 100, gettext("%m-%d-%y"), atime);
-                if(stat_p.st_size>=1048576)
-                {
-                    sprintf(sizestr,"%.1fM",((double)(stat_p.st_size))/((double)1048576.0));
-                }
-                else
-                {
-                    sprintf(sizestr,"%dk",(int)(((double)(stat_p.st_size))/((double)1024.0)+0.5));
-                }
 
                 extension = strrchr(file, '.');
-                if(extension==NULL)
-                {
-                    infostr=(char *)calloc(strlen(timeStr)+3+strlen(sizestr)+1,sizeof(char));
-                }
-                else
-                {
-                    infostr=(char *)calloc(strlen(timeStr)+3+strlen(extension)+3+strlen(sizestr)+1,sizeof(char));
-                    strcat(infostr,extension);
-                    strcat(infostr,"   ");
-                }
-                strcat(infostr,timeStr);
-                strcat(infostr,"   ");
-                strcat(infostr,sizestr);
-                ewl_label_text_set(EWL_LABEL(infolabel[count]),infostr);
-                free(infostr);
 
-                if(extracted_author!=NULL && strlen(extracted_author)>0)
-                    ewl_label_text_set(EWL_LABEL(authorlabel[count]),extracted_author);
-                else
-                    ewl_label_text_set(EWL_LABEL(authorlabel[count]),gettext("Unknown Author"));
+                ewl_label_text_set(EWL_LABEL(infolabel[count]),timeStr);
+                ewl_label_text_set(EWL_LABEL(authorlabel[count]),"Folder");
+                ewl_image_file_path_set(EWL_IMAGE(typeicon[count]),"/usr/share/madshelf/folder.png");
             }
             else
             {
-                stat(fileconcat,&stat_p);
+                char* size_str;
+                char* infostr;
+                char* imagefile;
 
-                atime = localtime(&(stat_p.st_mtime));
-                strftime(timeStr, 100, gettext("%m-%d-%y"), atime);
+                EXTRACTOR_KeywordList *mykeys;
+                mykeys = EXTRACTOR_getKeywords(extractors,fileconcat);
+
+                extracted_title = EXTRACTOR_extractLast(EXTRACTOR_TITLE,mykeys);
+                extracted_author = EXTRACTOR_extractLast(EXTRACTOR_AUTHOR,mykeys);
+
+                if(extracted_title && extracted_title[0])
+                {
+                    ewl_label_text_set(EWL_LABEL(titlelabel[count]), extracted_title);
+                }
+                else
+                {
+                    ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));
+                }
+
+                size_str = format_size(stat_p.st_size);
 
                 extension = strrchr(file, '.');
-                infostr=(char *)calloc(strlen(timeStr)+1,sizeof(char));
-                strcat(infostr,timeStr);
+
+                asprintf(&infostr, "%s%s%s   %s",
+                         extension ? extension : "",
+                         extension ? "   " : "",
+                         timeStr,
+                         size_str);
 
                 ewl_label_text_set(EWL_LABEL(infolabel[count]),infostr);
                 free(infostr);
+                free(size_str);
 
-                ewl_label_text_set(EWL_LABEL(authorlabel[count]),"Folder");
-            }
+                if(extracted_author && extracted_author[0])
+                    ewl_label_text_set(EWL_LABEL(authorlabel[count]), extracted_author);
+                else
+                    ewl_label_text_set(EWL_LABEL(authorlabel[count]), gettext("Unknown Author"));
 
-            if(!ecore_file_is_dir(fileconcat))
-            {
                 pointptr=strrchr(fileconcat,'.');
                 if(pointptr==NULL)
                     tempstr2=ReadString("icons",".","default.png");
                 else
                     tempstr2=ReadString("icons",pointptr,"default.png");
-                imagefile=(char *)calloc(strlen(tempstr2)+20+1, sizeof(char));
-                strcat(imagefile,"/usr/share/madshelf/");
-                strcat(imagefile,tempstr2);
+                asprintf(&imagefile, "/usr/share/madshelf/%s", tempstr2);
                 ewl_image_file_path_set(EWL_IMAGE(typeicon[count]),imagefile);
                 free(imagefile);
-
-            }
-            else
-            {
-
-                ewl_image_file_path_set(EWL_IMAGE(typeicon[count]),"/usr/share/madshelf/folder.png");
             }
 
             showflag[count]=1;
