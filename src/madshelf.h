@@ -28,5 +28,3 @@ void init_filelist();
 void destroy_cb ( Ewl_Widget *w, void *event, void *data );
 void doActionForNum(unsigned int num);
 char *getUpLevelDir(char *thedir);
-void cb_key_down(Ewl_Widget *w, void *ev, void *data);
-void cb_menu_key_down(Ewl_Widget *w, void *ev, void *data);
