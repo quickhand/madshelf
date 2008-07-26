@@ -207,6 +207,19 @@ char* format_size(off_t size)
     return res;
 }
 
+#define TIME_LEN 100
+
+/*
+ * Returns malloc(3)ed string.
+ */
+char* format_time(time_t t)
+{
+    char* res = malloc(TIME_LEN*sizeof(char));
+    struct tm* atime = localtime(&t);
+    strftime(timeStr, TIME_LEN, gettext("%m-%d-%y"), atime);
+    return res;
+}
+
 void update_list()
 {
     int offset=0;
@@ -214,7 +227,6 @@ void update_list()
     char *file;
     char tempname[20];
     char *pointptr;
-    char *extension;
     const char *tempstr2;
     int filelistcount;
     Ewl_Widget *labelsbox[8];
@@ -289,21 +301,17 @@ void update_list()
         for(count=0; count < 8 && (file = (char*)ecore_list_next(filelist)); count++)
         {
             char* fileconcat;
-
             struct stat stat_p;
-            struct tm* atime;
-            char timeStr[101];
+            char* time_str;
+            char *extension = strrchr(file, '.');
 
             asprintf(&fileconcat, "%s%s", curdir, file);
-            stat(fileconcat,&stat_p);
-            atime = localtime(&(stat_p.st_mtime));
-            strftime(timeStr, 100, gettext("%m-%d-%y"), atime);
+            stat(fileconcat, &stat_p);
+            time_str = format_time(stat_p.st_mtime);
 
             if(ecore_file_is_dir(fileconcat))
             {
                 ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));
-
-                extension = strrchr(file, '.');
 
                 ewl_label_text_set(EWL_LABEL(infolabel[count]),timeStr);
                 ewl_label_text_set(EWL_LABEL(authorlabel[count]),"Folder");
@@ -311,7 +319,7 @@ void update_list()
             }
             else
             {
-                char* size_str;
+                char* size_str = format_size(stat_p.st_size);
                 char* infostr;
                 char* imagefile;
 
@@ -322,15 +330,9 @@ void update_list()
                 extracted_author = EXTRACTOR_extractLast(EXTRACTOR_AUTHOR,mykeys);
 
                 if(extracted_title && extracted_title[0])
-                {
                     ewl_label_text_set(EWL_LABEL(titlelabel[count]), extracted_title);
-                }
                 else
-                {
                     ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));
-                }
-
-                size_str = format_size(stat_p.st_size);
 
                 extension = strrchr(file, '.');
 
@@ -341,8 +343,6 @@ void update_list()
                          size_str);
 
                 ewl_label_text_set(EWL_LABEL(infolabel[count]),infostr);
-                free(infostr);
-                free(size_str);
 
                 if(extracted_author && extracted_author[0])
                     ewl_label_text_set(EWL_LABEL(authorlabel[count]), extracted_author);
@@ -355,11 +355,16 @@ void update_list()
                 else
                     tempstr2=ReadString("icons",pointptr,"default.png");
                 asprintf(&imagefile, "/usr/share/madshelf/%s", tempstr2);
-                ewl_image_file_path_set(EWL_IMAGE(typeicon[count]),imagefile);
+                ewl_image_file_path_set(EWL_IMAGE(typeicon[count]), imagefile);
+
                 free(imagefile);
+                free(infostr);
+                free(size_str);
             }
 
             showflag[count]=1;
+
+            free(time_str);
             free(fileconcat);
         }
 
@@ -425,6 +430,7 @@ void update_title()
     curwidget = ewl_widget_name_find("mainborder");
     ewl_border_label_set(EWL_BORDER(curwidget),titletext);
 }
+
 void update_sort_label()
 {
     Ewl_Widget *curwidget;
