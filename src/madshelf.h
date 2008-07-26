@@ -22,7 +22,6 @@
 void update_list();
 void update_title();
 void cleanup();
-int file_name_compare(const void *data1, const void *data2);
 int file_date_compare(const void *data1, const void *data2);
 void init_filelist();
 void destroy_cb ( Ewl_Widget *w, void *event, void *data );

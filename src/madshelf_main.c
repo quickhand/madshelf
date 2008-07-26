@@ -481,21 +481,11 @@ void update_menu()
     ewl_button_label_set(EWL_BUTTON(curwidget),gettext("6. Scripts"));
 }
 
-int file_name_compare(const void *data1, const void *data2)
+static int file_name_compare(const void *data1, const void *data2)
 {
-    int counter;
-    char *fname1,*fname2;
-    fname1=(char*)data1;
-    fname2=(char*)data2;
-    for(counter=0;counter<strlen(fname1)&&counter<strlen(fname2);counter++)
-    {
-        if(fname1[0]>fname2[0])
-            return 1;
-        else if(fname1[0]<fname2[0])
-            return -1;
-    }
-    return 0;
+    return strcmp((const char*)data1, (const char*)data2);
 }
+
 int file_date_compare(const void *data1, const void *data2)
 {
     char *fname1,*fname2;
