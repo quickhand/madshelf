@@ -216,7 +216,7 @@ char* format_time(time_t t)
 {
     char* res = malloc(TIME_LEN*sizeof(char));
     struct tm* atime = localtime(&t);
-    strftime(timeStr, TIME_LEN, gettext("%m-%d-%y"), atime);
+    strftime(res, TIME_LEN, gettext("%m-%d-%y"), atime);
     return res;
 }
 
@@ -313,7 +313,7 @@ void update_list()
             {
                 ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));
 
-                ewl_label_text_set(EWL_LABEL(infolabel[count]),timeStr);
+                ewl_label_text_set(EWL_LABEL(infolabel[count]),time_str);
                 ewl_label_text_set(EWL_LABEL(authorlabel[count]),"Folder");
                 ewl_image_file_path_set(EWL_IMAGE(typeicon[count]),"/usr/share/madshelf/folder.png");
             }
@@ -339,7 +339,7 @@ void update_list()
                 asprintf(&infostr, "%s%s%s   %s",
                          extension ? extension : "",
                          extension ? "   " : "",
-                         timeStr,
+                         time_str,
                          size_str);
 
                 ewl_label_text_set(EWL_LABEL(infolabel[count]),infostr);
