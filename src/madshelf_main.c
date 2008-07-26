@@ -431,25 +431,35 @@ void update_title()
     ewl_border_label_set(EWL_BORDER(curwidget),titletext);
 }
 
+char* get_sort_label(int sort_type, int sort_order)
+{
+    if(sort_type == SORT_BY_NAME)
+    {
+        if(sort_order==ECORE_SORT_MAX)
+            return gettext("reverse-sorted by name");
+        else if(sort_order == ECORE_SORT_MIN)
+            return gettext("sorted by name");
+    }
+    else if(sort_type == SORT_BY_TIME)
+    {
+        if(sort_order==ECORE_SORT_MAX)
+            return gettext("reverse-sorted by time");
+        else if(sort_order == ECORE_SORT_MIN)
+            return gettext("sorted by time");
+    }
+
+    fprintf(stderr, "FATAL: unknown sort_type and/or sort_order\n");
+    abort();
+}
+
 void update_sort_label()
 {
     Ewl_Widget *curwidget;
 
     curwidget = ewl_widget_name_find("sortlabel");
-    if(sort_type==SORT_BY_NAME)
-    {
-        if(sort_order==ECORE_SORT_MAX)
-            ewl_label_text_set(EWL_LABEL(curwidget),gettext("reverse-sorted by name"));
-        else
-            ewl_label_text_set(EWL_LABEL(curwidget),gettext("sorted by name"));
-    }
-    else if(sort_type==SORT_BY_TIME)
-    {
-        if(sort_order==ECORE_SORT_MAX)
-            ewl_label_text_set(EWL_LABEL(curwidget),gettext("reverse-sorted by time"));
-        else
-            ewl_label_text_set(EWL_LABEL(curwidget),gettext("sorted by time"));
-    }
+    ewl_label_text_set(EWL_LABEL(curwidget),
+                       get_sort_label(sort_type, sort_order));
+
 }
 
 void update_menu()
