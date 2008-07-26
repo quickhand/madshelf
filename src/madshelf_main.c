@@ -37,8 +37,6 @@ Place - Suite 330, Boston, MA 02111-1307, USA.
 #include <unistd.h>
 #include <extractor.h>
 
-#define _(String) gettext (String)
-
 #define SCRIPTS_DIR "/.madshelf/scripts/"
 #define DEFAULT_THEME "/usr/share/madshelf/madshelf.edj"
 
