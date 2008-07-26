@@ -17,12 +17,15 @@ Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #define _GNU_SOURCE
 
+#include <ctype.h>
+#include <Ecore_File.h>
 #include <Edje.h>
 #include <Eet.h>
 #include <errno.h>
 #include <Ewl.h>
 #include <ewl_list.h>
 #include <ewl_macros.h>
+#include <extractor.h>
 #include <fcntl.h>
 #include "IniFile.h"
 #include <libintl.h>
@@ -35,7 +38,6 @@ Place - Suite 330, Boston, MA 02111-1307, USA.
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-#include <extractor.h>
 
 #define SCRIPTS_DIR "/.madshelf/scripts/"
 #define DEFAULT_THEME "/usr/share/madshelf/madshelf.edj"
@@ -186,25 +188,18 @@ void update_list()
 {
     int offset=0;
     int count=0;
-    Ewl_Widget* curwidget;
     char *file;
-    char *finalstr;
     char tempname[20];
-    char *tempfilename;
-    char prefix[4];
-    char *tempo;
     char *imagefile;
     char *pointptr;
     char *fileconcat;
     char *extension;
     const char *tempstr2;
-    long long ftime1;
     char timeStr[101];
     char *infostr;
     struct tm* atime;
     struct stat stat_p;
     int filelistcount;
-    double f_size;
     char sizestr[50];
     Ewl_Widget *labelsbox[8];
     Ewl_Widget *titlelabel[8];
@@ -250,9 +245,9 @@ void update_list()
         
 
     }
-    sprintf (tempname, "backarr",count);
+    sprintf (tempname, "backarr");
     backarr = ewl_widget_name_find(tempname);
-    sprintf (tempname, "forwardarr",count);
+    sprintf (tempname, "forwardarr");
     forwardarr = ewl_widget_name_find(tempname);
     //set arrow offset
     offset=ewl_object_current_w_get(EWL_OBJECT(forwardarr));
@@ -449,7 +444,6 @@ void update_list()
 
 void update_title()
 {
-    char temptext[100];
     titletext[0]='\0';
     Ewl_Widget *curwidget;
     strcat(titletext,"Madshelf | ");
@@ -507,7 +501,6 @@ int file_name_compare(const void *data1, const void *data2)
 {
     int counter;
     char *fname1,*fname2;
-    int retval=0;
     fname1=(char*)data1;
     fname2=(char*)data2;
     for(counter=0;counter<strlen(fname1)&&counter<strlen(fname2);counter++)
@@ -593,10 +586,6 @@ void doActionForNum(unsigned int num)
 {
     char *file;
     char *tempo;
-    const char *tempstr;
-    char *pointptr;
-    char *theargv[1];
-    char *homepoint;
     if(curindex+(num-1)>=ecore_list_count(filelist))
         return;
 
@@ -687,8 +676,6 @@ void cb_key_down(Ewl_Widget *w, void *ev, void *data)
 {
     Ewl_Event_Key_Down *e;
     Ewl_Widget *curwidget;
-    int buttonnum=0;
-    int charloc;
     char *tmpchrptr;
     e = (Ewl_Event_Key_Down*)ev;
 
@@ -865,8 +852,6 @@ void cb_goto_menu_key_down(Ewl_Widget *w, void *ev, void *data)
     Ewl_Event_Key_Down *e;
     Ewl_Widget *curwidget;
     int index=-1;
-    int count=0;
-    const char *tempstr;
     e = (Ewl_Event_Key_Down*)ev;
 
     if(!strcmp(e->base.keyname,"Escape"))
@@ -972,7 +957,6 @@ void refresh_state()
     Eet_File *state;
     int size;
     state=eet_open(statefilename,EET_FILE_MODE_READ);
-    int a=0;
     int i;
     if(eet_read(state,"statesaved",&size)==NULL)
     {
@@ -1026,35 +1010,21 @@ int main ( int argc, char ** argv )
     Ewl_Widget *box3=NULL;
     Ewl_Widget *box4=NULL;
     Ewl_Widget *box5=NULL;
-    Ewl_Widget *box6=NULL;
-    Ewl_Widget *box7=NULL;
-    Ewl_Widget *list = NULL;
     Ewl_Widget *authorlabel[8];
     Ewl_Widget *titlelabel[8];
     Ewl_Widget *infolabel[8];
     Ewl_Widget *iconimage[8];
-    Ewl_Widget *buttonimage[8];
-    Ewl_Widget *borderimage;
     Ewl_Widget *menubar=NULL;
-    Ewl_Widget *numlabel=NULL;
     Ewl_Widget *forwardarr=NULL;
     Ewl_Widget *backarr=NULL;
     Ewl_Widget *sorttypetext;
     Ewl_Widget *dividewidget;
-    int w,h;
-    char imgfile[100];
-    char flun[200];
     char *homedir;
     char *configfile;
     int count=0;
     int count2=0;
-    const char *tempstr;
-    char *tempstr2;
-    char *tempstr3;
     char *tempstr4;
-    char *tempstr5;
     char *tempstr6;
-    struct ENTRY *rootlist;
     struct ENTRY *scriptlist;
 
     if ( !ewl_init ( &argc, argv ) )
