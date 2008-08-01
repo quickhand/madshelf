@@ -55,6 +55,69 @@ int filter_files(const struct dirent* d)
     return (len > 2) && !strcmp(d->d_name + len - 3, ".so");
 }
 
+extractors_t* load_extractor(extractors_t* head, char* name)
+{
+    extractors_t* nhead;
+    void* libhandle;
+    void* extract_handle;
+    char* extract_name;
+    char* libname = get_full_path(name);
+    if(!libname)
+    {
+        fprintf(stderr, "Out of memory while loading extractor %s",
+                name);
+        exit(1);
+    }
+
+    libhandle = dlopen(libname, RTLD_LAZY);
+    if(!libhandle)
+    {
+        fprintf(stderr, "Unable to load %s: %s\n", libname, dlerror());
+        free(libname);
+        return head;
+    }
+
+    free(libname);
+
+    /* Remove '.so' from filename */
+    name[strlen(name)-3] = 0;
+    /* libextractor_foo_extract */
+    asprintf(&extract_name, "%s_extract", name);
+    if(!extract_name)
+    {
+        fprintf(stderr, "Out of memory while loading extractor %s",
+                name);
+        exit(1);
+    }
+
+    extract_handle = dlsym(libhandle, extract_name);
+    if(!extract_handle)
+    {
+        fprintf(stderr, "Unable to get entry point in %s: %s\n",
+                name, dlerror());
+        free(extract_name);
+        dlclose(libhandle);
+        return head;
+    }
+
+    free(extract_name);
+
+    nhead = malloc(sizeof(extractors_t));
+    if(!nhead)
+    {
+        fprintf(stderr, "Out of memory while loading extractor %s",
+                name);
+        exit(1);
+    }
+
+    nhead = malloc(sizeof(extractors_t));
+    nhead->handle = libhandle;
+    nhead->method = (ExtractMethod)extract_handle;
+    nhead->next = head;
+
+    return nhead;
+}
+
 extractors_t* load_extractors()
 {
     struct dirent** files;
@@ -71,66 +134,7 @@ extractors_t* load_extractors()
     extractors_t* head = NULL;
 
     for(i = 0; i != nfiles; ++i)
-    {
-        extractors_t* nhead;
-        void* libhandle;
-        void* extract_handle;
-        char* extract_name;
-        char* libname = get_full_path(files[0]->d_name);
-        if(!libname)
-        {
-            fprintf(stderr, "Out of memory while loading extractor %s",
-                    files[i]->d_name);
-            exit(1);
-        }
-        
-        libhandle = dlopen(libname, RTLD_LAZY);
-        if(!libhandle)
-        {
-            fprintf(stderr, "Unable to load %s: %s\n", libname, dlerror());
-            free(libname);
-            continue;
-        }
-
-        free(libname);
-
-        /* Remove '.so' from filename */
-        files[i]->d_name[strlen(files[i]->d_name)-3] = 0;
-        /* libextractor_foo_extract */
-        asprintf(&extract_name, "%s_extract", files[i]->d_name);
-        if(!extract_name)
-        {
-            fprintf(stderr, "Out of memory while loading extractor %s",
-                    files[i]->d_name);
-            exit(1);
-        }
-
-        extract_handle = dlsym(libhandle, extract_name);
-        if(!extract_handle)
-        {
-            fprintf(stderr, "Unable to get entry point in %s: %s\n",
-                    libname, dlerror());
-            free(extract_name);
-            dlclose(libhandle);
-            continue;
-        }
-
-        free(extract_name);
-
-        nhead = malloc(sizeof(extractors_t));
-        if(!nhead)
-        {
-            fprintf(stderr, "Out of memory while loading extractor %s",
-                    files[i]->d_name);
-            exit(1);
-        }
-
-        nhead->handle = libhandle;
-        nhead->method = (ExtractMethod)extract_handle;
-        nhead->next = head;
-
-        head = nhead;
-    }
+        head = load_extractor(head, files[i]->d_name);
 
     free(files);
 
