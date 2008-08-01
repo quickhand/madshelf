@@ -26,7 +26,7 @@ Place - Suite 330, Boston, MA 02111-1307, USA.
 #include <Ewl.h>
 #include <ewl_list.h>
 #include <ewl_macros.h>
-#include <extractor.h>
+#include "madshelf_extractors.h"
 #include <fcntl.h>
 #include "IniFile.h"
 #include <libintl.h>
@@ -85,7 +85,7 @@ const char* g_file;
 * Need to be freed by own methods.
 */
 
-EXTRACTOR_ExtractorList *extractors;
+extractors_t *extractors;
 
 char titletext[200];
 
@@ -326,8 +326,8 @@ void update_list()
                 char* infostr;
                 char* imagefile;
 
-                EXTRACTOR_KeywordList *mykeys;
-                mykeys = EXTRACTOR_getKeywords(extractors,fileconcat);
+                EXTRACTOR_KeywordList* mykeys;
+                mykeys = extractor_get_keywords(extractors, fileconcat);
 
                 extracted_title = EXTRACTOR_extractLast(EXTRACTOR_TITLE,mykeys);
                 extracted_author = EXTRACTOR_extractLast(EXTRACTOR_AUTHOR,mykeys);
@@ -1085,8 +1085,7 @@ int main ( int argc, char ** argv )
     OpenIniFile (configfile);
     free(configfile);
 
-    //load extractors
-    extractors=EXTRACTOR_loadConfigLibraries(NULL,"libextractor_pdf:libextractor_html:libextractor_oo:libextractor_ps:libextractor_dvi");//EXTRACTOR_loadDefaultLibraries();
+    extractors= load_extractors();
     if(extractors==NULL)
         fprintf(stderr,"Could not load extractors");
 
@@ -1379,7 +1378,7 @@ int main ( int argc, char ** argv )
 
     free(scriptstrlist);
     free(curdir);
-    EXTRACTOR_removeAll(extractors);
+    unload_extractors(extractors);
     if (g_file)
     {
         const char* home = getenv("HOME");
