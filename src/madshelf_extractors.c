@@ -189,3 +189,28 @@ err2:
 err1:
     return list;
 }
+
+const char* extractor_get_last(const EXTRACTOR_KeywordType type,
+                               const EXTRACTOR_KeywordList* keywords)
+{
+    const char* result = NULL;
+    while(keywords)
+    {
+        if(keywords->keywordType == type)
+            result = keywords->keyword;
+        keywords = keywords->next;
+    }
+    return result;
+}
+
+const char* extractor_get_first(const EXTRACTOR_KeywordType type,
+                                const EXTRACTOR_KeywordList* keywords)
+{
+    while(keywords)
+    {
+        if(keywords->keywordType == type)
+            return keywords->keyword;
+        keywords = keywords->next;
+    }
+    return NULL;
+}

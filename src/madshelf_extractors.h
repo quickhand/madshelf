@@ -25,4 +25,11 @@ void unload_extractors(extractors_t* extractors);
 EXTRACTOR_KeywordList* extractor_get_keywords(extractors_t* extractors,
                                               const char* filename);
 
+
+const char* extractor_get_last(const EXTRACTOR_KeywordType type,
+                               const EXTRACTOR_KeywordList* keywords);
+
+const char* extractor_get_first(const EXTRACTOR_KeywordType type,
+                                const EXTRACTOR_KeywordList* keywords);
+
 #endif

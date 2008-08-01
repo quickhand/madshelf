@@ -329,8 +329,8 @@ void update_list()
                 EXTRACTOR_KeywordList* mykeys;
                 mykeys = extractor_get_keywords(extractors, fileconcat);
 
-                extracted_title = EXTRACTOR_extractLast(EXTRACTOR_TITLE,mykeys);
-                extracted_author = EXTRACTOR_extractLast(EXTRACTOR_AUTHOR,mykeys);
+                extracted_title = extractor_get_last(EXTRACTOR_TITLE, mykeys);
+                extracted_author = extractor_get_last(EXTRACTOR_AUTHOR, mykeys);
 
                 if(extracted_title && extracted_title[0])
                     ewl_label_text_set(EWL_LABEL(titlelabel[count]), extracted_title);
