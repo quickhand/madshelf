@@ -158,7 +158,7 @@ EXTRACTOR_KeywordList* extractor_get_keywords(extractors_t* extractors,
     EXTRACTOR_KeywordList* list = NULL;
     int fd = open(filename, O_RDONLY);
     struct stat s;
-    void* m;
+    void* m = NULL;
     if(fd == -1)
     {
         fprintf(stderr, "Unable to open %s for obtaining keywords: %s",
@@ -173,12 +173,15 @@ EXTRACTOR_KeywordList* extractor_get_keywords(extractors_t* extractors,
         goto err2;
     }
 
-    m = mmap(NULL, s.st_size, PROT_READ, MAP_PRIVATE | MAP_NONBLOCK, fd, 0);
-    if(m == (void*)-1)
+    if(s.st_size)
     {
-        fprintf(stderr, "Unable to mmap %s for obtaining keywords: %s",
-                filename, strerror(errno));
-        goto err2;
+        m = mmap(NULL, s.st_size, PROT_READ, MAP_PRIVATE | MAP_NONBLOCK, fd, 0);
+        if(m == (void*)-1)
+        {
+            fprintf(stderr, "Unable to mmap %s for obtaining keywords: %s",
+                    filename, strerror(errno));
+            goto err2;
+        }
     }
     
     while(extractors)
@@ -187,7 +190,8 @@ EXTRACTOR_KeywordList* extractor_get_keywords(extractors_t* extractors,
         extractors = extractors->next;
     }
 
-    munmap(m, s.st_size);
+    if(m)
+        munmap(m, s.st_size);
 err2:
     close(fd);
 err1:
