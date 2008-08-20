@@ -1086,8 +1086,6 @@ int main ( int argc, char ** argv )
     free(configfile);
 
     extractors= load_extractors();
-    if(extractors==NULL)
-        fprintf(stderr,"Could not load extractors");
 
         //load scripts
     count2=0;

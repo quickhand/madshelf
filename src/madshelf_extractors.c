@@ -127,16 +127,23 @@ extractors_t* load_extractors()
 
     if(nfiles == -1)
     {
-        perror("Unable to load extractors");
+        fprintf(stderr, "Unable to load extractors from %s: %s\n",
+                get_extractors_dir(), strerror(errno));
         exit(1);
     }
-    
+
     extractors_t* head = NULL;
 
     for(i = 0; i != nfiles; ++i)
         head = load_extractor(head, files[i]->d_name);
 
     free(files);
+
+    if(!head)
+    {
+        fprintf(stderr, "Warning: no extractors found in %s\n",
+                get_extractors_dir());
+    }
 
     return head;
 }
