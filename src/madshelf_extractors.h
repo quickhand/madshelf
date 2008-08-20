@@ -15,8 +15,8 @@ typedef struct extractors_t
 } extractors_t;
 
 /*
- * Loads extractors from hardcoded directory (/usr/lib/libextractor) or (if set)
- * from ENV{EXTRACTORS_DIR}
+ * Loads extractors from hardcoded directory (/usr/lib/madshelf/extractors) or
+ * (if set) from ENV{EXTRACTORS_DIR}
  */
 extractors_t* load_extractors();
 

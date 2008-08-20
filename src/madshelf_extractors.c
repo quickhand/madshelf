@@ -11,7 +11,7 @@
 
 #include "madshelf_extractors.h"
 
-#define EXTRACTORS_DIR "/usr/lib/libextractor"
+#define EXTRACTORS_DIR "/usr/lib/madshelf/extractors"
 
 /*
  * Returns full path, not need to be freeed.
