@@ -497,17 +497,22 @@ void update_sort_label()
 
 void update_menu()
 {
-    char *tempstrings[]={"1. Sort by Name","2. Sort by Time","3. Reverse Sort Order","4. Language Settings","5. Go to","6. Scripts"};
+    char *tempstrings[]={"Sort by Name","Sort by Time","Reverse Sort Order","Language Settings","Go to","Scripts"};
     char tempname[30];
+    char temptext[40];
     int i=0;
     Ewl_Widget *curwidget;
     curwidget = ewl_widget_name_find("okmenu");
-    ewl_button_label_set(EWL_BUTTON(curwidget),gettext("Menu (OK)"));
+    ewl_button_label_set(EWL_BUTTON(curwidget),gettext("Menu"));
     for(i=0;i<6;i++)
     {
         sprintf(tempname,"menuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
-        ewl_button_label_set(EWL_BUTTON(curwidget),gettext(tempstrings[i]));
+        if(nav_mode==0)
+            sprintf(temptext,"%d. %s",i+1,gettext(tempstrings[i]));
+        else
+            sprintf(temptext,"%s",gettext(tempstrings[i]));
+        ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
     }
 }
 
@@ -1030,10 +1035,10 @@ typedef struct
 
 static language_t g_languages[] =
 {
-    { "1. English", "en" },
-    { "2. Français", "fr" },
-    { "3. Русский", "ru" },
-    { "4. 简体中文", "zh_CN" }
+    { "English", "en" },
+    { "Français", "fr" },
+    { "Русский", "ru" },
+    { "简体中文", "zh_CN" }
 };
 
 static const int g_nlanguages = sizeof(g_languages)/sizeof(language_t);
@@ -1565,7 +1570,12 @@ int main ( int argc, char ** argv )
         for(i = 0; i < g_nlanguages; ++i)
         {
             Ewl_Widget* lang_menu_item = ewl_menu_item_new();
-            ewl_button_label_set(EWL_BUTTON(lang_menu_item), g_languages[i].name);
+            tempstr4=(char *)calloc(strlen(g_languages[i].name)+3+1,sizeof(char));
+            if(nav_mode==0)
+                sprintf(tempstr4,"%d. %s",i+1, g_languages[i].name);
+            else
+                sprintf(tempstr4,"%s",g_languages[i].name);
+            ewl_button_label_set(EWL_BUTTON(lang_menu_item),tempstr4);
             ewl_container_child_append(EWL_CONTAINER(temp2), lang_menu_item);
             if(nav_mode==1 && i==0)
                 ewl_widget_state_set((EWL_MENU_ITEM(lang_menu_item)->button).label_object,"select",EWL_STATE_PERSISTENT);
@@ -1585,7 +1595,10 @@ int main ( int argc, char ** argv )
         {
             temp3=ewl_menu_item_new();
             tempstr4=(char *)calloc(strlen(g_roots->roots[i].name)+3+1,sizeof(char));
-            sprintf(tempstr4,"%d. %s",i+1, g_roots->roots[i].name);
+            if(nav_mode==0)
+                sprintf(tempstr4,"%d. %s",i+1, g_roots->roots[i].name);
+            else
+                sprintf(tempstr4,"%s",g_roots->roots[i].name);
             ewl_button_label_set(EWL_BUTTON(temp3),tempstr4);
             free(tempstr4);
             ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
@@ -1609,7 +1622,10 @@ int main ( int argc, char ** argv )
         {
             temp3=ewl_menu_item_new();
             tempstr4=(char *)calloc(strlen(scriptstrlist[count])+3+1,sizeof(char));
-            sprintf(tempstr4,"%d. %s",count+1,scriptstrlist[count]);
+            if(nav_mode==0)
+                sprintf(tempstr4,"%d. %s",count+1,scriptstrlist[count]);
+            else
+                sprintf(tempstr4,"%s",scriptstrlist[count]);
             ewl_button_label_set(EWL_BUTTON(temp3),tempstr4);
             free(tempstr4);
             ewl_container_child_append(EWL_CONTAINER(temp2),temp3);

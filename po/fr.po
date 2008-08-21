@@ -33,29 +33,29 @@ msgid "sorted by time"
 msgstr "triage par date"
 
 #: madshelf_main.c:244
-msgid "Menu (OK)"
-msgstr "Menu (OK)"
+msgid "Menu"
+msgstr "Menu"
 
 #: madshelf_main.c:246
-msgid "1. Sort by Name"
-msgstr "1. Trier par Nom"
+msgid "Sort by Name"
+msgstr "Trier par Nom"
 
 #: madshelf_main.c:248
-msgid "2. Sort by Time"
-msgstr "2. Trier par Date"
+msgid "Sort by Time"
+msgstr "Trier par Date"
 
 #: madshelf_main.c:250
-msgid "3. Reverse Sort Order"
-msgstr "3. Inverser l'Ordre de Triage"
+msgid "Reverse Sort Order"
+msgstr "Inverser l'Ordre de Triage"
 
 #: madshelf_main.c:252
-msgid "4. Language Settings"
-msgstr "4. Options de Langue"
+msgid "Language Settings"
+msgstr "Options de Langue"
 
 #: madshelf_main.c:254
-msgid "5. Go to"
-msgstr "5. Aller à"
+msgid "Go to"
+msgstr "Aller à"
 
 #: madshelf_main.c:256
-msgid "6. Scripts"
-msgstr "6 Scripts"
+msgid "Scripts"
+msgstr "Scripts"

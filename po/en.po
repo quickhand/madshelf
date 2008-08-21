@@ -33,29 +33,29 @@ msgid "sorted by time"
 msgstr "sorted by time"
 
 #: madshelf_main.c:244
-msgid "Menu (OK)"
-msgstr "Menu (OK)"
+msgid "Menu"
+msgstr "Menu"
 
 #: madshelf_main.c:246
-msgid "1. Sort by Name"
-msgstr "1. Sort by Name"
+msgid "Sort by Name"
+msgstr "Sort by Name"
 
 #: madshelf_main.c:248
-msgid "2. Sort by Time"
-msgstr "2. Sort by Time"
+msgid "Sort by Time"
+msgstr "Sort by Time"
 
 #: madshelf_main.c:250
-msgid "3. Reverse Sort Order"
-msgstr "3. Reverse Sort Order"
+msgid "Reverse Sort Order"
+msgstr "Reverse Sort Order"
 
 #: madshelf_main.c:252
-msgid "4. Language Settings"
-msgstr "4. Language Settings"
+msgid "Language Settings"
+msgstr "Language Settings"
 
 #: madshelf_main.c:254
-msgid "5. Go to"
-msgstr "5. Go to"
+msgid "Go to"
+msgstr "Go to"
 
 #: madshelf_main.c:256
-msgid "6. Scripts"
-msgstr "6. Scripts"
+msgid "Scripts"
+msgstr "Scripts"

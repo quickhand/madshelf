@@ -32,29 +32,29 @@ msgid "sorted by time"
 msgstr "按时间排列"
 
 #: madshelf_main.c:244
-msgid "Menu (OK)"
-msgstr "菜单 (OK)"
+msgid "Menu"
+msgstr "菜单"
 
 #: madshelf_main.c:246
-msgid "1. Sort by Name"
-msgstr "1. 按名字排列"
+msgid "Sort by Name"
+msgstr "按名字排列"
 
 #: madshelf_main.c:248
-msgid "2. Sort by Time"
-msgstr "2. 按时间排列"
+msgid "Sort by Time"
+msgstr "按时间排列"
 
 #: madshelf_main.c:250
-msgid "3. Reverse Sort Order"
-msgstr "3. 逆转排列顺序"
+msgid "Reverse Sort Order"
+msgstr "逆转排列顺序"
 
 #: madshelf_main.c:252
-msgid "4. Language Settings"
-msgstr "4. 语言设置"
+msgid "Language Settings"
+msgstr "语言设置"
 
 #: madshelf_main.c:254
-msgid "5. Go to"
-msgstr "5. 跳转到"
+msgid "Go to"
+msgstr "跳转到"
 
 #: madshelf_main.c:256
-msgid "6. Scripts"
-msgstr "6. 脚本"
+msgid "Scripts"
+msgstr "脚本"
