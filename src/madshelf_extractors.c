@@ -35,23 +35,7 @@ char* get_full_path(const char* extractor_file)
 
 int filter_files(const struct dirent* d)
 {
-    int len = strlen(d->d_name);
-
-    if(d->d_type == DT_LNK)
-    {
-        char *libname = get_full_path(d->d_name);
-        struct stat s;
-        if(-1 == stat(libname, &s)
-           || !S_ISREG(s.st_mode))
-        {
-            free(libname);
-            return 0;
-        }
-        free(libname);
-    }
-    else if(d->d_type != DT_REG)
-        return 0;
-    
+    unsigned short int len = _D_EXACT_NAMLEN(d);
     return (len > 2) && !strcmp(d->d_name + len - 3, ".so");
 }
 
