@@ -53,7 +53,7 @@ extractors_t* load_extractor(extractors_t* head, char* name)
         exit(1);
     }
 
-    libhandle = dlopen(libname, RTLD_LAZY);
+    libhandle = dlopen(libname, RTLD_NOW);
     if(!libhandle)
     {
         fprintf(stderr, "Unable to load %s: %s\n", libname, dlerror());
