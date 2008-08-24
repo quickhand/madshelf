@@ -90,7 +90,7 @@ extractors_t *extractors;
 char titletext[200];
 
 //***********these variables need to be saved and restored in order to restore the state
-int current_page = 0;
+int current_index = 0;
 int depth=0;
 
 int current_root;
@@ -230,28 +230,30 @@ char* format_time(time_t t)
 
 int next_page_exists()
 {
-    return g_nfileslist > (current_page + 1) * num_books;
+    return g_nfileslist > current_index + num_books;
 }
 
 void next_page()
 {
     if(next_page_exists())
     {
-        current_page++;
+        current_index += num_books;
         update_list();
     }
 }
 
 int prev_page_exists()
 {
-    return current_page > 0;
+    return current_index > 0;
 }
 
 void prev_page()
 {
     if(prev_page_exists())
     {
-        current_page--;
+        current_index -= num_books;
+        if(current_index < 0)
+            current_index = 0;
         update_list();
     }
 }
@@ -328,7 +330,7 @@ void update_list()
 
     for(count = 0; count < num_books; count++)
     {
-        if(current_page * num_books + count >= g_nfileslist)
+        if(current_index + count >= g_nfileslist)
         {
             showflag[count]=0;
             continue;
@@ -342,7 +344,7 @@ void update_list()
                 ewl_widget_state_set(bookbox[count],"unselect",EWL_STATE_PERSISTENT);
         }
             
-        char* file = g_fileslist[current_page * num_books + count]->d_name;
+        char* file = g_fileslist[current_index + count]->d_name;
 
         char* fileconcat;
         struct stat stat_p;
@@ -618,7 +620,7 @@ void doActionForNum(unsigned int num)
 {
     char *file;
     char *tempo;
-    int file_index = current_page*num_books + num - 1;
+    int file_index = current_index + num - 1;
 
     if(file_index > g_nfileslist)
         return;
@@ -650,7 +652,7 @@ void doActionForNum(unsigned int num)
         fini_filelist();
         init_filelist();
         depth++;
-        current_page = 0;
+        current_index = 0;
         nav_sel=0;
         update_list();
         update_title();
@@ -786,7 +788,7 @@ void main_esc()
     fini_filelist();
     init_filelist();
     depth--;
-    current_page = 0;
+    current_index = 0;
     update_list();
     update_title();
 }
@@ -950,7 +952,7 @@ void main_menu_item(int item)
         fini_filelist();
         init_filelist();
 
-        current_page = 0;
+        current_index = 0;
         update_list();
         update_sort_label();
         hide_main_menu();
@@ -962,7 +964,7 @@ void main_menu_item(int item)
         fini_filelist();
         init_filelist();
 
-        current_page = 0;
+        current_index = 0;
         update_list();
         update_sort_label();
         hide_main_menu();
@@ -976,7 +978,7 @@ void main_menu_item(int item)
         fini_filelist();
         init_filelist();
 
-        current_page = 0;
+        current_index = 0;
         update_list();
         update_sort_label();
         hide_main_menu();
@@ -1173,7 +1175,7 @@ void goto_menu_item(int item)
 
     initdirstrlen=strlen(curdir);
     depth=0;
-    current_page=0;
+    current_index = 0;
     init_filelist();
     update_title();
     update_list();
@@ -1284,9 +1286,8 @@ void save_state()
     Eet_File *state;
     state=eet_open(statefilename,EET_FILE_MODE_WRITE);
     const int a=1;
-    int curindex = current_page * num_books;
     eet_write(state,"statesaved",(void *)&a, sizeof(int),0);
-    eet_write(state,"curindex",(void *)&curindex,sizeof(int),0);
+    eet_write(state,"curindex",(void *)&current_index,sizeof(int),0);
     eet_write(state,"depth",(void *)&depth,sizeof(int),0);
     eet_write(state,"rootname",(void *)g_roots->roots[current_root].name,
               sizeof(char)*(strlen(g_roots->roots[current_root].name)+1),0);
@@ -1309,7 +1310,7 @@ void refresh_state()
         eet_close(state);
         return;
     }
-    current_page = *((int*)eet_read(state,"curindex",&size)) / num_books;
+    current_index = *((int*)eet_read(state,"curindex",&size));
     depth=*((int*)eet_read(state,"depth",&size));
 
     current_root = 0;
