@@ -111,9 +111,9 @@ extractors_t* load_extractors()
 
     if(nfiles == -1)
     {
-        fprintf(stderr, "Unable to load extractors from %s: %s\n",
+        fprintf(stderr, "Warning: unable to load extractors from %s: %s\n",
                 get_extractors_dir(), strerror(errno));
-        exit(1);
+        return NULL;
     }
 
     extractors_t* head = NULL;
