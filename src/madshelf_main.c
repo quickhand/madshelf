@@ -101,7 +101,7 @@ int sort_type=SORT_BY_NAME;
 int sort_order=ECORE_SORT_MIN;
 //***********
 int num_books=8;
-int nav_mode=1;
+int nav_mode;
 int nav_sel=0;
 int nav_menu_sel=0;
 int nav_lang_menu_sel=0;
