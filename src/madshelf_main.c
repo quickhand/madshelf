@@ -272,10 +272,7 @@ void update_list()
     Ewl_Widget **bookbox;
     Ewl_Widget **separator;
     Ewl_Widget **typeicon;
-    Ewl_Widget *backarr;
-    Ewl_Widget *forwardarr;
-    int backarrshowflag;
-    int forwardarrshowflag;
+    Ewl_Widget *arrow_widget;
     int *showflag;
     const char *extracted_title = NULL;
     const char *extracted_author = NULL;
@@ -308,12 +305,9 @@ void update_list()
         sprintf (tempname, "labelsbox%d",count);
         labelsbox[count] = ewl_widget_name_find(tempname);
     }
-    sprintf (tempname, "backarr");
-    backarr = ewl_widget_name_find(tempname);
-    sprintf (tempname, "forwardarr");
-    forwardarr = ewl_widget_name_find(tempname);
-    //set arrow offset
-    offset=ewl_object_current_w_get(EWL_OBJECT(forwardarr));
+    sprintf (tempname, "arrow_widget");
+    arrow_widget = ewl_widget_name_find(tempname);
+    
 
     for(count=0;count<num_books;count++)
     {
@@ -325,8 +319,6 @@ void update_list()
         ewl_widget_hide(infolabel[count]);
         ewl_widget_hide(typeicon[count]);
     }
-    ewl_widget_hide(forwardarr);
-    ewl_widget_hide(backarr);
 
     for(count = 0; count < num_books; count++)
     {
@@ -416,23 +408,14 @@ void update_list()
 
     if(next_page_exists())
     {
-        forwardarrshowflag = 1;
-        offset = 0;
-    }
-    else
-    {
-        forwardarrshowflag = 0;
-    }
-
     if(prev_page_exists())
-    {
-        backarrshowflag = 1;
-        ewl_object_padding_set(EWL_OBJECT(backarr), 0, offset, 0, 0);
+            ewl_widget_state_set(arrow_widget,"both_on",EWL_STATE_PERSISTENT);
+    else
+            ewl_widget_state_set(arrow_widget,"right_only",EWL_STATE_PERSISTENT);
     }
     else
-    {
-        backarrshowflag = 0;
-    }
+        ewl_widget_state_set(arrow_widget,"left_only",EWL_STATE_PERSISTENT);
+    
 
     for(count=0;count<num_books;count++)
     {
@@ -447,12 +430,6 @@ void update_list()
             ewl_widget_show(bookbox[count]);
         }
     }
-
-    if(backarrshowflag)
-        ewl_widget_show(backarr);
-
-    if(forwardarrshowflag)
-            ewl_widget_show(forwardarr);
 }
 
 void update_title()
@@ -1363,8 +1340,7 @@ int main ( int argc, char ** argv )
     Ewl_Widget *infolabel;
     Ewl_Widget *iconimage;
     Ewl_Widget *menubar=NULL;
-    Ewl_Widget *forwardarr=NULL;
-    Ewl_Widget *backarr=NULL;
+    Ewl_Widget *arrow_widget=NULL;
     Ewl_Widget *sorttypetext;
     Ewl_Widget *dividewidget;
     char *homedir;
@@ -1502,18 +1478,14 @@ int main ( int argc, char ** argv )
     ewl_object_alignment_set(EWL_OBJECT(box4),EWL_FLAG_ALIGN_RIGHT);
     ewl_widget_show(box4);
 
-    backarr = ewl_image_new();
-    ewl_image_file_path_set(EWL_IMAGE(backarr),"/usr/share/madshelf/backarr.png");
-    ewl_container_child_append(EWL_CONTAINER(box4), backarr);
-    ewl_widget_name_set(backarr,"backarr");
-    ewl_object_alignment_set(EWL_OBJECT(backarr),EWL_FLAG_ALIGN_LEFT|EWL_FLAG_ALIGN_TOP);
 
-    forwardarr = ewl_image_new();
-    ewl_image_file_path_set(EWL_IMAGE(forwardarr),"/usr/share/madshelf/forwardarr.png");
-    ewl_container_child_append(EWL_CONTAINER(box4), forwardarr);
-    ewl_widget_name_set(forwardarr,"forwardarr");
-    ewl_object_alignment_set(EWL_OBJECT(forwardarr),EWL_FLAG_ALIGN_RIGHT|EWL_FLAG_ALIGN_TOP);
 
+    arrow_widget = ewl_widget_new();
+    ewl_container_child_append(EWL_CONTAINER(box4), arrow_widget);
+    ewl_widget_name_set(arrow_widget,"arrow_widget");
+    ewl_object_alignment_set(EWL_OBJECT(arrow_widget),EWL_FLAG_ALIGN_RIGHT|EWL_FLAG_ALIGN_TOP);
+    ewl_theme_data_str_set(EWL_WIDGET(arrow_widget),"/group","ewl/widget/oi_arrows");
+    ewl_widget_show(arrow_widget);
     menubar=ewl_hmenubar_new();
 
     {
