@@ -709,13 +709,31 @@ static void _key_handler(Ewl_Widget* w, void *event, void *context)
     }
     else if (!strcmp(k,"Up"))
     {
-        if(handler_info->nav_up_handler)
-            (*handler_info->nav_up_handler)();
+        /* FIXME: HACK */
+        if(nav_mode == 1)
+        {
+            if(handler_info->nav_up_handler)
+                (*handler_info->nav_up_handler)();
+        }
+        else
+        {
+            if(handler_info->nav_left_handler)
+                (*handler_info->nav_left_handler)();
+        }
     }
     else if (!strcmp(k,"Down"))
     {
-        if(handler_info->nav_down_handler)
-            (*handler_info->nav_down_handler)();
+        /* FIXME: HACK */
+        if(nav_mode == 1)
+        {
+            if(handler_info->nav_down_handler)
+                (*handler_info->nav_down_handler)();
+        }
+        else
+        {
+            if(handler_info->nav_right_handler)
+                (*handler_info->nav_right_handler)();
+        }
     }
     else if (!strcmp(k,"Left"))
     {
