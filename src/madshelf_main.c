@@ -599,7 +599,7 @@ void doActionForNum(unsigned int num)
     char *tempo;
     int file_index = current_index + num - 1;
 
-    if(file_index => g_nfileslist)
+    if(file_index >= g_nfileslist)
         return;
 
     file = g_fileslist[file_index]->d_name;
