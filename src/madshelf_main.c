@@ -1160,7 +1160,13 @@ void goto_menu_nav_down(void)
 
 void goto_menu_item(int item)
 {
+    if(item == 0)
+        item = 10;
+
     item--;
+
+    if(item < 0 || item >= g_roots->nroots)
+        return;
 
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem5")));
     hide_main_menu();
