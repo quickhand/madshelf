@@ -50,7 +50,6 @@ void show_main_menu();
 
 
 #define SCRIPTS_DIR "/.madshelf/scripts/"
-#define DEFAULT_THEME "/usr/share/madshelf/madshelf.edj"
 
 /*
 * Single "root"
@@ -110,6 +109,30 @@ int nav_menu_sel=0;
 int nav_lang_menu_sel=0;
 int nav_goto_menu_sel=0;
 int nav_scripts_menu_sel=0;
+
+
+#define REL_THEME "themes/madshelf.edj"
+#define SYSTEM_THEME "/usr/share/madshelf/madshelf.edj"
+
+/*
+ * Returns edje theme file name.
+ */
+char* get_theme_file()
+{
+    char *rel_theme;
+    asprintf(&rel_theme, "%s/" REL_THEME, getenv("HOME"));
+    if(0 == access(rel_theme, R_OK))
+        return rel_theme;
+    free(rel_theme);
+
+    if(0 == access(SYSTEM_THEME, R_OK))
+        return strdup(SYSTEM_THEME);
+
+    fprintf(stderr, "Unable to find any theme. Silly me.\n");
+    exit(1);
+}
+
+
 /*
 * roots_create() helper
 */
@@ -1412,12 +1435,14 @@ int main ( int argc, char ** argv )
     char *tempstr6;
     struct ENTRY *scriptlist;
 
+    char* theme_file = get_theme_file();
+
     if ( !ewl_init ( &argc, argv ) )
     {
         return 1;
     }
     eet_init();
-    ewl_theme_theme_set(DEFAULT_THEME);
+    ewl_theme_theme_set(theme_file);
 
     setlocale(LC_ALL, "");
     textdomain("madshelf");
@@ -1675,7 +1700,7 @@ int main ( int argc, char ** argv )
         iconimage = ewl_image_new();
 
         ewl_container_child_append(EWL_CONTAINER(box), iconimage);
-        ewl_object_insets_set(EWL_OBJECT ( iconimage ),strtol(edje_file_data_get(DEFAULT_THEME,"/madshelf/icon/inset"),NULL,10),0,0,0);
+        ewl_object_insets_set(EWL_OBJECT ( iconimage ),strtol(edje_file_data_get(theme_file, "/madshelf/icon/inset"),NULL,10),0,0,0);
         ewl_object_padding_set(EWL_OBJECT ( iconimage ),0,0,0,0);
         ewl_widget_name_set(iconimage,tempname2 );
         ewl_object_alignment_set(EWL_OBJECT(iconimage),EWL_FLAG_ALIGN_LEFT|EWL_FLAG_ALIGN_BOTTOM);
@@ -1723,6 +1748,9 @@ int main ( int argc, char ** argv )
 
         ewl_widget_name_set(dividewidget,tempname4 );
     }
+
+    free(theme_file);
+
     update_list();
     ewl_widget_focus_send(EWL_WIDGET(border));
 
