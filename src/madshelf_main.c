@@ -87,16 +87,15 @@ const char* g_file;
 
 extractors_t *extractors;
 
-char titletext[200];
 
 //***********these variables need to be saved and restored in order to restore the state
 int current_index = 0;
-int depth=0;
 
+/*
+ * It is guaranteed that g_roots[current_root]->path is a prefix of cwd.
+ */
 int current_root;
 
-char *curdir;
-int initdirstrlen;
 int sort_type=SORT_BY_NAME;
 int sort_order=ECORE_SORT_MIN;
 //***********
@@ -159,7 +158,12 @@ void fill_roots(int count, root_t* roots)
 
         name = malloc((line_sep - conf_line + 1) * sizeof(char));
         strncpy(name, conf_line, line_sep - conf_line);
-        name[line_sep - conf_line] = 0; /* 0-terminate after strncpy */
+        /* 0-terminate after strncpy */
+        name[line_sep - conf_line] = 0;
+        /* Strip trailing '/' */
+        if(line_sep - conf_line - 1 >= 0
+           && name[line_sep - conf_line - 1] == '/')
+            name[line_sep - conf_line - 1] = 0;
         roots[i].name = name;
 
         roots[i].path = strdup(line_sep+1);
@@ -258,9 +262,109 @@ void prev_page()
     }
 }
 
+/*
+ * If something wicked happened, just move to some allowed directory. If it is
+ * not possible - crash loudly.
+ */
+void emergency_chdir()
+{
+    int i;
+    fprintf(stderr,
+            "Emergency chdir activated: trying to find any chdir'able root.\n");
+
+    for(i = 0; i < g_roots->nroots; ++i)
+    {
+        fprintf(stderr, "Trying %s\n", g_roots->roots[i].path);
+        if(0 == chdir(g_roots->roots[i].path))
+        {
+            current_root = i;
+            fprintf(stderr, "Succesfully. Back to normal operation.\n");
+            return;
+        }
+    }
+
+    /*
+     * Okay, something is *really* bad.
+     */
+    fprintf(stderr,
+            "** Unable to find any remotely sane directory to chdir to. **\n");
+    exit(1);
+}
+
+
+/* Maintaining invariant "current root is a prefix of current dir" */
+int is_cwd_in_root(int n)
+{
+    char* cwd = get_current_dir_name();
+    char* root = g_roots->roots[n].path;
+    int rootlen = strlen(root);
+
+    fprintf(stderr, "Checking legality of %s in root %d (%s)\n",
+            cwd, n, root);
+
+    int in_root = !strncmp(cwd, root, rootlen)
+        && (cwd[rootlen] == 0 || cwd[rootlen] == '/');
+
+    fprintf(stderr, "%s is %slegal in %d (%s)\n",
+            cwd, in_root ? "" : "not ", n, root);
+
+    free(cwd);
+    return in_root;
+}
+
+/*
+ * chdir, checking that target directory is in given root.
+ */
+int chdir_to_in_root(const char* file, int root)
+{
+    fprintf(stderr, "Trying to chdir %s in root %d.\n", file, root);
+
+    /* Keeping current directory, as a fallback if something goes wrong later */
+    int curfd = open(".", O_DIRECTORY | O_RDONLY);
+
+    if(-1 == chdir(file))
+    {
+        fprintf(stderr, "Unable to chdir to %s: %s.\n", file, strerror(errno));
+
+        /* Unable to chdir due to some reason. */
+        if(curfd != -1)
+            close(curfd);
+        return -1;
+    }
+
+    fprintf(stderr, "Successfully chdir to %s. Checking legality.\n", file);
+
+    if(!is_cwd_in_root(root))
+    {
+        fprintf(stderr, "%s is illegal in root %d. Falling back.\n",
+                file, root);
+
+        if(curfd != -1 && fchdir(curfd) == 0)
+            return -1;
+
+        /*
+         * We've moved to directory which is not allowed, and unable to move
+         * back. Time to ask for help.
+         */
+        if(curfd != -1)
+            close(curfd);
+        emergency_chdir();
+        return -1;
+    }
+
+    if(curfd != -1)
+        close(curfd);
+
+    return 0;
+}
+
+int chdir_to(const char* file)
+{
+    return chdir_to_in_root(file, current_root);
+}
+
 void update_list()
 {
-    int offset=0;
     int count=0;
     char tempname[20];
     char *pointptr;
@@ -338,16 +442,14 @@ void update_list()
             
         char* file = g_fileslist[current_index + count]->d_name;
 
-        char* fileconcat;
         struct stat stat_p;
         char* time_str;
         char *extension = strrchr(file, '.');
 
-        asprintf(&fileconcat, "%s%s", curdir, file);
-        stat(fileconcat, &stat_p);
+        stat(file, &stat_p);
         time_str = format_time(stat_p.st_mtime);
 
-        if(ecore_file_is_dir(fileconcat))
+        if(ecore_file_is_dir(file))
         {
             ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));
 
@@ -362,7 +464,7 @@ void update_list()
             char* imagefile;
 
             EXTRACTOR_KeywordList* mykeys;
-            mykeys = extractor_get_keywords(extractors, fileconcat);
+            mykeys = extractor_get_keywords(extractors, file);
 
             extracted_title = extractor_get_last(EXTRACTOR_TITLE, mykeys);
             extracted_author = extractor_get_last(EXTRACTOR_AUTHOR, mykeys);
@@ -387,7 +489,7 @@ void update_list()
             else
                 ewl_label_text_set(EWL_LABEL(authorlabel[count]), gettext("Unknown Author"));
 
-            pointptr=strrchr(fileconcat,'.');
+            pointptr=strrchr(file,'.');
             if(pointptr==NULL)
                 tempstr2=ReadString("icons",".","default.png");
             else
@@ -403,19 +505,14 @@ void update_list()
         showflag[count]=1;
 
         free(time_str);
-        free(fileconcat);
     }
 
-    if(next_page_exists())
-    {
-    if(prev_page_exists())
-            ewl_widget_state_set(arrow_widget,"both_on",EWL_STATE_PERSISTENT);
-    else
-            ewl_widget_state_set(arrow_widget,"right_only",EWL_STATE_PERSISTENT);
-    }
-    else
+    if(next_page_exists() && prev_page_exists())
+        ewl_widget_state_set(arrow_widget,"both_on",EWL_STATE_PERSISTENT);
+    else if(next_page_exists())
+        ewl_widget_state_set(arrow_widget,"right_only",EWL_STATE_PERSISTENT);
+    else if(prev_page_exists())
         ewl_widget_state_set(arrow_widget,"left_only",EWL_STATE_PERSISTENT);
-    
 
     for(count=0;count<num_books;count++)
     {
@@ -434,18 +531,21 @@ void update_list()
 
 void update_title()
 {
-    titletext[0]='\0';
-    Ewl_Widget *curwidget;
-    strcat(titletext,"Madshelf | ");
-    strcat(titletext, g_roots->roots[current_root].name);
-    if(!(strlen(curdir)==initdirstrlen))
-    {
-        strcat(titletext,"://");
-        strcat(titletext,&(curdir[initdirstrlen]));
-    }
+    char* titletext;
+    char* cwd = get_current_dir_name();
 
-    curwidget = ewl_widget_name_find("mainborder");
-    ewl_border_label_set(EWL_BORDER(curwidget),titletext);
+    int notroot = strcmp(g_roots->roots[current_root].path, cwd);
+
+    asprintf(&titletext, "Madshelf | %s%s%s",
+             g_roots->roots[current_root].name,
+             notroot ? "://" : "",
+             notroot ? cwd + strlen(g_roots->roots[current_root].path) : "");
+
+    ewl_border_label_set(EWL_BORDER(ewl_widget_name_find("mainborder")),
+                         titletext);
+
+    free(titletext);
+    free(cwd);
 }
 
 char* get_sort_label(int sort_type, int sort_order)
@@ -476,7 +576,6 @@ void update_sort_label()
     curwidget = ewl_widget_name_find("sortlabel");
     ewl_label_text_set(EWL_LABEL(curwidget),
                        get_sort_label(sort_type, sort_order));
-
 }
 
 void update_menu()
@@ -507,11 +606,8 @@ static int rev_alphasort(const void* lhs, const void* rhs)
 
 static long long rel_file_mtime(const char* f)
 {
-    char* filename;
     struct stat st;
-    asprintf(&filename, "%s%s", curdir, f);
-    stat(filename, &st);
-    free(filename);
+    stat(f, &st);
     return st.st_mtime;
 }
 
@@ -538,16 +634,26 @@ static int filter_dotfiles(const struct dirent* f)
 
 typedef int (*compar_t)(const void*, const void*);
 
+void fini_filelist()
+{
+    int i;
+    for(i = 0; i < g_nfileslist; ++i)
+        free(g_fileslist[i]);
+    free(g_fileslist);
+}
+
 void init_filelist()
 {
     compar_t cmp;
+
+    fini_filelist();
 
     if(sort_type == SORT_BY_NAME)
         cmp = (compar_t)(sort_order == ECORE_SORT_MIN ? alphasort : rev_alphasort);
     else
         cmp = (compar_t)(sort_order == ECORE_SORT_MIN ? date_cmp : rev_date_cmp);
 
-    g_nfileslist = scandir(curdir, &g_fileslist,
+    g_nfileslist = scandir(".", &g_fileslist,
                            &filter_dotfiles,
                            cmp);
 
@@ -557,16 +663,6 @@ void init_filelist()
 
         g_nfileslist = 0;
     }
-}
-
-void fini_filelist()
-{
-    int i;
-    for(i = 0; i < g_nfileslist; ++i)
-        free(g_fileslist[i]);
-    free(g_fileslist);
-
-    g_nfileslist = 0;
 }
 
 void destroy_cb ( Ewl_Widget *w, void *event, void *data )
@@ -593,10 +689,18 @@ const char* lookup_handler(const char* file_path)
     return ReadString("apps", extension, NULL);
 }
 
+void change_dir_in_gui()
+{
+    init_filelist();
+    current_index = 0;
+    nav_sel=0;
+    update_list();
+    update_title();
+}
+
 void doActionForNum(unsigned int num)
 {
     char *file;
-    char *tempo;
     int file_index = current_index + num - 1;
 
     if(file_index >= g_nfileslist)
@@ -604,16 +708,14 @@ void doActionForNum(unsigned int num)
 
     file = g_fileslist[file_index]->d_name;
 
-    asprintf(&tempo, "%s%s", curdir, file);
-
-    if(!ecore_file_is_dir(tempo))
+    if(!ecore_file_is_dir(file))
     {
-        const char* handler = lookup_handler(tempo);
+        const char* handler = lookup_handler(file);
         if (handler)
         {
             /* Sin */
             g_handler = handler;
-            g_file = tempo;
+            g_file = file;
             ewl_main_quit();
         }
         else
@@ -623,48 +725,15 @@ void doActionForNum(unsigned int num)
     }
     else
     {
-        free(curdir);
-        strcat(tempo,"/");
-        curdir=tempo;
-        fini_filelist();
-        init_filelist();
-        depth++;
-        current_index = 0;
-        nav_sel=0;
-        update_list();
-        update_title();
+        chdir_to(file);
+        change_dir_in_gui();
     }
 }
 
-char *getUpLevelDir(char *thedir)
+void change_root(int item)
 {
-    char *strippeddir;
-    char *ptr;
-    int loc=-1;
-    int count;
-
-    strippeddir=(char *)calloc(strlen(thedir), sizeof(char));
-    strncpy(strippeddir,thedir,strlen(thedir)-1);
-    strippeddir[strlen(thedir)-1]='\0';
-    ptr=strrchr(strippeddir,'/');
-    if(ptr==NULL)
-    {
-        free(strippeddir);
-        return NULL;
-    }
-    for(count=0;count<strlen(strippeddir);count++)
-        if(&(strippeddir[count])==ptr)
-            loc=count+1;
-    if(loc==-1)
-    {
-        free(strippeddir);
-        return NULL;
-    }
-    ptr=(char *)calloc(loc +1, sizeof(char));
-    strncpy(ptr,strippeddir,loc);
-    ptr[loc]='\0';
-    free(strippeddir);
-    return ptr;
+    if(chdir_to_in_root(g_roots->roots[item].path, item) == 0)
+        current_root = item;
 }
 
 /* GUI */
@@ -770,22 +839,8 @@ void set_key_handler(Ewl_Widget* widget, key_handler_info_t* handler_info)
 
 void main_esc()
 {
-    char* tmpchrptr;
-
-    if(depth==0)
-        return;
-    tmpchrptr=getUpLevelDir(curdir);
-    if(tmpchrptr==NULL)
-        return;
-
-    free(curdir);
-    curdir=tmpchrptr;
-    fini_filelist();
-    init_filelist();
-    depth--;
-    current_index = 0;
-    update_list();
-    update_title();
+    chdir_to("..");
+    change_dir_in_gui();
 }
 
 void main_ok(void)
@@ -799,7 +854,6 @@ void main_nav_up(void)
     Ewl_Widget *curwidget=NULL;
     if((nav_sel-1)>=0)
     {
-        
         sprintf (tempname, "bookbox%d",nav_sel);
         curwidget = ewl_widget_name_find(tempname);
         ewl_widget_state_set(curwidget,"unselect",EWL_STATE_PERSISTENT);
@@ -924,11 +978,6 @@ void main_menu_nav_down(void)
     }
 }
 
-
-
-
-
-
 void main_menu_esc()
 {
     hide_main_menu();
@@ -944,7 +993,6 @@ void main_menu_item(int item)
         sort_order=ECORE_SORT_MIN;
         sort_type=SORT_BY_NAME;
 
-        fini_filelist();
         init_filelist();
 
         current_index = 0;
@@ -956,7 +1004,6 @@ void main_menu_item(int item)
         sort_order=ECORE_SORT_MIN;
         sort_type=SORT_BY_TIME;
 
-        fini_filelist();
         init_filelist();
 
         current_index = 0;
@@ -970,7 +1017,6 @@ void main_menu_item(int item)
         else
             sort_order=ECORE_SORT_MIN;
 
-        fini_filelist();
         init_filelist();
 
         current_index = 0;
@@ -1069,10 +1115,7 @@ void lang_menu_nav_down(void)
     ewl_widget_state_set((EWL_MENU_ITEM(oldselwid)->button).label_object,"unselect",EWL_STATE_PERSISTENT);
     nav_lang_menu_sel++;
     ewl_widget_state_set((EWL_MENU_ITEM(newselwid)->button).label_object,"select",EWL_STATE_PERSISTENT);
-
 }
-
-
 
 void lang_menu_item(int item)
 {
@@ -1171,15 +1214,8 @@ void goto_menu_item(int item)
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem5")));
     hide_main_menu();
 
-    curdir = strdup(g_roots->roots[item].path);
-    current_root = item;
-
-    initdirstrlen=strlen(curdir);
-    depth=0;
-    current_index = 0;
-    init_filelist();
-    update_title();
-    update_list();
+    change_root(item);
+    change_dir_in_gui();
 }
 
 void goto_menu_nav_sel(void)
@@ -1212,7 +1248,6 @@ void scripts_menu_nav_up(void)
     Ewl_Widget *newselwid=NULL;
     if((nav_scripts_menu_sel-1)>=0)
     {
-        
         sprintf (tempname, "scriptsmenuitem%d",nav_scripts_menu_sel+1);
         oldselwid = ewl_widget_name_find(tempname);
         sprintf (tempname, "scriptsmenuitem%d",nav_scripts_menu_sel);
@@ -1287,16 +1322,18 @@ void save_state()
     Eet_File *state;
     state=eet_open(statefilename,EET_FILE_MODE_WRITE);
     const int a=1;
+    char* cwd = get_current_dir_name();
+
     eet_write(state,"statesaved",(void *)&a, sizeof(int),0);
     eet_write(state,"curindex",(void *)&current_index,sizeof(int),0);
-    eet_write(state,"depth",(void *)&depth,sizeof(int),0);
     eet_write(state,"rootname",(void *)g_roots->roots[current_root].name,
               sizeof(char)*(strlen(g_roots->roots[current_root].name)+1),0);
-    eet_write(state,"curdir",curdir,sizeof(char)*(strlen(curdir)+1),0);
-    eet_write(state,"initdirstrlen",(void *)&initdirstrlen,sizeof(int),0);
+    eet_write(state,"curdir",cwd,sizeof(char)*(strlen(cwd)+1),0);
     eet_write(state,"sort_type",(void *)&sort_type,sizeof(int),0);
     eet_write(state,"sort_order",(void *)&sort_order,sizeof(int),0);
     eet_close(state);
+
+    free(cwd);
 }
 
 void refresh_state()
@@ -1312,22 +1349,19 @@ void refresh_state()
         return;
     }
     current_index = *((int*)eet_read(state,"curindex",&size));
-    depth=*((int*)eet_read(state,"depth",&size));
 
-    current_root = 0;
+    change_root(0);
+
     temp=(char *)eet_read(state,"rootname",&size);
-    for(i = 0; i < g_roots->nroots; ++i)
+    for(i = 1; i < g_roots->nroots; ++i)
         if (!strcmp(temp, g_roots->roots[i].name))
     {
-        current_root = i;
+        change_root(i);
         break;
     }
 
-    temp=(char *)eet_read(state,"curdir",&size);
-    free(curdir);
-    curdir=(char *)calloc(strlen(temp) + 1, sizeof(char));
-    strcpy(curdir,temp);
-    initdirstrlen=*((int*)eet_read(state,"initdirstrlen",&size));
+    chdir_to((char*)eet_read(state, "curdir", &size));
+
     sort_type=*((int*)eet_read(state,"sort_type",&size));
     sort_order=*((int*)eet_read(state,"sort_order",&size));
     eet_close(state);
@@ -1344,7 +1378,6 @@ int valid_dir(const char* dir)
 int main ( int argc, char ** argv )
 {
     int file_desc;
-        //char *eetfilename;
     char tempname1[20];
     char tempname2[20];
     char tempname3[20];
@@ -1444,25 +1477,11 @@ int main ( int argc, char ** argv )
     g_roots = roots_create();
     current_root = 0;
 
-    curdir = strdup(g_roots->roots[current_root].path);
-
-    initdirstrlen=strlen(curdir);
-
     statefilename=(char *)calloc(strlen(homedir) + 1+21 + 1, sizeof(char));
     strcat(statefilename,homedir);
     strcat(statefilename,"/.madshelf/state.eet");
 
     refresh_state();
-
-    if (!valid_dir(curdir))
-    {
-        free(curdir);
-
-        /*
-         * This dir may be invalid too. Oh, well...
-         */
-        curdir = strdup(g_roots->roots[0].path);
-    }
 
     win = ewl_window_new();
     ewl_window_title_set ( EWL_WINDOW ( win ), "EWL_WINDOW" );
@@ -1501,8 +1520,6 @@ int main ( int argc, char ** argv )
     ewl_object_fill_policy_set(EWL_OBJECT(box4), EWL_FLAG_FILL_HSHRINK|EWL_FLAG_FILL_VSHRINK);
     ewl_object_alignment_set(EWL_OBJECT(box4),EWL_FLAG_ALIGN_RIGHT);
     ewl_widget_show(box4);
-
-
 
     arrow_widget = ewl_widget_new();
     ewl_container_child_append(EWL_CONTAINER(box4), arrow_widget);
@@ -1648,10 +1665,7 @@ int main ( int argc, char ** argv )
         if(nav_mode==0)
             ewl_widget_appearance_part_text_set(box,"ewl/box/oi_bookbox/text",tempname5);
         
-                                                
-        
         ewl_widget_name_set(box,tempname1 );
-        //ewl_widget_show(box);
 
         sprintf (tempname2, "type%d",count);
         iconimage = ewl_image_new();
@@ -1704,7 +1718,6 @@ int main ( int argc, char ** argv )
         ewl_container_child_append(EWL_CONTAINER(box3), dividewidget);
 
         ewl_widget_name_set(dividewidget,tempname4 );
-        //ewl_widget_show(dividewidget);
     }
     update_list();
     ewl_widget_focus_send(EWL_WIDGET(border));
@@ -1720,7 +1733,6 @@ int main ( int argc, char ** argv )
     roots_destroy(g_roots);
 
     free(scriptstrlist);
-    free(curdir);
     unload_extractors(extractors);
     if (g_file)
     {
