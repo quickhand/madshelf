@@ -92,7 +92,7 @@ extractors_t *extractors;
 
 
 //***********these variables need to be saved and restored in order to restore the state
-int current_index = 0;
+int current_index;
 
 /*
  * It is guaranteed that g_roots[current_root]->path is a prefix of cwd.
@@ -689,6 +689,9 @@ void init_filelist()
 
         g_nfileslist = 0;
     }
+
+    current_index = 0;
+    nav_sel = 0;
 }
 
 void destroy_cb ( Ewl_Widget *w, void *event, void *data )
@@ -715,13 +718,16 @@ const char* lookup_handler(const char* file_path)
     return ReadString("apps", extension, NULL);
 }
 
+void update_filelist_in_gui()
+{
+    update_list();
+    update_title();
+}
+
 void change_dir_in_gui()
 {
     init_filelist();
-    current_index = 0;
-    nav_sel=0;
-    update_list();
-    update_title();
+    update_filelist_in_gui();
 }
 
 void doActionForNum(unsigned int num)
@@ -869,8 +875,6 @@ void main_esc()
     curwd=&curwd[1];
     chdir_to("..");
     init_filelist();
-    current_index=0;
-    nav_sel=0;
     int i;
     for(i=0;i<g_nfileslist;i++)
     {
@@ -882,10 +886,8 @@ void main_esc()
             break;
         }
     }
-    update_list();
-    update_title();
-    //change_dir_in_gui();
-    
+
+    update_filelist_in_gui();
 }
 
 void main_ok(void)
@@ -1040,7 +1042,6 @@ void main_menu_item(int item)
 
         init_filelist();
 
-        current_index = 0;
         update_list();
         update_sort_label();
         hide_main_menu();
@@ -1051,7 +1052,6 @@ void main_menu_item(int item)
 
         init_filelist();
 
-        current_index = 0;
         update_list();
         update_sort_label();
         hide_main_menu();
@@ -1064,7 +1064,6 @@ void main_menu_item(int item)
 
         init_filelist();
 
-        current_index = 0;
         update_list();
         update_sort_label();
         hide_main_menu();
