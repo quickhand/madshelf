@@ -865,8 +865,27 @@ void set_key_handler(Ewl_Widget* widget, key_handler_info_t* handler_info)
 
 void main_esc()
 {
+    char *curwd=strrchr(get_current_dir_name(),'/');
+    curwd=&curwd[1];
     chdir_to("..");
-    change_dir_in_gui();
+    init_filelist();
+    current_index=0;
+    nav_sel=0;
+    int i;
+    for(i=0;i<g_nfileslist;i++)
+    {
+        if(strcmp(curwd,g_fileslist[i]->d_name)==0)
+        {
+            nav_sel=i%num_books;
+            current_index=i-nav_sel;
+            
+            break;
+        }
+    }
+    update_list();
+    update_title();
+    //change_dir_in_gui();
+    
 }
 
 void main_ok(void)
