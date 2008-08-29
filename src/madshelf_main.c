@@ -644,7 +644,8 @@ static int date_cmp(const struct dirent** lhs, const struct dirent** rhs)
 
     if(lhs_mtime > rhs_mtime) return 1;
     if(lhs_mtime < rhs_mtime) return -1;
-    return 0;
+
+    return alphasort(lhs, rhs);
 }
 
 static int rev_date_cmp(const struct dirent** lhs, const struct dirent** rhs)
