@@ -119,8 +119,10 @@ int nav_scripts_menu_sel=0;
  */
 char* get_theme_file()
 {
-    char *rel_theme;
-    asprintf(&rel_theme, "%s/" REL_THEME, getenv("HOME"));
+    char* cwd = get_current_dir_name();
+    char* rel_theme;
+    asprintf(&rel_theme, "%s/%s", cwd, REL_THEME);
+    free(cwd);
     if(0 == access(rel_theme, R_OK))
         return rel_theme;
     free(rel_theme);
