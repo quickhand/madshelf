@@ -169,6 +169,7 @@ void fill_roots(int count, root_t* roots)
         char* name;
         const char* conf_line;
         const char* line_sep;
+        int path_len;
 
         while (p->Type != tpKEYVALUE)
             p = p->pNext;
@@ -185,17 +186,13 @@ void fill_roots(int count, root_t* roots)
             continue;
         }
 
-        name = malloc((line_sep - conf_line + 1) * sizeof(char));
-        strncpy(name, conf_line, line_sep - conf_line);
-        /* 0-terminate after strncpy */
-        name[line_sep - conf_line] = 0;
-        /* Strip trailing '/' */
-        if(line_sep - conf_line - 1 >= 0
-           && name[line_sep - conf_line - 1] == '/')
-            name[line_sep - conf_line - 1] = 0;
+        asprintf(&name, "%.*s", line_sep - conf_line, conf_line);
         roots[i].name = name;
 
         roots[i].path = strdup(line_sep+1);
+        path_len = strlen(roots[i].path);
+        if(path_len > 0 && roots[i].path[path_len-1] == '/')
+            roots[i].path[path_len-1] = 0;
 
         p = p->pNext;
     }
