@@ -872,7 +872,8 @@ void set_key_handler(Ewl_Widget* widget, key_handler_info_t* handler_info)
 void main_esc()
 {
     int i;
-    char *cur_name = strrchr(get_current_dir_name(),'/') + 1;
+    char* cwd = get_current_dir_name();
+    char* cur_name = strrchr(cwd, '/') + 1;
 
     chdir_to("..");
     init_filelist();
@@ -884,6 +885,8 @@ void main_esc()
             current_index = i-nav_sel;
             break;
         }
+
+    free(cwd);
 
     update_filelist_in_gui();
 }
