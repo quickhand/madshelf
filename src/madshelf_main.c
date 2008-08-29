@@ -1408,6 +1408,8 @@ void refresh_state()
     chdir_to((char*)eet_read(state, "curdir", &size));
     init_filelist();
     current_index = *((int*)eet_read(state,"curindex",&size));
+    if(current_index < 0 || current_index > g_nfileslist)
+        current_index = 0;
 
     sort_type=*((int*)eet_read(state,"sort_type",&size));
     sort_order=*((int*)eet_read(state,"sort_order",&size));
