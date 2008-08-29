@@ -787,6 +787,9 @@ typedef struct
     item_handler_t item_handler;
 } key_handler_info_t;
 
+
+
+/* FIXME: HACK */
 static void _key_handler(Ewl_Widget* w, void *event, void *context)
 {
     Ewl_Event_Key_Up* e = (Ewl_Event_Key_Up*)event;
@@ -794,71 +797,27 @@ static void _key_handler(Ewl_Widget* w, void *event, void *context)
 
     const char* k = e->base.keyname;
 
-    if(!strcmp(k, "Return"))
-    {
-        if(handler_info->ok_handler)
-            (*handler_info->ok_handler)();
+#define HANDLE_ITEM(h, params) { if(handler_info->h) (*handler_info->h)(params);}
+#define HANDLE_KEY(h) {if(handler_info->h) (*handler_info->h)();}
+
+    if(!strcmp(k, "Return")) {
+        if(nav_mode == 1)            HANDLE_KEY(nav_sel_handler)
+        else                         HANDLE_KEY(ok_handler)
     }
-    else if(!strcmp(k, "Escape"))
-    {
-        if(handler_info->esc_handler)
-            (*handler_info->esc_handler)();
+    else if(!strcmp(k, "Escape"))    HANDLE_KEY(esc_handler)
+    else if (isdigit(k[0]) && !k[1]) HANDLE_ITEM(item_handler, k[0]-'0')
+    else if (!strcmp(k,"Up")) {
+        if(nav_mode == 1)            HANDLE_KEY(nav_up_handler)
+        else                         HANDLE_KEY(nav_left_handler)
     }
-    else if (isdigit(k[0]) && !k[1])
-    {
-        if (handler_info->item_handler)
-            (*handler_info->item_handler)(k[0] - '0');
+    else if (!strcmp(k, "Down")) {
+        if(nav_mode == 1)            HANDLE_KEY(nav_down_handler)
+        else                         HANDLE_KEY(nav_right_handler)
     }
-    else if (!strcmp(k,"Up"))
-    {
-        /* FIXME: HACK */
-        if(nav_mode == 1)
-        {
-            if(handler_info->nav_up_handler)
-                (*handler_info->nav_up_handler)();
-        }
-        else
-        {
-            if(handler_info->nav_left_handler)
-                (*handler_info->nav_left_handler)();
-        }
-    }
-    else if (!strcmp(k,"Down"))
-    {
-        /* FIXME: HACK */
-        if(nav_mode == 1)
-        {
-            if(handler_info->nav_down_handler)
-                (*handler_info->nav_down_handler)();
-        }
-        else
-        {
-            if(handler_info->nav_right_handler)
-                (*handler_info->nav_right_handler)();
-        }
-    }
-    else if (!strcmp(k,"Left"))
-    {
-        if(handler_info->nav_left_handler)
-            (*handler_info->nav_left_handler)();
-    }
-    else if (!strcmp(k,"Right"))
-    {
-        if(handler_info->nav_right_handler)
-            (*handler_info->nav_right_handler)();
-    }
-    else if (!strcmp(k,"Enter"))
-    {
-        if(handler_info->nav_sel_handler)
-            (*handler_info->nav_sel_handler)();
-    }
-    else if (!strcmp(k,"F2"))
-    {
-        if(handler_info->nav_menubtn_handler)
-            (*handler_info->nav_menubtn_handler)();
-    }
-    else
-        fprintf(stderr,k);
+    else if (!strcmp(k, "Left"))     HANDLE_KEY(nav_left_handler)
+    else if (!strcmp(k, "Right"))    HANDLE_KEY(nav_right_handler)
+    else if (!strcmp(k, "F2"))       HANDLE_KEY(nav_menubtn_handler)
+    else fprintf(stderr,k);
 
 }
 
