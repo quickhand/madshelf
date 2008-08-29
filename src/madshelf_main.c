@@ -1393,7 +1393,6 @@ void refresh_state()
         eet_close(state);
         return;
     }
-    current_index = *((int*)eet_read(state,"curindex",&size));
 
     change_root(0);
 
@@ -1406,6 +1405,8 @@ void refresh_state()
     }
 
     chdir_to((char*)eet_read(state, "curdir", &size));
+    init_filelist();
+    current_index = *((int*)eet_read(state,"curindex",&size));
 
     sort_type=*((int*)eet_read(state,"sort_type",&size));
     sort_order=*((int*)eet_read(state,"sort_order",&size));
@@ -1539,8 +1540,6 @@ int main ( int argc, char ** argv )
     set_key_handler(win, &main_info);
     ewl_widget_name_set(win,"mainwindow");
     ewl_widget_show ( win );
-
-    init_filelist();
 
     box2 = ewl_vbox_new();
     ewl_container_child_append(EWL_CONTAINER(win),box2);
