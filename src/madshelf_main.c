@@ -847,12 +847,12 @@ static void _key_handler(Ewl_Widget* w, void *event, void *context)
         if(handler_info->nav_right_handler)
             (*handler_info->nav_right_handler)();
     }
-    else if (!strcmp(k," "))
+    else if (!strcmp(k,"Enter"))
     {
         if(handler_info->nav_sel_handler)
             (*handler_info->nav_sel_handler)();
     }
-    else if (!strcmp(k,"F1"))
+    else if (!strcmp(k,"F2"))
     {
         if(handler_info->nav_menubtn_handler)
             (*handler_info->nav_menubtn_handler)();
