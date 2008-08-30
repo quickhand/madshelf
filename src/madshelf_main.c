@@ -44,6 +44,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#define BUFSIZE 4096
+
 /* Forward declarations */
 
 void show_main_menu();
@@ -388,6 +390,103 @@ int chdir_to_in_root(const char* file, int root)
 int chdir_to(const char* file)
 {
     return chdir_to_in_root(file, current_root);
+}
+
+/*
+ * Copies a file. Returns 0 on success. If anything goes wrong, deletes the
+ * target file and returns -1 and error in errno. See the
+ * open(2)/write(2)/close(2) manpages for the list of possible errors.
+ */
+int copy_file(const char* old, const char* new)
+{
+    int saved_errno;
+    int rfd = open(old, O_RDONLY);
+    if(rfd == -1)
+        return -1;
+
+    struct stat s;
+    if(-1 == fstat(rfd, &s))
+    {
+        saved_errno = errno;
+        close(rfd);
+        errno = saved_errno;
+        return -1;
+    }
+    
+    int wfd = creat(new, s.st_mode);
+    if(wfd == -1)
+    {
+        saved_errno = errno;
+        close(rfd);
+        errno = saved_errno;
+        return -1;
+    }
+
+    for(;;)
+    {
+        char buf[BUFSIZE];
+        int count = read(rfd, buf, BUFSIZE);
+        if(count == 0)
+            break;
+        if(count == -1)
+        {
+            if(errno == EINTR || errno == EAGAIN)
+                continue;
+            goto err;
+        }
+        char* pos = buf;
+        while(count > 0)
+        {
+            int written = write(wfd, pos, count);
+            if(written == -1)
+            {
+                if(errno == EINTR || errno == EAGAIN)
+                    continue;
+                goto err;
+            }
+            pos += written;
+            count -= written;
+        }
+    }
+
+    if(-1 == close(wfd))
+        goto err;
+    close(rfd);
+    return 0;
+
+err:
+    saved_errno = errno;
+    unlink(new);
+    close(wfd);
+    close(rfd);
+    errno = saved_errno;
+    return -1;
+}
+
+/*
+ * Moves file, resorting to copying+deleting if source and target are on
+ * different filesystems.
+ *
+ * Returns 0 on success and -1 and error in errno if unable to move file.
+ */
+int move_file(const char* old, const char* new)
+{
+    struct stat s_old;
+    struct stat s_new;
+
+    if(-1 == stat(old, &s_old))
+        return -1;
+    if(-1 == stat(new, &s_new))
+        return -1;
+
+    if(s_old.st_dev == s_new.st_dev)
+        return rename(old ,new);
+
+    int res = copy_file(old, new);
+    if(res == 0)
+        return unlink(old);
+    else
+        return res;
 }
 
 void update_list()
