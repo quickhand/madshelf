@@ -109,7 +109,8 @@ int nav_menu_sel=0;
 int nav_lang_menu_sel=0;
 int nav_goto_menu_sel=0;
 int nav_scripts_menu_sel=0;
-
+int nav_mc_menu_sel=0;
+int key_shifted=0;
 
 #define REL_THEME "themes/madshelf.edj"
 #define SYSTEM_THEME "/usr/share/madshelf/madshelf.edj"
@@ -625,6 +626,26 @@ void update_menu()
     }
 }
 
+void update_context_menu()
+{
+    char *tempstrings[]={"Cut","Copy","Delete"};
+    char tempname[30];
+    char temptext[40];
+    int i=0;
+    Ewl_Widget *curwidget;
+    curwidget = ewl_widget_name_find("main_context");
+    for(i=0;i<3;i++)
+    {
+        sprintf(tempname,"mc_menuitem%d",i+1);
+        curwidget = ewl_widget_name_find(tempname);
+        if(nav_mode==0)
+            sprintf(temptext,"%d. %s",i+1,gettext(tempstrings[i]));
+        else
+            sprintf(temptext,"%s",gettext(tempstrings[i]));
+        ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
+    }
+}
+
 static int rev_alphasort(const void* lhs, const void* rhs)
 {
     return alphasort(rhs, lhs);
@@ -763,6 +784,26 @@ void doActionForNum(unsigned int num)
     }
 }
 
+void popupContext(unsigned int num)
+{
+    char tempname[30];
+    Ewl_Widget *curwidget,*selected;
+ 
+    key_shifted=0;
+    
+    sprintf(tempname,"bookbox%d",num-1);
+    selected = ewl_widget_name_find(tempname);
+    if(selected==NULL)
+        return;
+    if(!ewl_widget_onscreen_is(selected))
+        return;
+    curwidget=ewl_widget_name_find("main_context");
+    ewl_popup_follow_set(EWL_POPUP(curwidget),selected);
+    
+    ewl_popup_mouse_position_set(EWL_POPUP(curwidget),ewl_object_current_x_get(EWL_OBJECT(selected))+ewl_object_current_w_get(EWL_OBJECT(selected))-PREFERRED_W(curwidget),ewl_object_current_y_get(EWL_OBJECT(selected)));
+    ewl_widget_show(curwidget);
+    ewl_widget_focus_send(curwidget);
+}
 void change_root(int item)
 {
     if(chdir_to_in_root(g_roots->roots[item].path, item) == 0)
@@ -784,6 +825,7 @@ typedef struct
     key_handler_t nav_right_handler;
     key_handler_t nav_sel_handler;
     key_handler_t nav_menubtn_handler;
+    key_handler_t shift_handler;
     item_handler_t item_handler;
 } key_handler_info_t;
 
@@ -817,6 +859,7 @@ static void _key_handler(Ewl_Widget* w, void *event, void *context)
     else if (!strcmp(k, "Left"))     HANDLE_KEY(nav_left_handler)
     else if (!strcmp(k, "Right"))    HANDLE_KEY(nav_right_handler)
     else if (!strcmp(k, "F2"))       HANDLE_KEY(nav_menubtn_handler)
+    else if (!strcmp(k, " "))        HANDLE_KEY(shift_handler)
     else fprintf(stderr,k);
 
 }
@@ -854,6 +897,11 @@ void main_esc()
 void main_ok(void)
 {
     show_main_menu();
+}
+
+void main_shift(void)
+{
+    key_shifted=!key_shifted;
 }
 
 void main_nav_up(void)
@@ -902,8 +950,10 @@ void main_nav_right(void)
 
 void main_nav_sel(void)
 {
-    
-    doActionForNum(nav_sel+1);
+    if(key_shifted)
+        popupContext(nav_sel+1);
+    else
+        doActionForNum(nav_sel+1);
     
 }
 void main_nav_menubtn(void)
@@ -918,8 +968,11 @@ void main_item(int item)
         next_page();
     else if(item == 9)
         prev_page();
+    else if(key_shifted)
+        popupContext(item);
     else
         doActionForNum(item);
+    
 }
 
 static key_handler_info_t main_info =
@@ -932,6 +985,7 @@ static key_handler_info_t main_info =
     .nav_sel_handler=&main_nav_sel,
     .nav_menubtn_handler=&main_nav_menubtn,
     .esc_handler = &main_esc,
+    .shift_handler= &main_shift,
     .item_handler = &main_item,
 };
 
@@ -1320,6 +1374,72 @@ static key_handler_info_t scripts_menu_info =
     .item_handler = &scripts_menu_item,
 };
 
+/* Main Context menu */
+
+void mc_menu_esc()
+{
+    ewl_widget_hide(ewl_widget_name_find("main_context"));
+}
+
+void mc_menu_nav_up(void)
+{
+    char tempname[30];
+    Ewl_Widget *oldselwid=NULL;
+    Ewl_Widget *newselwid=NULL;
+    if((nav_mc_menu_sel-1)>=0)
+    {
+        
+        sprintf (tempname, "mc_menuitem%d",nav_mc_menu_sel+1);
+        oldselwid = ewl_widget_name_find(tempname);
+        sprintf (tempname, "mc_menuitem%d",nav_mc_menu_sel);
+        newselwid = ewl_widget_name_find(tempname);
+        if(!oldselwid||!newselwid)
+            return;
+        ewl_widget_state_set((EWL_MENU_ITEM(oldselwid)->button).label_object,"unselect",EWL_STATE_PERSISTENT);
+        nav_mc_menu_sel--;
+        ewl_widget_state_set((EWL_MENU_ITEM(newselwid)->button).label_object,"select",EWL_STATE_PERSISTENT);
+    }       
+}
+
+void mc_menu_nav_down(void)
+{
+    char tempname[30];
+    Ewl_Widget *oldselwid=NULL;
+    Ewl_Widget *newselwid=NULL;
+    sprintf (tempname, "mc_menuitem%d",nav_mc_menu_sel+1);
+    oldselwid = ewl_widget_name_find(tempname);
+    sprintf (tempname, "mc_menuitem%d",nav_mc_menu_sel+2);
+    newselwid = ewl_widget_name_find(tempname);
+    if(!oldselwid||!newselwid)
+        return;
+    ewl_widget_state_set((EWL_MENU_ITEM(oldselwid)->button).label_object,"unselect",EWL_STATE_PERSISTENT);
+    nav_mc_menu_sel++;
+    ewl_widget_state_set((EWL_MENU_ITEM(newselwid)->button).label_object,"select",EWL_STATE_PERSISTENT);
+}
+
+
+void mc_menu_item(int item)
+{
+    if(item <= 0 || item>3)
+        return;
+
+    
+}
+
+void mc_menu_nav_sel(void)
+{
+    mc_menu_item(nav_mc_menu_sel+1);
+}
+
+static key_handler_info_t mc_menu_info =
+{
+    .ok_handler = &mc_menu_esc,
+    .esc_handler = &mc_menu_esc,
+    .nav_up_handler=&mc_menu_nav_up,
+    .nav_down_handler=&mc_menu_nav_down,
+    .nav_sel_handler=&mc_menu_nav_sel,
+    .item_handler = &mc_menu_item,
+};
 /* State */
 
 void save_state()
@@ -1728,6 +1848,43 @@ int main ( int argc, char ** argv )
         ewl_widget_name_set(dividewidget,tempname4 );
     }
 
+    
+    {
+        Ewl_Widget *context;
+        Ewl_Widget *cont_item;
+        
+        context=ewl_context_menu_new();
+        ewl_widget_name_set(context,"main_context");
+        ewl_popup_type_set(EWL_POPUP(context),EWL_POPUP_TYPE_MOUSE);
+        set_key_handler(context, &mc_menu_info);
+        
+        
+        cont_item=ewl_menu_item_new();
+        ewl_widget_name_set(cont_item,"mc_menuitem1");
+        
+        ewl_container_child_append(EWL_CONTAINER(context),cont_item);
+        if(nav_mode==1)
+            ewl_widget_state_set((EWL_MENU_ITEM(cont_item)->button).label_object,"select",EWL_STATE_PERSISTENT);
+        ewl_widget_show(cont_item);
+        
+        cont_item=ewl_menu_item_new();
+        ewl_widget_name_set(cont_item,"mc_menuitem2");
+        
+        ewl_container_child_append(EWL_CONTAINER(context),cont_item);
+        ewl_widget_show(cont_item);
+        
+        cont_item=ewl_menu_item_new();
+        ewl_widget_name_set(cont_item,"mc_menuitem3");
+        
+        ewl_container_child_append(EWL_CONTAINER(context),cont_item);
+        ewl_widget_show(cont_item);
+        
+        update_context_menu();
+        ewl_widget_realize(context);
+        //ewl_object_init(EWL_OBJECT(context));
+        //ewl_widget_configure(context);
+    }
+    
     free(theme_file);
 
     update_list();
