@@ -1009,7 +1009,7 @@ void main_esc()
 {
     int i;
     char* cwd = get_current_dir_name();
-    char* cur_name = strrchr(cwd, '/') + 1;
+    char* cur_name = basename(cwd);
 
     chdir_to("..");
     init_filelist();
@@ -1642,10 +1642,6 @@ void fileops_menu_nav_down(void)
 
 void fileops_menu_item(int item)
 {
-    char *target_basename;
-    char *target_filename;
-    char *cwd;
-    
     if(item < 0 || item >1)
         return;
 
@@ -1656,17 +1652,20 @@ void fileops_menu_item(int item)
     {
         if(file_action==FILE_NO_ACTION)
             return;
-        target_basename = strrchr(action_filename, '/') + 1;
-        cwd = get_current_dir_name();
-        target_filename=(char *)malloc((strlen(target_basename)+2+strlen(cwd))*sizeof(char));
-        sprintf(target_filename,"%s/%s",cwd,target_basename);
+        char* filename_copy = strdup(action_filename);
+        char* target_basename = basename(filename_copy);
+        char* cwd = get_current_dir_name();
+
+        char* target_filename;
+        asprintf(&target_filename, "%s/%s", cwd, target_basename);
+
+        free(filename_copy);
         free(cwd);
         
         if(file_action==FILE_CUT)
             move_file(action_filename,target_filename);            
         else if(file_action==FILE_COPY)
             copy_file(action_filename,target_filename);
-            
         
         file_action=FILE_NO_ACTION;
         free(target_filename);
@@ -1675,7 +1674,6 @@ void fileops_menu_item(int item)
         init_filelist();
         update_filelist_in_gui();
     }
-
 }
 
 void fileops_menu_nav_sel(void)
