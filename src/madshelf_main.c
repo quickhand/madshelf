@@ -43,6 +43,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #define BUFSIZE 4096
 
@@ -479,8 +480,19 @@ int move_file(const char* old, const char* new)
 
     if(-1 == stat(old, &s_old))
         return -1;
-    if(-1 == stat(new, &s_new))
+
+    char* new_copy = strdup(new);
+    char* new_dir = dirname(new_copy);
+
+    if(-1 == stat(new_dir, &s_new))
+    {
+        int saved_errno = errno;
+        free(new_copy);
+        errno = saved_errno;
         return -1;
+    }
+
+    free(new_copy);
 
     if(s_old.st_dev == s_new.st_dev)
         return rename(old ,new);
@@ -845,13 +857,19 @@ void destroy_cb ( Ewl_Widget *w, void *event, void *data )
 */
 const char* lookup_handler(const char* file_path)
 {
-    const char* file_name = basename(file_path);
+    char* file_path_copy = strdup(file_path);
+    const char* file_name = basename(file_path_copy);
 
     const char* extension = strrchr(file_name, '.');
     if (!extension)
+    {
+        free(file_path_copy);
         return NULL;
+    }
 
-    return ReadString("apps", extension, NULL);
+    const char* res = ReadString("apps", extension, NULL);
+    free(file_path_copy);
+    return res;
 }
 
 void update_filelist_in_gui()
