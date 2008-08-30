@@ -2125,6 +2125,7 @@ int main ( int argc, char ** argv )
         ewl_widget_name_set(context,"main_context");
         ewl_popup_type_set(EWL_POPUP(context),EWL_POPUP_TYPE_MOUSE);
         set_key_handler(context, &mc_menu_info);
+        ewl_context_menu_attach(EWL_CONTEXT_MENU(context), EWL_WIDGET(win));
         
         
         cont_item=ewl_menu_item_new();
