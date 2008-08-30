@@ -19,6 +19,11 @@
 #define SORT_BY_NAME 0
 #define SORT_BY_TIME 1
 
+#define FILE_NO_ACTION 0
+#define FILE_COPY      1
+#define FILE_CUT       2
+
+
 void update_list();
 void update_title();
 void cleanup();
