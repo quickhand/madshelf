@@ -848,6 +848,82 @@ void destroy_cb ( Ewl_Widget *w, void *event, void *data )
     ewl_main_quit();
 }
 
+/* Confirm dialog stuff */
+#define CONFIRM_DIALOG_NO 0
+#define CONFIRM_DIALOG_YES 1
+typedef void (*confirm_handler)(void);
+confirm_handler confirm_dialog_yes_handler=NULL;
+confirm_handler confirm_dialog_no_handler=NULL;
+int confirm_dialog_current_choice=0;
+void show_confirm_dialog(confirm_handler nohandler,confirm_handler yeshandler,char *message)
+{
+    Ewl_Widget *wwin=ewl_widget_name_find("mainwindow");
+    Ewl_Widget *wdialog=ewl_widget_name_find("confirm_dialog");
+    Ewl_Widget *wmessage=ewl_widget_name_find("confirm_dialog_message");
+    Ewl_Widget *yeslabel=ewl_widget_name_find("confirm_dialog_yeslabel");
+    Ewl_Widget *nolabel=ewl_widget_name_find("confirm_dialog_nolabel");
+    char yestext[20],notext[20];
+    
+    confirm_dialog_no_handler=nohandler;
+    confirm_dialog_yes_handler=yeshandler;
+    
+    ewl_label_text_set(EWL_LABEL(wmessage),message);
+    
+    if(nav_mode==0)
+    {
+        sprintf(notext,"1. %s",gettext("No"));
+        sprintf(yestext,"2. %s",gettext("Yes"));
+        ewl_label_text_set(EWL_LABEL(nolabel),notext);
+        ewl_label_text_set(EWL_LABEL(yeslabel),yestext);
+    }
+    else
+    {
+        ewl_label_text_set(EWL_LABEL(nolabel),gettext("No"));
+        ewl_label_text_set(EWL_LABEL(yeslabel),gettext("Yes"));
+    }
+    
+    
+    confirm_dialog_choice_set(CONFIRM_DIALOG_NO);
+    
+    ewl_widget_show(wdialog);
+    ewl_widget_configure(wdialog);
+    
+}
+int confirm_dialog_choice_get(void)
+{
+    return confirm_dialog_current_choice;
+}
+void confirm_dialog_choice_set(int choice)
+{
+    Ewl_Widget *yeslabel=ewl_widget_name_find("confirm_dialog_yeslabel");
+    Ewl_Widget *nolabel=ewl_widget_name_find("confirm_dialog_nolabel");
+    confirm_dialog_current_choice=choice;
+    if(choice==CONFIRM_DIALOG_NO)
+    {
+        ewl_widget_state_set(nolabel,"select",EWL_STATE_PERSISTENT);
+        ewl_widget_state_set(yeslabel,"unselect",EWL_STATE_PERSISTENT);
+    }
+    else if(choice==CONFIRM_DIALOG_YES)
+    {
+        ewl_widget_state_set(yeslabel,"select",EWL_STATE_PERSISTENT);
+        ewl_widget_state_set(nolabel,"unselect",EWL_STATE_PERSISTENT);
+        
+    }
+}
+void confirm_dialog_action_perform(void)
+{
+    Ewl_Widget *wdialog=ewl_widget_name_find("confirm_dialog");
+    if(confirm_dialog_choice_get()==CONFIRM_DIALOG_NO)
+    {
+        ewl_widget_hide(wdialog);    
+        (confirm_dialog_no_handler)();
+    }
+    else if(confirm_dialog_choice_get()==CONFIRM_DIALOG_YES)
+    {
+        ewl_widget_hide(wdialog);    
+        (confirm_dialog_yes_handler)();
+    }
+}
 /*
 * Looks up handler for given absolute file path. Returns string with filename
 * of the program-handler.
@@ -1555,9 +1631,32 @@ void mc_menu_nav_down(void)
     ewl_widget_state_set((EWL_MENU_ITEM(newselwid)->button).label_object,"select",EWL_STATE_PERSISTENT);
 }
 
+void mc_menu_delete_confirm_yes(void)
+{
+    if(action_filename)
+    {
+        unlink (action_filename);
+        free(action_filename);
+        action_filename=NULL;
+        init_filelist();
+        update_filelist_in_gui();
+    }
+    
+}
+void mc_menu_delete_confirm_no(void)
+{
+    if(action_filename)
+    { 
+        free(action_filename);
+        action_filename=NULL;
+    }
+        
+        
+}
 
 void mc_menu_item(int item)
 {
+    Ewl_Widget *curwidget;
     if(item <= 0 || item>3)
         return;
     char* cwd = get_current_dir_name();
@@ -1571,12 +1670,10 @@ void mc_menu_item(int item)
         file_action=FILE_COPY;
     else if(item==3)
     {
+        
+        show_confirm_dialog(mc_menu_delete_confirm_no,mc_menu_delete_confirm_yes,gettext("Delete file?"));
         file_action=FILE_NO_ACTION;
-        unlink (action_filename);
-        free(action_filename);
-        action_filename=NULL;
-        init_filelist();
-        update_filelist_in_gui();
+        
     }
     
 }
@@ -1585,6 +1682,9 @@ void mc_menu_nav_sel(void)
 {
     mc_menu_item(nav_mc_menu_sel+1);
 }
+
+
+
 
 static key_handler_info_t mc_menu_info =
 {
@@ -1691,6 +1791,55 @@ static key_handler_info_t fileops_menu_info =
     .item_handler = &fileops_menu_item,
 };
 
+/* Confirm dialog key handlers */
+
+void confirm_dialog_nav_sel(void)
+{
+    confirm_dialog_action_perform();
+}
+
+void confirm_dialog_nav_right(void)
+{
+    if(confirm_dialog_choice_get()!=CONFIRM_DIALOG_YES)
+        confirm_dialog_choice_set(CONFIRM_DIALOG_YES);
+}
+
+void confirm_dialog_nav_left(void)
+{
+    if(confirm_dialog_choice_get()!=CONFIRM_DIALOG_NO)
+        confirm_dialog_choice_set(CONFIRM_DIALOG_NO);
+}
+
+void confirm_dialog_ok(void)
+{
+    confirm_dialog_action_perform();
+}
+
+void confirm_dialog_item(int item)
+{
+    if(item <1 || item >2)
+        return;
+    
+    if(item==1)
+    {
+        if(confirm_dialog_choice_get()!=CONFIRM_DIALOG_NO)
+            confirm_dialog_choice_set(CONFIRM_DIALOG_NO);
+    }
+    else if(item==2)
+    {
+        if(confirm_dialog_choice_get()!=CONFIRM_DIALOG_YES)
+            confirm_dialog_choice_set(CONFIRM_DIALOG_YES);    
+    }
+}
+
+static key_handler_info_t confirm_dialog_info =
+{
+    .ok_handler = &confirm_dialog_ok,
+    .nav_left_handler=&confirm_dialog_nav_left,
+    .nav_right_handler=&confirm_dialog_nav_right,
+    .nav_sel_handler=&confirm_dialog_nav_sel,
+    .item_handler = &confirm_dialog_item,
+};
 
 /* State */
 
@@ -2152,6 +2301,52 @@ int main ( int argc, char ** argv )
         //ewl_widget_configure(context);
     }
     
+    {
+        Ewl_Widget *idialog;
+        Ewl_Widget *confirmlabel;
+        Ewl_Widget *yesnobox;
+        Ewl_Widget *nolabel;
+        Ewl_Widget *yeslabel;
+        
+        idialog=ewl_dialog_new();
+        ewl_theme_data_str_set(EWL_WIDGET(idialog),"/dialog/group","ewl/dialog/oi_confirmdialog");
+        ewl_theme_data_str_set(EWL_WIDGET(idialog),"/dialog/vbox/hseparator/group","ewl/dialog/oi_confirmdialog/spacer");
+        ewl_theme_data_str_set(EWL_WIDGET(idialog),"/dialog/vbox/actionarea/group","ewl/dialog/oi_confirmdialog/actionarea");
+        set_key_handler(idialog, &confirm_dialog_info);
+        ewl_widget_name_set(idialog,"confirm_dialog");
+        ewl_window_dialog_set(EWL_WINDOW(idialog),1);
+        ewl_window_transient_for(EWL_WINDOW(idialog),EWL_WINDOW(win));
+        
+        ewl_object_fill_policy_set(EWL_OBJECT(EWL_DIALOG(idialog)->action_area),EWL_FLAG_FILL_HFILL);
+        ewl_object_fill_policy_set(EWL_OBJECT(EWL_DIALOG(idialog)->action_box),EWL_FLAG_FILL_HFILL);
+        
+        
+        confirmlabel=ewl_label_new();
+        
+        ewl_object_fill_policy_set(EWL_OBJECT(confirmlabel),EWL_FLAG_FILL_HFILL);
+        ewl_container_child_append(EWL_CONTAINER(EWL_DIALOG(idialog)->vbox),confirmlabel);
+        ewl_widget_name_set(confirmlabel,"confirm_dialog_message");
+        ewl_widget_show(confirmlabel);
+        
+        nolabel=ewl_label_new();
+        ewl_label_text_set(EWL_LABEL(nolabel),"No");
+        ewl_object_fill_policy_set(EWL_OBJECT(nolabel),EWL_FLAG_FILL_HFILL);
+        ewl_container_child_append(EWL_CONTAINER(EWL_DIALOG(idialog)->action_box),nolabel);
+        ewl_theme_data_str_set(EWL_WIDGET(nolabel),"/label/group","ewl/dialog/oi_confirmdialog/reverse_label");
+        ewl_theme_data_str_set(EWL_WIDGET(nolabel),"/label/textpart","ewl/dialog/oi_confirmdialog/reverse_label/text");
+        ewl_widget_name_set(nolabel,"confirm_dialog_nolabel");
+        ewl_widget_show(nolabel);
+                
+        yeslabel=ewl_label_new();
+        ewl_label_text_set(EWL_LABEL(yeslabel),"Yes");
+        ewl_object_fill_policy_set(EWL_OBJECT(yeslabel),EWL_FLAG_FILL_HFILL);
+        ewl_container_child_append(EWL_CONTAINER(EWL_DIALOG(idialog)->action_box),yeslabel);
+        ewl_theme_data_str_set(EWL_WIDGET(yeslabel),"/label/group","ewl/dialog/oi_confirmdialog/reverse_label");
+        ewl_theme_data_str_set(EWL_WIDGET(yeslabel),"/label/textpart","ewl/dialog/oi_confirmdialog/reverse_label/text");
+        ewl_widget_name_set(yeslabel,"confirm_dialog_yeslabel");
+        ewl_widget_show(yeslabel);
+        
+    }
     free(theme_file);
 
     update_list();
