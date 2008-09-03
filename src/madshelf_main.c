@@ -1011,6 +1011,7 @@ void popupContext(unsigned int num)
     ewl_popup_mouse_position_set(EWL_POPUP(curwidget),ewl_object_current_x_get(EWL_OBJECT(selected))+ewl_object_current_w_get(EWL_OBJECT(selected))-PREFERRED_W(curwidget),ewl_object_current_y_get(EWL_OBJECT(selected)));
     context_index=num-1;
     ewl_widget_show(curwidget);
+    ewl_window_raise(EWL_WINDOW(curwidget));
     ewl_widget_focus_send(curwidget);
 }
 void change_root(int item)
@@ -1068,7 +1069,7 @@ static void _key_handler(Ewl_Widget* w, void *event, void *context)
     else if (!strcmp(k, "Left"))     HANDLE_KEY(nav_left_handler)
     else if (!strcmp(k, "Right"))    HANDLE_KEY(nav_right_handler)
     else if (!strcmp(k, "F2"))       HANDLE_KEY(nav_menubtn_handler)
-    else if (!strcmp(k, " "))        HANDLE_KEY(shift_handler)
+    else if (!strcmp(k, "+"))        HANDLE_KEY(shift_handler)
     else fprintf(stderr,k);
 
 }
