@@ -1905,6 +1905,20 @@ int valid_dir(const char* dir)
     return res == 0 && S_ISDIR(st.st_mode) && ((S_IRUSR | S_IXUSR) & st.st_mode);
 }
 
+static void idialog_reveal(Ewl_Widget *w, void *ev, void *data) {
+	Ewl_Widget *win;
+	win = ewl_widget_name_find("mainwindow");
+	ewl_window_move(EWL_WINDOW(w), CURRENT_X(win) + (CURRENT_W(win) - CURRENT_W(w)) / 2, CURRENT_Y(win) + (CURRENT_H(win) - CURRENT_H(w)) / 2);
+	ewl_window_keyboard_grab_set(EWL_WINDOW(w), 1);
+}
+
+static void idialog_unrealize(Ewl_Widget *w, void *ev, void *data) {
+	Ewl_Widget *win;
+	win = ewl_widget_name_find("mainwindow");
+	if(win)
+		ewl_window_keyboard_grab_set(EWL_WINDOW(win), 1);
+}
+
 int main ( int argc, char ** argv )
 {
     int file_desc;
@@ -2310,9 +2324,14 @@ int main ( int argc, char ** argv )
         Ewl_Widget *yeslabel;
         
         idialog=ewl_dialog_new();
+        ewl_window_title_set ( EWL_WINDOW ( idialog ), "EWL_DIALOG" );
+        ewl_window_name_set ( EWL_WINDOW (  idialog ), "EWL_DIALOG" );
+        ewl_window_class_set ( EWL_WINDOW ( idialog ), "EWLDialog" );
         ewl_theme_data_str_set(EWL_WIDGET(idialog),"/dialog/group","ewl/dialog/oi_confirmdialog");
         ewl_theme_data_str_set(EWL_WIDGET(idialog),"/dialog/vbox/hseparator/group","ewl/dialog/oi_confirmdialog/spacer");
         ewl_theme_data_str_set(EWL_WIDGET(idialog),"/dialog/vbox/actionarea/group","ewl/dialog/oi_confirmdialog/actionarea");
+        ewl_callback_append(idialog, EWL_CALLBACK_REVEAL, idialog_reveal, NULL);
+        ewl_callback_append(idialog, EWL_CALLBACK_UNREALIZE, idialog_unrealize, NULL);
         set_key_handler(idialog, &confirm_dialog_info);
         ewl_widget_name_set(idialog,"confirm_dialog");
         ewl_window_dialog_set(EWL_WINDOW(idialog),1);
