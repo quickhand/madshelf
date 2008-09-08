@@ -977,7 +977,7 @@ void doActionForNum(unsigned int num)
         {
             /* Sin */
             g_handler = handler;
-            g_file = file;
+            g_file = strdup(file);
             ewl_main_quit();
         }
         else
