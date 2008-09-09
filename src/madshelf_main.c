@@ -650,6 +650,8 @@ void update_list()
 
     if(next_page_exists() && prev_page_exists())
         ewl_widget_state_set(arrow_widget,"both_on",EWL_STATE_PERSISTENT);
+    else if(!next_page_exists() && !prev_page_exists())
+    	ewl_widget_state_set(arrow_widget,"both_off",EWL_STATE_PERSISTENT);
     else if(next_page_exists())
         ewl_widget_state_set(arrow_widget,"right_only",EWL_STATE_PERSISTENT);
     else if(prev_page_exists())
