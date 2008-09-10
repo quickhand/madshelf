@@ -874,6 +874,22 @@ void destroy_cb ( Ewl_Widget *w, void *event, void *data )
     ewl_main_quit();
 }
 
+
+int sighup_signal_handler(void *data, int type, void *event)
+{
+    int old_ci=current_index;
+    int old_ns=nav_sel;
+    init_filelist();
+    if(old_ci<g_nfileslist)
+        current_index=old_ci;
+    if((old_ci+old_ns)<g_nfileslist)
+        nav_sel=old_ns;
+    update_filelist_in_gui();
+    
+    return 1;
+}
+
+
 /* Confirm dialog stuff */
 #define CONFIRM_DIALOG_NO 0
 #define CONFIRM_DIALOG_YES 1
@@ -2430,6 +2446,7 @@ int main ( int argc, char ** argv )
     update_list();
     ewl_widget_focus_send(EWL_WIDGET(border));
 
+    ecore_event_handler_add(ECORE_EVENT_SIGNAL_HUP,sighup_signal_handler,NULL);
     ewl_main();
 
     save_state();
