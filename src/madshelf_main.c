@@ -1920,6 +1920,8 @@ void save_state()
 
 void refresh_state()
 {
+    change_root(0);
+
     int size;
     Eet_File* state = eet_open(statefilename, EET_FILE_MODE_READ);
     if(!state || !eet_read(state, "statesaved", &size))
@@ -1927,8 +1929,6 @@ void refresh_state()
         eet_close(state);
         return;
     }
-
-    change_root(0);
 
     char* temp = (char*)eet_read(state, "rootname", &size);
     int i;
