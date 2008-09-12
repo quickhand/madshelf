@@ -1920,12 +1920,9 @@ void save_state()
 
 void refresh_state()
 {
-    char *temp;
-    Eet_File *state;
     int size;
-    state=eet_open(statefilename,EET_FILE_MODE_READ);
-    int i;
-    if(eet_read(state,"statesaved",&size)==NULL)
+    Eet_File* state = eet_open(statefilename, EET_FILE_MODE_READ);
+    if(!state || !eet_read(state, "statesaved", &size))
     {
         eet_close(state);
         return;
@@ -1933,7 +1930,8 @@ void refresh_state()
 
     change_root(0);
 
-    temp=(char *)eet_read(state,"rootname",&size);
+    char* temp = (char*)eet_read(state, "rootname", &size);
+    int i;
     for(i = 1; i < g_roots->nroots; ++i)
         if (!strcmp(temp, g_roots->roots[i].name))
     {
@@ -1943,12 +1941,12 @@ void refresh_state()
 
     chdir_to((char*)eet_read(state, "curdir", &size));
     init_filelist();
-    current_index = *((int*)eet_read(state,"curindex",&size));
+    current_index = *((int*)eet_read(state,"curindex", &size));
     if(current_index < 0 || current_index > g_nfileslist)
         current_index = 0;
 
-    sort_type=*((int*)eet_read(state,"sort_type",&size));
-    sort_order=*((int*)eet_read(state,"sort_order",&size));
+    sort_type=*((int*)eet_read(state, "sort_type", &size));
+    sort_order=*((int*)eet_read(state, "sort_order", &size));
     eet_close(state);
 }
 
