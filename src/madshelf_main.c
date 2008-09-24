@@ -102,6 +102,8 @@ int current_index;
  */
 int current_root;
 
+char* current_dir;
+
 int sort_type=SORT_BY_NAME;
 int sort_order=ECORE_SORT_MIN;
 //***********
@@ -311,6 +313,8 @@ void emergency_chdir()
         if(0 == chdir(g_roots->roots[i].path))
         {
             current_root = i;
+            free(current_dir);
+            current_dir = get_current_dir_name();
             fprintf(stderr, "Succesfully. Back to normal operation.\n");
             return;
         }
@@ -367,13 +371,20 @@ int chdir_to_in_root(const char* file, int root)
 
     fprintf(stderr, "Successfully chdir to %s. Checking legality.\n", file);
 
+    free(current_dir);
+    current_dir = get_current_dir_name();
+
     if(!is_cwd_in_root(root))
     {
         fprintf(stderr, "%s is illegal in root %d. Falling back.\n",
                 file, root);
 
         if(curfd != -1 && fchdir(curfd) == 0)
+        {
+            free(current_dir);
+            current_dir = get_current_dir_name();
             return -1;
+        }
 
         /*
          * We've moved to directory which is not allowed, and unable to move
@@ -879,6 +890,22 @@ int sighup_signal_handler(void *data, int type, void *event)
 {
     int old_ci=current_index;
     int old_ns=nav_sel;
+
+    /*
+     * This chdir/chdir stanza is required to make sure madshelf has freed the
+     * handle to the directory of just unmounted filesystem.
+     */
+    chdir("/");
+    if(-1 == chdir_to(current_dir))
+    {
+        /* Ok, let's try top directory */
+        if(-1 == chdir_to(g_roots->roots[current_root].path))
+        {
+            /* Achtung! */
+            emergency_chdir();
+        }
+    }
+
     init_filelist();
     if(old_ci<g_nfileslist)
         current_index=old_ci;
