@@ -2014,7 +2014,6 @@ int main ( int argc, char ** argv )
     Ewl_Widget *box = NULL;
     Ewl_Widget *box2=NULL;
     Ewl_Widget *box3=NULL;
-    Ewl_Widget *box4=NULL;
     Ewl_Widget *box5=NULL;
     Ewl_Widget *authorlabel;
     Ewl_Widget *titlelabel;
@@ -2138,21 +2137,10 @@ int main ( int argc, char ** argv )
 
     box3 = ewl_vbox_new();
     ewl_container_child_append(EWL_CONTAINER(border),box3);
-    ewl_object_fill_policy_set(EWL_OBJECT(box3), EWL_FLAG_FILL_VSHRINK|EWL_FLAG_FILL_HFILL);
+    ewl_object_fill_policy_set(EWL_OBJECT(box3), EWL_FLAG_FILL_FILL);//EWL_FLAG_FILL_VSHRINK|EWL_FLAG_FILL_HFILL);
     ewl_widget_show(box3);
 
-    box4 = ewl_hbox_new();
-    ewl_container_child_append(EWL_CONTAINER(border),box4);
-    ewl_object_fill_policy_set(EWL_OBJECT(box4), EWL_FLAG_FILL_HSHRINK|EWL_FLAG_FILL_VSHRINK);
-    ewl_object_alignment_set(EWL_OBJECT(box4),EWL_FLAG_ALIGN_RIGHT);
-    ewl_widget_show(box4);
-
-    arrow_widget = ewl_widget_new();
-    ewl_container_child_append(EWL_CONTAINER(box4), arrow_widget);
-    ewl_widget_name_set(arrow_widget,"arrow_widget");
-    ewl_object_alignment_set(EWL_OBJECT(arrow_widget),EWL_FLAG_ALIGN_RIGHT|EWL_FLAG_ALIGN_TOP);
-    ewl_theme_data_str_set(EWL_WIDGET(arrow_widget),"/group","ewl/widget/oi_arrows");
-    ewl_widget_show(arrow_widget);
+    
     menubar=ewl_hmenubar_new();
 
     {
@@ -2376,7 +2364,12 @@ int main ( int argc, char ** argv )
 
         ewl_widget_name_set(dividewidget,tempname4 );
     }
-
+    arrow_widget = ewl_widget_new();
+    ewl_container_child_append(EWL_CONTAINER(box3), arrow_widget);
+    ewl_widget_name_set(arrow_widget,"arrow_widget");
+    ewl_object_alignment_set(EWL_OBJECT(arrow_widget),EWL_FLAG_ALIGN_RIGHT|EWL_FLAG_ALIGN_TOP);
+    ewl_theme_data_str_set(EWL_WIDGET(arrow_widget),"/group","ewl/widget/oi_arrows");
+    ewl_widget_show(arrow_widget);
     
     {
         Ewl_Widget *context;
