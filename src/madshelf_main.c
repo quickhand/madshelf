@@ -1142,11 +1142,11 @@ static void _key_handler(Ewl_Widget* w, void *event, void *context)
     else if (isdigit(k[0]) && !k[1]) HANDLE_ITEM(item_handler, k[0]-'0')
     else if (!strcmp(k,"Up")) {
         if(nav_mode == 1)            HANDLE_KEY(nav_up_handler)
-        else                         HANDLE_KEY(nav_left_handler)
+        else                         HANDLE_KEY(nav_right_handler)
     }
     else if (!strcmp(k, "Down")) {
         if(nav_mode == 1)            HANDLE_KEY(nav_down_handler)
-        else                         HANDLE_KEY(nav_right_handler)
+        else                         HANDLE_KEY(nav_left_handler)
     }
     else if (!strcmp(k, "Left"))     HANDLE_KEY(nav_left_handler)
     else if (!strcmp(k, "Right"))    HANDLE_KEY(nav_right_handler)
