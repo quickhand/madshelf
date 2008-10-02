@@ -1,17 +1,9 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: 0.1\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-02 11:33-0400\n"
-"PO-Revision-Date: 2008-07-09 11:16+0700\n"
+"Project-Id-Version: 0.0\n"
+"PO-Revision-Date: 2008-10-02 23:13+0700\n"
 "Last-Translator: Mikhail Gusarov <dottedmag@dottedmag.net>\n"
-"Language-Team: \n"
+"Language-Team: Russian <openinkpot-hackers@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -22,11 +14,11 @@ msgstr ""
 
 #: madshelf_main.c:642
 msgid "Unknown Author"
-msgstr ""
+msgstr "Автор неизвестен"
 
 #: madshelf_main.c:698
 msgid "no books"
-msgstr ""
+msgstr "Пусто"
 
 #: madshelf_main.c:731
 msgid "reverse-sorted by name"
@@ -70,7 +62,7 @@ msgstr "Скрипты"
 
 #: madshelf_main.c:758
 msgid "Edit"
-msgstr ""
+msgstr "Редактирование"
 
 #: madshelf_main.c:765
 msgid "Menu"
@@ -78,28 +70,28 @@ msgstr "Меню"
 
 #: madshelf_main.c:779
 msgid "Paste"
-msgstr ""
+msgstr "Вставить"
 
 #: madshelf_main.c:794
 msgid "Cut"
-msgstr ""
+msgstr "Вырезать"
 
 #: madshelf_main.c:794
 msgid "Copy"
-msgstr ""
+msgstr "Копировать"
 
 #: madshelf_main.c:794
 msgid "Delete"
-msgstr ""
+msgstr "Удалить"
 
 #: madshelf_main.c:943 madshelf_main.c:950
 msgid "No"
-msgstr ""
+msgstr "Нет"
 
 #: madshelf_main.c:944 madshelf_main.c:951
 msgid "Yes"
-msgstr ""
+msgstr "Да"
 
 #: madshelf_main.c:1757
 msgid "Delete file?"
-msgstr ""
+msgstr "Удалить файл?"
