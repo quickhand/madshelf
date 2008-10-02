@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-04 15:56-0400\n"
+"POT-Creation-Date: 2008-10-02 11:33-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,34 +16,90 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: madshelf_main.c:147
+#: madshelf_main.c:266
+msgid "%m-%d-%y"
+msgstr ""
+
+#: madshelf_main.c:642
+msgid "Unknown Author"
+msgstr ""
+
+#: madshelf_main.c:698
+msgid "no books"
+msgstr ""
+
+#: madshelf_main.c:731
 msgid "reverse-sorted by name"
 msgstr ""
 
-#: madshelf_main.c:149
+#: madshelf_main.c:733
 msgid "sorted by name"
 msgstr ""
 
-#: madshelf_main.c:154
+#: madshelf_main.c:738
 msgid "reverse-sorted by time"
 msgstr ""
 
-#: madshelf_main.c:156
+#: madshelf_main.c:740
 msgid "sorted by time"
 msgstr ""
 
-#: madshelf_main.c:593
-msgid "Menu (OK)"
+#: madshelf_main.c:758
+msgid "Sort by Name"
 msgstr ""
 
-#: madshelf_main.c:600
-msgid "1. Sort by Name"
+#: madshelf_main.c:758
+msgid "Sort by Time"
 msgstr ""
 
-#: madshelf_main.c:605
-msgid "2. Sort by Time"
+#: madshelf_main.c:758
+msgid "Reverse Sort Order"
 msgstr ""
 
-#: madshelf_main.c:610
-msgid "3. Reverse Sort Order"
+#: madshelf_main.c:758
+msgid "Language Settings"
+msgstr ""
+
+#: madshelf_main.c:758
+msgid "Go to"
+msgstr ""
+
+#: madshelf_main.c:758
+msgid "Scripts"
+msgstr ""
+
+#: madshelf_main.c:758
+msgid "Edit"
+msgstr ""
+
+#: madshelf_main.c:765
+msgid "Menu"
+msgstr ""
+
+#: madshelf_main.c:779
+msgid "Paste"
+msgstr ""
+
+#: madshelf_main.c:794
+msgid "Cut"
+msgstr ""
+
+#: madshelf_main.c:794
+msgid "Copy"
+msgstr ""
+
+#: madshelf_main.c:794
+msgid "Delete"
+msgstr ""
+
+#: madshelf_main.c:943 madshelf_main.c:950
+msgid "No"
+msgstr ""
+
+#: madshelf_main.c:944 madshelf_main.c:951
+msgid "Yes"
+msgstr ""
+
+#: madshelf_main.c:1757
+msgid "Delete file?"
 msgstr ""

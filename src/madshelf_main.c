@@ -755,7 +755,7 @@ void update_sort_label()
 
 void update_menu()
 {
-    char *tempstrings[]={"Sort by Name","Sort by Time","Reverse Sort Order","Language Settings","Go to","Scripts","Edit"};
+    char *tempstrings[]={gettext("Sort by Name"),gettext("Sort by Time"),gettext("Reverse Sort Order"),gettext("Language Settings"),gettext("Go to"),gettext("Scripts"),gettext("Edit")};
     char tempname[30];
     char temptext[40];
     int i=0;
@@ -769,29 +769,29 @@ void update_menu()
         sprintf(tempname,"menuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
         if(nav_mode==0)
-            sprintf(temptext,"%d. %s",i+1,gettext(tempstrings[i]));
+            sprintf(temptext,"%d. %s",i+1,tempstrings[i]);
         else
-            sprintf(temptext,"%s",gettext(tempstrings[i]));
+            sprintf(temptext,"%s",tempstrings[i]);
         ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
     }
     
     
-    char *tempstrings2[]={"Paste"};
+    char *tempstrings2[]={gettext("Paste")};
     for(i=0;i<1;i++)
     {
         sprintf(tempname,"fileopsmenuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
         if(nav_mode==0)
-            sprintf(temptext,"%d. %s",i+1,gettext(tempstrings2[i]));
+            sprintf(temptext,"%d. %s",i+1,tempstrings2[i]);
         else
-            sprintf(temptext,"%s",gettext(tempstrings2[i]));
+            sprintf(temptext,"%s",tempstrings2[i]);
         ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
     }
 }
 
 void update_context_menu()
 {
-    char *tempstrings[]={"Cut","Copy","Delete"};
+    char *tempstrings[]={gettext("Cut"),gettext("Copy"),gettext("Delete")};
     char tempname[30];
     char temptext[40];
     int i=0;
@@ -802,9 +802,9 @@ void update_context_menu()
         sprintf(tempname,"mc_menuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
         if(nav_mode==0)
-            sprintf(temptext,"%d. %s",i+1,gettext(tempstrings[i]));
+            sprintf(temptext,"%d. %s",i+1,tempstrings[i]);
         else
-            sprintf(temptext,"%s",gettext(tempstrings[i]));
+            sprintf(temptext,"%s",tempstrings[i]);
         ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
     }
 }

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: madshelf 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-11 17:34-0400\n"
+"POT-Creation-Date: 2008-10-02 11:33-0400\n"
 "PO-Revision-Date: 2008-07-04 15:58-0400\n"
 "Last-Translator: Marc Lajoie <manorapide@hotmail.com>\n"
 "Language-Team: French\n"
@@ -16,46 +16,90 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: madshelf_main.c:221
+#: madshelf_main.c:266
+msgid "%m-%d-%y"
+msgstr "%d-%m-%y"
+
+#: madshelf_main.c:642
+msgid "Unknown Author"
+msgstr "Auteur Inconnu"
+
+#: madshelf_main.c:698
+msgid "no books"
+msgstr "aucun livre"
+
+#: madshelf_main.c:731
 msgid "reverse-sorted by name"
 msgstr "triage-inverse par nom"
 
-#: madshelf_main.c:223
+#: madshelf_main.c:733
 msgid "sorted by name"
 msgstr "triage par nom"
 
-#: madshelf_main.c:228
+#: madshelf_main.c:738
 msgid "reverse-sorted by time"
 msgstr "triage-inverse par date"
 
-#: madshelf_main.c:230
+#: madshelf_main.c:740
 msgid "sorted by time"
 msgstr "triage par date"
 
-#: madshelf_main.c:244
-msgid "Menu"
-msgstr "Menu"
-
-#: madshelf_main.c:246
+#: madshelf_main.c:758
 msgid "Sort by Name"
 msgstr "Trier par Nom"
 
-#: madshelf_main.c:248
+#: madshelf_main.c:758
 msgid "Sort by Time"
 msgstr "Trier par Date"
 
-#: madshelf_main.c:250
+#: madshelf_main.c:758
 msgid "Reverse Sort Order"
 msgstr "Inverser l'Ordre de Triage"
 
-#: madshelf_main.c:252
+#: madshelf_main.c:758
 msgid "Language Settings"
 msgstr "Options de Langue"
 
-#: madshelf_main.c:254
+#: madshelf_main.c:758
 msgid "Go to"
 msgstr "Aller à"
 
-#: madshelf_main.c:256
+#: madshelf_main.c:758
 msgid "Scripts"
 msgstr "Scripts"
+
+#: madshelf_main.c:758
+msgid "Edit"
+msgstr "Édition"
+
+#: madshelf_main.c:765
+msgid "Menu"
+msgstr "Menu"
+
+#: madshelf_main.c:779
+msgid "Paste"
+msgstr "Coller"
+
+#: madshelf_main.c:794
+msgid "Cut"
+msgstr "Couper"
+
+#: madshelf_main.c:794
+msgid "Copy"
+msgstr "Copier"
+
+#: madshelf_main.c:794
+msgid "Delete"
+msgstr "Effacer"
+
+#: madshelf_main.c:943 madshelf_main.c:950
+msgid "No"
+msgstr "Non"
+
+#: madshelf_main.c:944 madshelf_main.c:951
+msgid "Yes"
+msgstr "Oui"
+
+#: madshelf_main.c:1757
+msgid "Delete file?"
+msgstr "Effacer ce fichier?"
