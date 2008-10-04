@@ -1,0 +1,105 @@
+# Belarusian translations for madshelf madshelf
+# Беларускі пераклад для madshelf.
+# Copyright (C) 2008 THE madshelf'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the madshelf madshelf.
+# Yauhen Kharuzhy <jekhor@gmail.com>, 2008.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-10-02 11:33-0400\n"
+"PO-Revision-Date: 2008-10-04 16:42+0300\n"
+"Last-Translator: Yauhen Kharuzhy <jekhor@gmail.com>\n"
+"Language-Team: Belarusian <openinkpot-hackers@googlegroups.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: madshelf_main.c:266
+msgid "%m-%d-%y"
+msgstr "%m-%d-%y"
+
+#: madshelf_main.c:642
+msgid "Unknown Author"
+msgstr "Невядомы аўтар"
+
+#: madshelf_main.c:698
+msgid "no books"
+msgstr "пуста"
+
+#: madshelf_main.c:731
+msgid "reverse-sorted by name"
+msgstr "адсартавана па імю ў адваротным накірунку"
+
+#: madshelf_main.c:733
+msgid "sorted by name"
+msgstr "адсартавана па імю"
+
+#: madshelf_main.c:738
+msgid "reverse-sorted by time"
+msgstr "адсартавана па часе ў адваротным накірунку"
+
+#: madshelf_main.c:740
+msgid "sorted by time"
+msgstr "адсартавана па часе"
+
+#: madshelf_main.c:758
+msgid "Sort by Name"
+msgstr "Сартаваць па імю"
+
+#: madshelf_main.c:758
+msgid "Sort by Time"
+msgstr "Сартаваць па часе"
+
+#: madshelf_main.c:758
+msgid "Reverse Sort Order"
+msgstr "Сартаваць у адваротным накірунку"
+
+#: madshelf_main.c:758
+msgid "Language Settings"
+msgstr "Моўныя наладкі"
+
+#: madshelf_main.c:758
+msgid "Go to"
+msgstr "Ісці ў"
+
+#: madshelf_main.c:758
+msgid "Scripts"
+msgstr "Скрыпты"
+
+#: madshelf_main.c:758
+msgid "Edit"
+msgstr "Рэдагаваць"
+
+#: madshelf_main.c:765
+msgid "Menu"
+msgstr "Мяню"
+
+#: madshelf_main.c:779
+msgid "Paste"
+msgstr "Уставіць"
+
+#: madshelf_main.c:794
+msgid "Cut"
+msgstr "Выразаць"
+
+#: madshelf_main.c:794
+msgid "Copy"
+msgstr "Капіяваць"
+
+#: madshelf_main.c:794
+msgid "Delete"
+msgstr "Выдаліць"
+
+#: madshelf_main.c:943 madshelf_main.c:950
+msgid "No"
+msgstr "Не"
+
+#: madshelf_main.c:944 madshelf_main.c:951
+msgid "Yes"
+msgstr "Так"
+
+#: madshelf_main.c:1757
+msgid "Delete file?"
+msgstr "Выдаліць файл?"
