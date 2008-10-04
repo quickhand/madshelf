@@ -1426,8 +1426,10 @@ static language_t g_languages[] =
     { "English", "en" },
     { "Français", "fr" },
     { "Русский", "ru" },
-    { "Беларуская", "be" },
+    { "Беларуская", "be" }
+/* Temporarily disabled until some Chinese font is added in
     { "简体中文", "zh_CN" }
+ */
 };
 
 static const int g_nlanguages = sizeof(g_languages)/sizeof(language_t);
