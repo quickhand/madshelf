@@ -1426,6 +1426,7 @@ static language_t g_languages[] =
     { "English", "en" },
     { "Français", "fr" },
     { "Русский", "ru" },
+    { "Беларуская", "be" },
     { "简体中文", "zh_CN" }
 };
 
