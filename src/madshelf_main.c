@@ -1426,7 +1426,10 @@ static language_t g_languages[] =
     { "English", "en" },
     { "Français", "fr" },
     { "Русский", "ru" },
+    { "Беларуская", "be" }
+/* Temporarily disabled until some Chinese font is added in
     { "简体中文", "zh_CN" }
+ */
 };
 
 static const int g_nlanguages = sizeof(g_languages)/sizeof(language_t);
@@ -2296,7 +2299,8 @@ int main ( int argc, char ** argv )
     sorttypetext=ewl_label_new();
     ewl_container_child_append(EWL_CONTAINER(box3), sorttypetext);
     ewl_widget_name_set(sorttypetext,"sortlabel");
-    ewl_theme_data_str_set(EWL_WIDGET(sorttypetext),"/label/textpart","ewl/oi_label/sorttext");
+    ewl_theme_data_str_set(EWL_WIDGET(sorttypetext),"/label/group","ewl/oi_label/sorttext");
+    ewl_theme_data_str_set(EWL_WIDGET(sorttypetext),"/label/textpart","ewl/oi_label/sorttext/text");
     update_sort_label();
     ewl_widget_show(sorttypetext);
 
@@ -2335,7 +2339,8 @@ int main ( int argc, char ** argv )
         ewl_widget_name_set(authorlabel,tempname3 );
         ewl_label_text_set(EWL_LABEL(authorlabel), "Unknown Author");
         ewl_object_padding_set(EWL_OBJECT(authorlabel),3,0,0,0);
-        ewl_theme_data_str_set(EWL_WIDGET(authorlabel),"/label/textpart","ewl/oi_label/authortext");
+        ewl_theme_data_str_set(EWL_WIDGET(authorlabel),"/label/group","ewl/oi_label/authortext");
+        ewl_theme_data_str_set(EWL_WIDGET(authorlabel),"/label/textpart","ewl/oi_label/authortext/text");
         ewl_object_fill_policy_set(EWL_OBJECT(authorlabel), EWL_FLAG_FILL_VSHRINK| EWL_FLAG_FILL_HFILL);
 
         sprintf (tempname3, "titlelabel%d",count);
@@ -2344,18 +2349,18 @@ int main ( int argc, char ** argv )
         ewl_widget_name_set(titlelabel,tempname3 );
         ewl_label_text_set(EWL_LABEL(titlelabel), "");
         ewl_object_padding_set(EWL_OBJECT(titlelabel),3,0,0,0);
-        ewl_theme_data_str_set(EWL_WIDGET(titlelabel),"/label/textpart","ewl/oi_label/titletext");
+        ewl_theme_data_str_set(EWL_WIDGET(titlelabel),"/label/group","ewl/oi_label/titletext");
+        ewl_theme_data_str_set(EWL_WIDGET(titlelabel),"/label/textpart","ewl/oi_label/titletext/text");
         ewl_object_fill_policy_set(EWL_OBJECT(titlelabel), EWL_FLAG_FILL_VSHRINK| EWL_FLAG_FILL_HFILL);
 
         sprintf (tempname3, "infolabel%d",count);
         infolabel = ewl_label_new();
         ewl_container_child_append(EWL_CONTAINER(box5), infolabel);
         ewl_widget_name_set(infolabel,tempname3 );
-        ewl_label_text_set(EWL_LABEL(infolabel), "blala");
         ewl_object_padding_set(EWL_OBJECT(infolabel),0,3,0,0);
         ewl_object_alignment_set(EWL_OBJECT(infolabel),EWL_FLAG_ALIGN_RIGHT|EWL_FLAG_ALIGN_BOTTOM);
-
-        ewl_theme_data_str_set(EWL_WIDGET(infolabel),"/label/textpart","ewl/oi_label/infotext");
+        ewl_theme_data_str_set(EWL_WIDGET(infolabel),"/label/group","ewl/oi_label/infotext");
+        ewl_theme_data_str_set(EWL_WIDGET(infolabel),"/label/textpart","ewl/oi_label/infotext/text");
         ewl_object_fill_policy_set(EWL_OBJECT(infolabel), EWL_FLAG_FILL_VSHRINK| EWL_FLAG_FILL_HFILL);
 
         sprintf(tempname4,"separator%d",count);
