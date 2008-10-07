@@ -809,9 +809,36 @@ void update_context_menu()
     }
 }
 
-static int rev_alphasort(const void* lhs, const void* rhs)
+static char isdir(const struct dirent* e)
 {
-    return alphasort(rhs, lhs);
+    if(e->d_type != DT_UNKNOWN)
+        return e->d_type == DT_DIR;
+
+    struct stat st;
+    if(stat(e->d_name, &st))
+        return 0;
+
+    return S_ISDIR(st.st_mode);
+}
+
+static int dir_alphasort(const void* lhs, const void* rhs)
+{
+    int lhsdir = isdir(*(const struct dirent**)lhs);
+    int rhsdir = isdir(*(const struct dirent**)rhs);
+
+    if(lhsdir == rhsdir)
+        return alphasort(lhs, rhs);
+    return rhsdir - lhsdir;
+}
+
+static int rev_dir_alphasort(const void* lhs, const void* rhs)
+{
+    int lhsdir = isdir(*(const struct dirent**)lhs);
+    int rhsdir = isdir(*(const struct dirent**)rhs);
+
+    if(lhsdir == rhsdir)
+        return alphasort(rhs, lhs);
+    return rhsdir - lhsdir;
 }
 
 static long long rel_file_mtime(const char* f)
@@ -860,7 +887,7 @@ void init_filelist()
     fini_filelist();
 
     if(sort_type == SORT_BY_NAME)
-        cmp = (compar_t)(sort_order == ECORE_SORT_MIN ? alphasort : rev_alphasort);
+        cmp = (compar_t)(sort_order == ECORE_SORT_MIN ? dir_alphasort : rev_dir_alphasort);
     else
         cmp = (compar_t)(sort_order == ECORE_SORT_MIN ? date_cmp : rev_date_cmp);
 
