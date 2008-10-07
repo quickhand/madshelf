@@ -515,6 +515,31 @@ int move_file(const char* old, const char* new)
         return res;
 }
 
+/* Returns the string which need to be free(3) ed*/
+char* get_authors_string(EXTRACTOR_KeywordList* keywords)
+{
+    char* authors = calloc(1, sizeof(char));
+    size_t len = 1;
+
+    while(keywords)
+    {
+        if(keywords->keywordType == EXTRACTOR_AUTHOR)
+        {
+            if(authors[0])
+            {
+                authors = realloc(authors, len + 2);
+                len += 2;
+                strcat(authors, ", ");
+            }
+            authors = realloc(authors, len + strlen(keywords->keyword));
+            len += strlen(keywords->keyword);
+            strcat(authors, keywords->keyword);
+        }
+        keywords = keywords->next;
+    }
+    return authors;
+}
+
 void update_list()
 {
     int count=0;
@@ -532,7 +557,6 @@ void update_list()
     Ewl_Widget *statuslabel;
     int *showflag;
     const char *extracted_title = NULL;
-    const char *extracted_author = NULL;
     count=0;
 
     labelsbox=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
@@ -619,7 +643,7 @@ void update_list()
             mykeys = extractor_get_keywords(extractors, file);
 
             extracted_title = extractor_get_last(EXTRACTOR_TITLE, mykeys);
-            extracted_author = extractor_get_last(EXTRACTOR_AUTHOR, mykeys);
+
 
             if(extracted_title && extracted_title[0])
                 ewl_label_text_set(EWL_LABEL(titlelabel[count]), extracted_title);
@@ -636,10 +660,9 @@ void update_list()
 
             ewl_label_text_set(EWL_LABEL(infolabel[count]),infostr);
 
-            if(extracted_author && extracted_author[0])
-                ewl_label_text_set(EWL_LABEL(authorlabel[count]), extracted_author);
-            else
-                ewl_label_text_set(EWL_LABEL(authorlabel[count]), "");
+            char* authors = get_authors_string(mykeys);
+            ewl_label_text_set(EWL_LABEL(authorlabel[count]), authors);
+            free(authors);
 
             pointptr=strrchr(file,'.');
             if(pointptr==NULL)
