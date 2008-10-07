@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-02 11:33-0400\n"
+"POT-Creation-Date: 2008-10-07 19:23+0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,10 +18,6 @@ msgstr ""
 
 #: madshelf_main.c:266
 msgid "%m-%d-%y"
-msgstr ""
-
-#: madshelf_main.c:642
-msgid "Unknown Author"
 msgstr ""
 
 #: madshelf_main.c:698
@@ -92,14 +88,14 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: madshelf_main.c:943 madshelf_main.c:950
+#: madshelf_main.c:970 madshelf_main.c:977
 msgid "No"
 msgstr ""
 
-#: madshelf_main.c:944 madshelf_main.c:951
+#: madshelf_main.c:971 madshelf_main.c:978
 msgid "Yes"
 msgstr ""
 
-#: madshelf_main.c:1757
+#: madshelf_main.c:1787
 msgid "Delete file?"
 msgstr ""

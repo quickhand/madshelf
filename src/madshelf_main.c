@@ -606,7 +606,7 @@ void update_list()
             ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));
 
             ewl_label_text_set(EWL_LABEL(infolabel[count]),time_str);
-            ewl_label_text_set(EWL_LABEL(authorlabel[count]),"Folder");
+            ewl_label_text_set(EWL_LABEL(authorlabel[count]),"");
             ewl_image_file_path_set(EWL_IMAGE(typeicon[count]),"/usr/share/madshelf/folder.png");
         }
         else
@@ -639,7 +639,7 @@ void update_list()
             if(extracted_author && extracted_author[0])
                 ewl_label_text_set(EWL_LABEL(authorlabel[count]), extracted_author);
             else
-                ewl_label_text_set(EWL_LABEL(authorlabel[count]), gettext("Unknown Author"));
+                ewl_label_text_set(EWL_LABEL(authorlabel[count]), "");
 
             pointptr=strrchr(file,'.');
             if(pointptr==NULL)
@@ -2364,7 +2364,7 @@ int main ( int argc, char ** argv )
         authorlabel = ewl_label_new();
         ewl_container_child_append(EWL_CONTAINER(box5), authorlabel);
         ewl_widget_name_set(authorlabel,tempname3 );
-        ewl_label_text_set(EWL_LABEL(authorlabel), "Unknown Author");
+        ewl_label_text_set(EWL_LABEL(authorlabel), "");
         ewl_object_padding_set(EWL_OBJECT(authorlabel),3,0,0,0);
         ewl_theme_data_str_set(EWL_WIDGET(authorlabel),"/label/group","ewl/oi_label/authortext");
         ewl_theme_data_str_set(EWL_WIDGET(authorlabel),"/label/textpart","ewl/oi_label/authortext/text");
