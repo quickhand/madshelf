@@ -2007,6 +2007,7 @@ void refresh_state()
     if(!state || !eet_read(state, "statesaved", &size))
     {
         eet_close(state);
+        init_filelist();
         return;
     }
 
