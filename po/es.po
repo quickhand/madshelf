@@ -1,0 +1,62 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2008-10-02 12:42+0100\n"
+"Last-Translator: David García-Abad\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Copyright (C) 2008 THE madshelf'S COPYRIGHT HOLDER\par
+# This file is distributed under the same license as the madshelf package.\par
+
+#\par
+msgid ""\pa"
+msgstr ""\pa"
+
+#: madshelf_main.c:221\par
+msgid "reverse-sorted by name"\pa"
+msgstr ordenado al revés por nombre"\pa"
+
+#: madshelf_main.c:223\par
+msgid "sorted by name"\pa"
+msgstr "ordenado por nombre"\pa"
+
+#: madshelf_main.c:228\par
+msgid "reverse-sorted by time"\pa"
+msgstr "ordenado al revés por hora"\pa"
+
+#: madshelf_main.c:230\par
+msgid "sorted by time"\pa"
+msgstr "ordenado por hora"\pa"
+
+#: madshelf_main.c:244\par
+msgid "Menu"\pa"
+msgstr "Menú"\pa"
+
+#: madshelf_main.c:246\par
+msgid "Sort by Name"\pa"
+msgstr "Ordenar por nombre"\pa"
+
+#: madshelf_main.c:248\par
+msgid "Sort by Time"\pa"
+msgstr "Ordenar por Hora"\pa"
+
+#: madshelf_main.c:250\par
+msgid "Reverse Sort Order"\pa"
+msgstr "Ordenar al Revés"\pa"
+
+#: madshelf_main.c:252\par
+msgid "Language Settings"\pa"
+msgstr "Configuración de Idioma"\pa"
+
+#: madshelf_main.c:254\par
+msgid "Go to"\pa"
+msgstr "Ir a"\pa"
+
+#: madshelf_main.c:256\par
+msgid "Scripts"\pa"
+msgstr "Scripts"\pa"
+
