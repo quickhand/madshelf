@@ -2352,6 +2352,7 @@ int main ( int argc, char ** argv )
     ewl_widget_name_set(sorttypetext,"sortlabel");
     ewl_theme_data_str_set(EWL_WIDGET(sorttypetext),"/label/group","ewl/oi_label/sorttext");
     ewl_theme_data_str_set(EWL_WIDGET(sorttypetext),"/label/textpart","ewl/oi_label/sorttext/text");
+    ewl_object_alignment_set(EWL_OBJECT(sorttypetext),EWL_FLAG_ALIGN_RIGHT);
     update_sort_label();
     ewl_widget_show(sorttypetext);
 
