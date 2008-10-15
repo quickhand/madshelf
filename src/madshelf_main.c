@@ -1477,7 +1477,8 @@ static language_t g_languages[] =
     { "Français", "fr" },
     { "Русский", "ru" },
     { "Беларуская", "be" },
-    { "Español", "es" }
+    { "Español", "es" },
+    { "Polish", "pl" },
     
 /* Temporarily disabled until some Chinese font is added in
     { "简体中文", "zh_CN" }
