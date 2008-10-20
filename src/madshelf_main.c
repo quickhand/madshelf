@@ -44,6 +44,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <libgen.h>
+#include "Keyhandler.h"
 
 #define BUFSIZE 4096
 
@@ -108,7 +109,7 @@ int sort_type=SORT_BY_NAME;
 int sort_order=ECORE_SORT_MIN;
 //***********
 int num_books=8;
-int nav_mode;
+
 int nav_sel=0;
 int nav_menu_sel=0;
 int nav_lang_menu_sel=0;
@@ -608,7 +609,7 @@ void update_list()
             continue;
         }
 
-        if(nav_mode==1)
+        if(get_nav_mode()==1)
         {
             if(count==nav_sel)
                 ewl_widget_state_set(bookbox[count],"select",EWL_STATE_PERSISTENT);
@@ -791,7 +792,7 @@ void update_menu()
     {
         sprintf(tempname,"menuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
-        if(nav_mode==0)
+        if(get_nav_mode()==0)
             sprintf(temptext,"%d. %s",i+1,tempstrings[i]);
         else
             sprintf(temptext,"%s",tempstrings[i]);
@@ -804,7 +805,7 @@ void update_menu()
     {
         sprintf(tempname,"fileopsmenuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
-        if(nav_mode==0)
+        if(get_nav_mode()==0)
             sprintf(temptext,"%d. %s",i+1,tempstrings2[i]);
         else
             sprintf(temptext,"%s",tempstrings2[i]);
@@ -824,7 +825,7 @@ void update_context_menu()
     {
         sprintf(tempname,"mc_menuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
-        if(nav_mode==0)
+        if(get_nav_mode()==0)
             sprintf(temptext,"%d. %s",i+1,tempstrings[i]);
         else
             sprintf(temptext,"%s",tempstrings[i]);
@@ -988,7 +989,7 @@ void show_confirm_dialog(confirm_handler nohandler,confirm_handler yeshandler,ch
     
     ewl_label_text_set(EWL_LABEL(wmessage),message);
     
-    if(nav_mode==0)
+    if(get_nav_mode()==0)
     {
         sprintf(notext,"1. %s",gettext("No"));
         sprintf(yestext,"2. %s",gettext("Yes"));
@@ -1154,67 +1155,9 @@ void change_root(int item)
 
 /* GUI */
 
-typedef void (*key_handler_t)();
-typedef void (*item_handler_t)(int index);
-
-typedef struct
-{
-    key_handler_t ok_handler;
-    key_handler_t esc_handler;
-    key_handler_t nav_up_handler;
-    key_handler_t nav_down_handler;
-    key_handler_t nav_left_handler;
-    key_handler_t nav_right_handler;
-    key_handler_t nav_sel_handler;
-    key_handler_t nav_menubtn_handler;
-    key_handler_t shift_handler;
-    item_handler_t item_handler;
-} key_handler_info_t;
-
-
-
-/* FIXME: HACK */
-static void _key_handler(Ewl_Widget* w, void *event, void *context)
-{
-    Ewl_Event_Key_Up* e = (Ewl_Event_Key_Up*)event;
-    key_handler_info_t* handler_info = (key_handler_info_t*)context;
-
-    const char* k = e->base.keyname;
-
-#define HANDLE_ITEM(h, params) { if(handler_info->h) (*handler_info->h)(params);}
-#define HANDLE_KEY(h) {if(handler_info->h) (*handler_info->h)();}
-
-    if(!strcmp(k, "Return")) {
-        if(nav_mode == 1)            HANDLE_KEY(nav_sel_handler)
-        else                         HANDLE_KEY(ok_handler)
-    }
-    else if(!strcmp(k, "Escape"))    HANDLE_KEY(esc_handler)
-    else if (isdigit(k[0]) && !k[1]) HANDLE_ITEM(item_handler, k[0]-'0')
-    else if (!strcmp(k,"Up")) {
-        if(nav_mode == 1)            HANDLE_KEY(nav_up_handler)
-        else                         HANDLE_KEY(nav_right_handler)
-    }
-    else if (!strcmp(k, "Down")) {
-        if(nav_mode == 1)            HANDLE_KEY(nav_down_handler)
-        else                         HANDLE_KEY(nav_left_handler)
-    }
-    else if (!strcmp(k, "Left"))     HANDLE_KEY(nav_left_handler)
-    else if (!strcmp(k, "Right"))    HANDLE_KEY(nav_right_handler)
-    else if (!strcmp(k, "F2"))       HANDLE_KEY(nav_menubtn_handler)
-    else if (!strcmp(k, "+"))        HANDLE_KEY(shift_handler)
-    else fprintf(stderr,k);
-
-}
-
-void set_key_handler(Ewl_Widget* widget, key_handler_info_t* handler_info)
-{
-    ewl_callback_append(widget, EWL_CALLBACK_KEY_UP,
-                        &_key_handler, handler_info);
-}
-
 /* Main key handler */
 
-void main_esc()
+void main_esc(Ewl_Widget *widget)
 {
     int i;
     char* cwd = get_current_dir_name();
@@ -1236,17 +1179,17 @@ void main_esc()
     update_filelist_in_gui();
 }
 
-void main_ok(void)
+void main_ok(Ewl_Widget *widget)
 {
     show_main_menu();
 }
 
-void main_shift(void)
+void main_shift(Ewl_Widget *widget)
 {
     toggle_key_shifted();
 }
 
-void main_nav_up(void)
+void main_nav_up(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *curwidget=NULL;
@@ -1262,7 +1205,7 @@ void main_nav_up(void)
     }       
 }
 
-void main_nav_down(void)
+void main_nav_down(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *curwidget=NULL;
@@ -1278,19 +1221,19 @@ void main_nav_down(void)
     }
 }
 
-void main_nav_left(void)
+void main_nav_left(Ewl_Widget *widget)
 {
     nav_sel=0;
     prev_page();
 }
 
-void main_nav_right(void)
+void main_nav_right(Ewl_Widget *widget)
 {
     nav_sel=0;
     next_page();
 }
 
-void main_nav_sel(void)
+void main_nav_sel(Ewl_Widget *widget)
 {
     if(key_shifted)
         popupContext(nav_sel+1);
@@ -1298,13 +1241,13 @@ void main_nav_sel(void)
         doActionForNum(nav_sel+1);
     
 }
-void main_nav_menubtn(void)
+void main_nav_menubtn(Ewl_Widget *widget)
 {
     
     show_main_menu();
     
 }
-void main_item(int item)
+void main_item(Ewl_Widget *widget,int item)
 {
     if(item == 0)
         next_page();
@@ -1343,7 +1286,7 @@ void hide_main_menu()
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("okmenu")));
 }
 
-void main_menu_nav_up(void)
+void main_menu_nav_up(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1363,7 +1306,7 @@ void main_menu_nav_up(void)
     }       
 }
 
-void main_menu_nav_down(void)
+void main_menu_nav_down(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1382,12 +1325,12 @@ void main_menu_nav_down(void)
     }
 }
 
-void main_menu_esc()
+void main_menu_esc(Ewl_Widget *widget)
 {
     hide_main_menu();
 }
 
-void main_menu_item(int item)
+void main_menu_item(Ewl_Widget *widget,int item)
 {
     Ewl_Widget* curwidget;
 
@@ -1448,9 +1391,9 @@ void main_menu_item(int item)
     }
 }
 
-void main_menu_nav_sel(void)
+void main_menu_nav_sel(Ewl_Widget *widget)
 {
-    main_menu_item(nav_menu_sel+1);
+    main_menu_item(widget,nav_menu_sel+1);
 }
 
 static key_handler_info_t main_menu_info =
@@ -1487,12 +1430,12 @@ static language_t g_languages[] =
 
 static const int g_nlanguages = sizeof(g_languages)/sizeof(language_t);
 
-void lang_menu_esc()
+void lang_menu_esc(Ewl_Widget *widget)
 {
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem4")));
     hide_main_menu();
 }
-void lang_menu_nav_up(void)
+void lang_menu_nav_up(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1512,7 +1455,7 @@ void lang_menu_nav_up(void)
     }       
 }
 
-void lang_menu_nav_down(void)
+void lang_menu_nav_down(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1529,7 +1472,7 @@ void lang_menu_nav_down(void)
     ewl_widget_state_set((EWL_MENU_ITEM(newselwid)->button).label_object,"select",EWL_STATE_PERSISTENT);
 }
 
-void lang_menu_item(int item)
+void lang_menu_item(Ewl_Widget *widget,int item)
 {
     Ewl_Widget* curwidget;
 
@@ -1553,9 +1496,9 @@ void lang_menu_item(int item)
     update_menu();
 }
 
-void lang_menu_nav_sel(void)
+void lang_menu_nav_sel(Ewl_Widget *widget)
 {
-    lang_menu_item(nav_lang_menu_sel+1);
+    lang_menu_item(widget,nav_lang_menu_sel+1);
 }
 
 static key_handler_info_t lang_menu_info =
@@ -1570,13 +1513,13 @@ static key_handler_info_t lang_menu_info =
 
 /* "Go to" menu */
 
-void goto_menu_esc()
+void goto_menu_esc(Ewl_Widget *widget)
 {
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem5")));
     hide_main_menu();
 }
 
-void goto_menu_nav_up(void)
+void goto_menu_nav_up(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1596,7 +1539,7 @@ void goto_menu_nav_up(void)
     }       
 }
 
-void goto_menu_nav_down(void)
+void goto_menu_nav_down(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1613,7 +1556,7 @@ void goto_menu_nav_down(void)
 }
 
 
-void goto_menu_item(int item)
+void goto_menu_item(Ewl_Widget *widget,int item)
 {
     if(item == 0)
         item = 10;
@@ -1630,9 +1573,9 @@ void goto_menu_item(int item)
     change_dir_in_gui();
 }
 
-void goto_menu_nav_sel(void)
+void goto_menu_nav_sel(Ewl_Widget *widget)
 {
-    goto_menu_item(nav_goto_menu_sel+1);
+    goto_menu_item(widget,nav_goto_menu_sel+1);
 }
 
 static key_handler_info_t goto_menu_info =
@@ -1647,13 +1590,13 @@ static key_handler_info_t goto_menu_info =
 
 /* "Scripts" menu */
 
-void scripts_menu_esc()
+void scripts_menu_esc(Ewl_Widget *widget)
 {
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem6")));
     hide_main_menu();
 }
 
-void scripts_menu_nav_up(void)
+void scripts_menu_nav_up(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1672,7 +1615,7 @@ void scripts_menu_nav_up(void)
     }       
 }
 
-void scripts_menu_nav_down(void)
+void scripts_menu_nav_down(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1689,7 +1632,7 @@ void scripts_menu_nav_down(void)
 }
 
 
-void scripts_menu_item(int item)
+void scripts_menu_item(Ewl_Widget *widget,int item)
 {
     const char* tempstr;
     char* handler_path;
@@ -1712,9 +1655,9 @@ void scripts_menu_item(int item)
     free(handler_path);
 }
 
-void scripts_menu_nav_sel(void)
+void scripts_menu_nav_sel(Ewl_Widget *widget)
 {
-    scripts_menu_item(nav_scripts_menu_sel+1);
+    scripts_menu_item(widget,nav_scripts_menu_sel+1);
 }
 
 static key_handler_info_t scripts_menu_info =
@@ -1729,12 +1672,12 @@ static key_handler_info_t scripts_menu_info =
 
 /* Main Context menu */
 
-void mc_menu_esc()
+void mc_menu_esc(Ewl_Widget *widget)
 {
     ewl_widget_hide(ewl_widget_name_find("main_context"));
 }
 
-void mc_menu_nav_up(void)
+void mc_menu_nav_up(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1754,7 +1697,7 @@ void mc_menu_nav_up(void)
     }       
 }
 
-void mc_menu_nav_down(void)
+void mc_menu_nav_down(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1793,7 +1736,7 @@ void mc_menu_delete_confirm_no(void)
         
 }
 
-void mc_menu_item(int item)
+void mc_menu_item(Ewl_Widget *widget,int item)
 {
     Ewl_Widget *curwidget;
     if(item <= 0 || item>3)
@@ -1817,9 +1760,9 @@ void mc_menu_item(int item)
     
 }
 
-void mc_menu_nav_sel(void)
+void mc_menu_nav_sel(Ewl_Widget *widget)
 {
-    mc_menu_item(nav_mc_menu_sel+1);
+    mc_menu_item(widget,nav_mc_menu_sel+1);
 }
 
 
@@ -1836,13 +1779,13 @@ static key_handler_info_t mc_menu_info =
 };
 
 /* FileOps menu */
-void fileops_menu_esc()
+void fileops_menu_esc(Ewl_Widget *widget)
 {
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem7")));
     hide_main_menu();
 }
 
-void fileops_menu_nav_up(void)
+void fileops_menu_nav_up(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1862,7 +1805,7 @@ void fileops_menu_nav_up(void)
     }       
 }
 
-void fileops_menu_nav_down(void)
+void fileops_menu_nav_down(Ewl_Widget *widget)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1879,7 +1822,7 @@ void fileops_menu_nav_down(void)
 }
 
 
-void fileops_menu_item(int item)
+void fileops_menu_item(Ewl_Widget *widget,int item)
 {
     if(item < 0 || item >1)
         return;
@@ -1915,9 +1858,9 @@ void fileops_menu_item(int item)
     }
 }
 
-void fileops_menu_nav_sel(void)
+void fileops_menu_nav_sel(Ewl_Widget *widget)
 {
-    fileops_menu_item(nav_fileops_menu_sel+1);
+    fileops_menu_item(widget,nav_fileops_menu_sel+1);
 }
 
 static key_handler_info_t fileops_menu_info =
@@ -1932,29 +1875,29 @@ static key_handler_info_t fileops_menu_info =
 
 /* Confirm dialog key handlers */
 
-void confirm_dialog_nav_sel(void)
+void confirm_dialog_nav_sel(Ewl_Widget *widget)
 {
     confirm_dialog_action_perform();
 }
 
-void confirm_dialog_nav_right(void)
+void confirm_dialog_nav_right(Ewl_Widget *widget)
 {
     if(confirm_dialog_choice_get()!=CONFIRM_DIALOG_YES)
         confirm_dialog_choice_set(CONFIRM_DIALOG_YES);
 }
 
-void confirm_dialog_nav_left(void)
+void confirm_dialog_nav_left(Ewl_Widget *widget)
 {
     if(confirm_dialog_choice_get()!=CONFIRM_DIALOG_NO)
         confirm_dialog_choice_set(CONFIRM_DIALOG_NO);
 }
 
-void confirm_dialog_ok(void)
+void confirm_dialog_ok(Ewl_Widget *widget)
 {
     confirm_dialog_action_perform();
 }
 
-void confirm_dialog_item(int item)
+void confirm_dialog_item(Ewl_Widget *widget,int item)
 {
     if(item <1 || item >2)
         return;
@@ -2124,7 +2067,7 @@ int main ( int argc, char ** argv )
     OpenIniFile (configfile);
     free(configfile);
 
-    nav_mode=ReadInt("general","nav_mode",0);
+    set_nav_mode(ReadInt("general","nav_mode",0));
     
     extractors= load_extractors();
 
@@ -2219,7 +2162,7 @@ int main ( int argc, char ** argv )
         ewl_widget_name_set(temp2,"menuitem1");
 
         ewl_container_child_append(EWL_CONTAINER(temp),temp2);
-        if(nav_mode==1)
+        if(get_nav_mode()==1)
             ewl_widget_state_set((EWL_MENU_ITEM(temp2)->button).label_object,"select",EWL_STATE_PERSISTENT);
         ewl_widget_show(temp2);
 
@@ -2249,13 +2192,13 @@ int main ( int argc, char ** argv )
         {
             Ewl_Widget* lang_menu_item = ewl_menu_item_new();
             tempstr4=(char *)calloc(strlen(g_languages[i].name)+3+1,sizeof(char));
-            if(nav_mode==0)
+            if(get_nav_mode()==0)
                 sprintf(tempstr4,"%d. %s",i+1, g_languages[i].name);
             else
                 sprintf(tempstr4,"%s",g_languages[i].name);
             ewl_button_label_set(EWL_BUTTON(lang_menu_item),tempstr4);
             ewl_container_child_append(EWL_CONTAINER(temp2), lang_menu_item);
-            if(nav_mode==1 && i==0)
+            if(get_nav_mode()==1 && i==0)
                 ewl_widget_state_set((EWL_MENU_ITEM(lang_menu_item)->button).label_object,"select",EWL_STATE_PERSISTENT);
             sprintf(tempname6,"langmenuitem%d",i+1);
             ewl_widget_name_set(lang_menu_item,tempname6);
@@ -2273,14 +2216,14 @@ int main ( int argc, char ** argv )
         {
             temp3=ewl_menu_item_new();
             tempstr4=(char *)calloc(strlen(g_roots->roots[i].name)+3+1,sizeof(char));
-            if(nav_mode==0)
+            if(get_nav_mode()==0)
                 sprintf(tempstr4,"%d. %s",i+1, g_roots->roots[i].name);
             else
                 sprintf(tempstr4,"%s",g_roots->roots[i].name);
             ewl_button_label_set(EWL_BUTTON(temp3),tempstr4);
             free(tempstr4);
             ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
-            if(nav_mode==1 && i==0)
+            if(get_nav_mode()==1 && i==0)
                 ewl_widget_state_set((EWL_MENU_ITEM(temp3)->button).label_object,"select",EWL_STATE_PERSISTENT);
             sprintf(tempname6,"gotomenuitem%d",i+1);
             ewl_widget_name_set(EWL_WIDGET(temp3),tempname6);
@@ -2300,14 +2243,14 @@ int main ( int argc, char ** argv )
         {
             temp3=ewl_menu_item_new();
             tempstr4=(char *)calloc(strlen(scriptstrlist[count])+3+1,sizeof(char));
-            if(nav_mode==0)
+            if(get_nav_mode()==0)
                 sprintf(tempstr4,"%d. %s",count+1,scriptstrlist[count]);
             else
                 sprintf(tempstr4,"%s",scriptstrlist[count]);
             ewl_button_label_set(EWL_BUTTON(temp3),tempstr4);
             free(tempstr4);
             ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
-            if(nav_mode==1 && count==0)
+            if(get_nav_mode()==1 && count==0)
                 ewl_widget_state_set((EWL_MENU_ITEM(temp3)->button).label_object,"select",EWL_STATE_PERSISTENT);
             sprintf(tempname6,"scriptsmenuitem%d",count+1);
             ewl_widget_name_set(temp3,tempname6);
@@ -2323,7 +2266,7 @@ int main ( int argc, char ** argv )
 
         temp3=ewl_menu_item_new();
         ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
-        if(nav_mode==1)
+        if(get_nav_mode()==1)
             ewl_widget_state_set((EWL_MENU_ITEM(temp3)->button).label_object,"select",EWL_STATE_PERSISTENT);
         ewl_widget_name_set(temp3,"fileopsmenuitem1");
         ewl_widget_show(temp3);
@@ -2366,7 +2309,7 @@ int main ( int argc, char ** argv )
         ewl_container_child_append(EWL_CONTAINER(box3), box);
         sprintf(tempname5,"%d",count+1);
         ewl_theme_data_str_set(EWL_WIDGET(box),"/hbox/group","ewl/box/oi_bookbox");//tempname5);
-        if(nav_mode==0)
+        if(get_nav_mode()==0)
             ewl_widget_appearance_part_text_set(box,"ewl/box/oi_bookbox/text",tempname5);
         
         ewl_widget_name_set(box,tempname1 );
@@ -2446,7 +2389,7 @@ int main ( int argc, char ** argv )
         ewl_widget_name_set(cont_item,"mc_menuitem1");
         
         ewl_container_child_append(EWL_CONTAINER(context),cont_item);
-        if(nav_mode==1)
+        if(get_nav_mode()==1)
             ewl_widget_state_set((EWL_MENU_ITEM(cont_item)->button).label_object,"select",EWL_STATE_PERSISTENT);
         ewl_widget_show(cont_item);
         
