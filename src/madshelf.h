@@ -29,6 +29,7 @@ void update_title();
 void cleanup();
 int file_date_compare(const void *data1, const void *data2);
 void init_filelist();
+void update_filelist_in_gui();
 void destroy_cb ( Ewl_Widget *w, void *event, void *data );
 void doActionForNum(unsigned int num);
 char *getUpLevelDir(char *thedir);

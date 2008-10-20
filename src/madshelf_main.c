@@ -45,7 +45,8 @@
 #include <unistd.h>
 #include <libgen.h>
 #include "Keyhandler.h"
-
+#include "filefilter.h"
+#include "Dialogs.h"
 #define BUFSIZE 4096
 
 /* Forward declarations */
@@ -779,7 +780,7 @@ void update_sort_label()
 
 void update_menu()
 {
-    char *tempstrings[]={gettext("Sort by Name"),gettext("Sort by Time"),gettext("Reverse Sort Order"),gettext("Language Settings"),gettext("Go to"),gettext("Scripts"),gettext("Edit")};
+    char *tempstrings[]={gettext("Sort by Name"),gettext("Sort by Time"),gettext("Reverse Sort Order"),gettext("Language Settings"),gettext("Go to"),gettext("Scripts"),gettext("Edit"),gettext("File Filters...")};
     char tempname[30];
     char temptext[40];
     int i=0;
@@ -788,7 +789,7 @@ void update_menu()
     curwidget = ewl_widget_name_find("okmenu");
     ewl_button_label_set(EWL_BUTTON(curwidget),gettext("Menu"));
 
-    for(i=0;i<7;i++)
+    for(i=0;i<8;i++)
     {
         sprintf(tempname,"menuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
@@ -918,13 +919,43 @@ void init_filelist()
     g_nfileslist = scandir(".", &g_fileslist,
                            &filter_dotfiles,
                            cmp);
-
     if(g_nfileslist == -1)
     {
         /* FIXME: handle somehow */
 
         g_nfileslist = 0;
     }
+    //filefilters implementation
+    
+    struct dirent** new_g_fileslist=(struct dirent**)malloc(sizeof(struct dirent*)*g_nfileslist);
+    int i,j;
+    int count=0;
+    for(i=0;i<g_nfileslist;i++)
+    {
+        int flag=1;
+        for(j=0;j<getNumFilters();j++)
+        {
+            if(isFilterActive(j))
+                if(!evaluateFilter(j,g_fileslist[i]->d_name))
+                {
+                    flag=0;
+                    break;
+                }
+            
+        }
+        if(flag)
+        {
+            new_g_fileslist[count]=g_fileslist[i];
+            count++;
+        }
+        else
+            free(g_fileslist[i]);
+        
+    }
+    g_nfileslist=count;
+    free(g_fileslist);
+    g_fileslist=new_g_fileslist;
+    
 
     current_index = 0;
     nav_sel = 0;
@@ -1387,6 +1418,9 @@ void main_menu_item(Ewl_Widget *widget,int item)
         curwidget = ewl_widget_name_find("menuitem7");
         ewl_menu_cb_expand(curwidget,NULL,NULL);
         ewl_widget_focus_send(EWL_WIDGET(EWL_MENU(curwidget)->popup));
+        break;
+    case 8:
+        FiltersDialog();
         break;
     }
 }
@@ -2027,6 +2061,7 @@ int main ( int argc, char ** argv )
     Ewl_Widget *keystatelabel;
     char *homedir;
     char *configfile;
+    char *filterfile;
     int count=0;
     int count2=0;
     char *tempstr4;
@@ -2046,13 +2081,26 @@ int main ( int argc, char ** argv )
     textdomain("madshelf");
 
     homedir=getenv("HOME");
+    
+    
+    filterfile=(char *)calloc(strlen(homedir) + 23, sizeof(char));
+    strcat(filterfile,homedir);
+    strcat(filterfile,"/.madshelf/");
+    if(!ecore_file_path_dir_exists(filterfile))
+    {
+        ecore_file_mkpath(filterfile);
+    }
+    strcat(filterfile,"filters.xml");
+    if(ecore_file_exists(filterfile))
+    {
+        load_filters(filterfile);
+
+    }
+    free(filterfile);
+    
     configfile=(char *)calloc(strlen(homedir) + 1+18 + 1, sizeof(char));
     strcat(configfile,homedir);
     strcat(configfile,"/.madshelf/");
-    if(!ecore_file_path_dir_exists(configfile))
-    {
-        ecore_file_mkpath(configfile);
-    }
     strcat(configfile,"config");
     if(!ecore_file_exists(configfile))
     {
@@ -2066,7 +2114,7 @@ int main ( int argc, char ** argv )
     }
     OpenIniFile (configfile);
     free(configfile);
-
+    
     set_nav_mode(ReadInt("general","nav_mode",0));
     
     extractors= load_extractors();
@@ -2270,6 +2318,13 @@ int main ( int argc, char ** argv )
             ewl_widget_state_set((EWL_MENU_ITEM(temp3)->button).label_object,"select",EWL_STATE_PERSISTENT);
         ewl_widget_name_set(temp3,"fileopsmenuitem1");
         ewl_widget_show(temp3);
+        
+        
+        temp2=ewl_menu_item_new();
+        ewl_widget_name_set(temp2,"menuitem8");
+        ewl_container_child_append(EWL_CONTAINER(temp),temp2);
+        ewl_widget_show(temp2);
+
 
     }
     statuslabel = ewl_label_new();
@@ -2472,12 +2527,14 @@ int main ( int argc, char ** argv )
 
     save_state();
     free(statefilename);
+    free_filters();
+    
     eet_shutdown();
     CloseIniFile ();
     fini_filelist();
 
     roots_destroy(g_roots);
-
+    
     free(scriptstrlist);
     unload_extractors(extractors);
     if(action_filename)
