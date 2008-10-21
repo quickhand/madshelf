@@ -1420,6 +1420,7 @@ void main_menu_item(Ewl_Widget *widget,int item)
         ewl_widget_focus_send(EWL_WIDGET(EWL_MENU(curwidget)->popup));
         break;
     case 8:
+        hide_main_menu();
         FiltersDialog();
         break;
     }
