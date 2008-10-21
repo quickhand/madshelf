@@ -62,6 +62,8 @@ void addFilter(char *filtername)
 // Filter Callbacks
 char *strToLower(char *str)
 {
+    if(str==NULL)
+        return NULL;
     char *retstr;
     asprintf(&retstr,"%s",str);
     int i;
@@ -80,7 +82,7 @@ int filename_substring_filter(char *filename,char *textcontent)
 }
 int filename_substring_filter_nocase(char *filename,char *textcontent)
 {
-    char *filenamei,testcontenti;
+    char *filenamei;
     filenamei=strToLower(filename);
     char *textcontenti=strToLower(textcontent);
     int retval;
@@ -101,7 +103,7 @@ int filename_match_filter(char *filename,char *textcontent)
 }
 int filename_match_filter_nocase(char *filename,char *textcontent)
 {
-    char *filenamei,testcontenti;
+    char *filenamei;
     filenamei=strToLower(filename);
     char *textcontenti=strToLower(textcontent);
     int retval;
@@ -114,6 +116,105 @@ int filename_match_filter_nocase(char *filename,char *textcontent)
    
     return retval;
 }
+
+int basename_substring_filter(char *filename,char *textcontent)
+{
+    if(strstr(basename(filename),textcontent)==NULL)
+        return 0;
+    return 1;
+}
+int basename_substring_filter_nocase(char *filename,char *textcontent)
+{
+    
+    char *basenamei;
+    basenamei=strToLower(basename(filename));
+    char *textcontenti=strToLower(textcontent);
+    int retval;
+	if(strstr(basenamei,textcontenti)==NULL)
+		retval=0;
+	else
+        retval=1;
+    free(basenamei);
+    free(textcontenti);
+   
+    return retval;
+}
+int basename_match_filter(char *filename,char *textcontent)
+{
+    if(strcmp(basename(filename),textcontent)==0)
+        return 1;
+    return 0;
+}
+int basename_match_filter_nocase(char *filename,char *textcontent)
+{
+    char *basenamei;
+    basenamei=strToLower(basename(filename));
+    char *textcontenti=strToLower(textcontent);
+    int retval;
+    if(strcmp(basenamei,textcontenti)==0)
+        retval=1;
+    else
+        retval=0;
+    free(basenamei);
+    free(textcontenti);
+   
+    return retval;
+}
+
+const char *extension(char *filename)
+{
+    
+    const char *dotpointer=strrchr(filename,'.');
+    if(dotpointer==NULL)
+        return "";
+    return dotpointer+1;
+    
+}
+
+int extension_substring_filter(char *filename,char *textcontent)
+{
+    if(strstr(extension(filename),textcontent)==NULL)
+        return 0;
+    return 1;
+}
+int extension_substring_filter_nocase(char *filename,char *textcontent)
+{
+    
+    char *extensioni;
+    extensioni=strToLower(extension(filename));
+    char *textcontenti=strToLower(textcontent);
+    int retval;
+	if(strstr(extensioni,textcontenti)==NULL)
+		retval=0;
+	else
+        retval=1;
+    free(extensioni);
+    free(textcontenti);
+   
+    return retval;
+}
+int extension_match_filter(char *filename,char *textcontent)
+{
+    if(strcmp(extension(filename),textcontent)==0)
+        return 1;
+    return 0;
+}
+int extension_match_filter_nocase(char *filename,char *textcontent)
+{
+    char *extensioni;
+    extensioni=strToLower(extension(filename));
+    char *textcontenti=strToLower(textcontent);
+    int retval;
+    if(strcmp(extensioni,textcontenti)==0)
+        retval=1;
+    else
+        retval=0;
+    free(extensioni);
+    free(textcontenti);
+   
+    return retval;
+}
+
 
 
 
@@ -244,7 +345,40 @@ void handlestart(void *userData,const XML_Char *name,const XML_Char **atts)
                     setLeafFunction(newnode,filename_substring_filter);
             }
         }
-            
+        else if(domain==1)
+        {
+            if(type==0)
+            {   
+                if(matchcase==0)
+                    setLeafFunction(newnode,basename_match_filter_nocase);       
+                if(matchcase==1)
+                    setLeafFunction(newnode,basename_match_filter);
+            }
+            else if(type==1)
+            {
+                if(matchcase==0)
+                    setLeafFunction(newnode,basename_substring_filter_nocase);       
+                if(matchcase==1)
+                    setLeafFunction(newnode,basename_substring_filter);
+            }
+        } 
+        else if(domain==2)
+        {
+            if(type==0)
+            {   
+                if(matchcase==0)
+                    setLeafFunction(newnode,extension_match_filter_nocase);       
+                if(matchcase==1)
+                    setLeafFunction(newnode,extension_match_filter);
+            }
+            else if(type==1)
+            {
+                if(matchcase==0)
+                    setLeafFunction(newnode,extension_substring_filter_nocase);       
+                if(matchcase==1)
+                    setLeafFunction(newnode,extension_substring_filter);
+            }
+        }
 
 
         

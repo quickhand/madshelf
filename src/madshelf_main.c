@@ -933,15 +933,18 @@ void init_filelist()
     for(i=0;i<g_nfileslist;i++)
     {
         int flag=1;
-        for(j=0;j<getNumFilters();j++)
+        if(!ecore_file_is_dir(g_fileslist[i]->d_name))
         {
-            if(isFilterActive(j))
-                if(!evaluateFilter(j,g_fileslist[i]->d_name))
-                {
-                    flag=0;
-                    break;
-                }
-            
+            for(j=0;j<getNumFilters();j++)
+            {
+                if(isFilterActive(j))
+                    if(!evaluateFilter(j,g_fileslist[i]->d_name))
+                    {
+                        flag=0;
+                        break;
+                    }
+                
+            }
         }
         if(flag)
         {
