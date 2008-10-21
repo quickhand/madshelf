@@ -925,8 +925,17 @@ void init_filelist()
 
         g_nfileslist = 0;
     }
-    //filefilters implementation
     
+    filter_filelist();
+    
+    
+
+    current_index = 0;
+    nav_sel = 0;
+}
+
+void filter_filelist()
+{
     struct dirent** new_g_fileslist=(struct dirent**)malloc(sizeof(struct dirent*)*g_nfileslist);
     int i,j;
     int count=0;
@@ -957,11 +966,8 @@ void init_filelist()
     }
     g_nfileslist=count;
     free(g_fileslist);
-    g_fileslist=new_g_fileslist;
+    g_fileslist=new_g_fileslist;    
     
-
-    current_index = 0;
-    nav_sel = 0;
 }
 
 void destroy_cb ( Ewl_Widget *w, void *event, void *data )
