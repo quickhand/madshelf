@@ -341,7 +341,7 @@ void load_filters(const char *filename)
 
 void free_filters()
 {
-    if(filterlist=NULL)
+    if(filterlist==NULL)
         return;
     int i;
     for(i=0;i<nfilters;i++)

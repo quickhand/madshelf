@@ -69,7 +69,7 @@ void FiltersDialog()
     initchoices=(char**)malloc(sizeof(char*)*getNumFilters());
     values=(char**)malloc(sizeof(char*)*getNumFilters());
     int i;
-    fprintf(stderr,"Debug #1, nfilters=%d",getNumFilters());
+    
     for(i=0;i<getNumFilters();i++)
     {
         if(isFilterActive(i))
