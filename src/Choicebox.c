@@ -101,15 +101,14 @@ void choicebox_change_selection(Ewl_Widget * widget, int new_navsel)
 		ewl_container_child_get(EWL_CONTAINER(vbox), new_navsel + 1);
 
 	if (get_nav_mode() == 1) {
-		ewl_widget_state_set(oldselected, "unselect",
-				EWL_STATE_PERSISTENT);
-		ewl_widget_state_set(ewl_container_child_get
-				(EWL_CONTAINER(oldselected), 0), "unselect",
-				EWL_STATE_PERSISTENT);
-		ewl_widget_state_set(newselected, "select", EWL_STATE_PERSISTENT);
-		ewl_widget_state_set(ewl_container_child_get
-				(EWL_CONTAINER(newselected), 0), "select",
-				EWL_STATE_PERSISTENT);
+		ewl_widget_state_set(oldselected, "unselect",EWL_STATE_PERSISTENT);
+		ewl_widget_state_set(ewl_container_child_get(EWL_CONTAINER(oldselected), 0), "unselect",EWL_STATE_PERSISTENT);
+		ewl_widget_state_set(ewl_container_child_get(EWL_CONTAINER(oldselected), 1), "unselect",EWL_STATE_PERSISTENT);
+        
+        ewl_widget_state_set(newselected, "select", EWL_STATE_PERSISTENT);
+		ewl_widget_state_set(ewl_container_child_get(EWL_CONTAINER(newselected), 0), "select",	EWL_STATE_PERSISTENT);
+        ewl_widget_state_set(ewl_container_child_get(EWL_CONTAINER(newselected), 1), "select",	EWL_STATE_PERSISTENT);
+        
 	}
 	infostruct->navsel = new_navsel;
 }
@@ -361,6 +360,7 @@ Ewl_Widget *init_choicebox(const char *choicelist[], const char *values[], int n
 	ewl_callback_append(win, EWL_CALLBACK_REVEAL, choicebox_reveal_cb, (void *)parent);
 	ewl_callback_append(win, EWL_CALLBACK_REALIZE, choicebox_realize_cb, (void *)parent);
 	ewl_callback_append(win, EWL_CALLBACK_UNREALIZE, choicebox_unrealize_cb, (void *)parent);
+    ewl_theme_data_str_set(win, "/window/group","ewl/window/dlg_choicebox");
 	EWL_EMBED(win)->x = 600;
 	EWL_EMBED(win)->y = 0;
 	ewl_widget_data_set(EWL_WIDGET(win), (void *)"choice_info",
@@ -400,14 +400,14 @@ Ewl_Widget *init_choicebox(const char *choicelist[], const char *values[], int n
 	tempw2 = ewl_label_new();
 	ewl_container_child_append(EWL_CONTAINER(v1), tempw2);
 	ewl_theme_data_str_set(EWL_WIDGET(tempw2), "/label/group",
-			"ewl/label/dlg_label");
+			"ewl/label/dlg_header");
 	ewl_theme_data_str_set(EWL_WIDGET(tempw2), "/label/textpart",
-		"ewl/label/dlg_label/text");
+		"ewl/label/dlg_header/text");
 	ewl_object_fill_policy_set(EWL_OBJECT(tempw2), EWL_FLAG_FILL_HFILL);
 	ewl_label_text_set(EWL_LABEL(tempw2), header);
 	ewl_widget_show(tempw2);
 
-	tempw2 = ewl_label_new();
+	/*tempw2 = ewl_label_new();
 	ewl_container_child_append(EWL_CONTAINER(v2), tempw2);
 	ewl_theme_data_str_set(EWL_WIDGET(tempw2), "/label/group",
 			"ewl/label/dlg_label");
@@ -415,7 +415,7 @@ Ewl_Widget *init_choicebox(const char *choicelist[], const char *values[], int n
 			"ewl/label/dlg_label/text");
 	ewl_object_fill_policy_set(EWL_OBJECT(tempw2), EWL_FLAG_FILL_HFILL);
 	ewl_label_text_set(EWL_LABEL(tempw2), "");
-	ewl_widget_show(tempw2);
+	ewl_widget_show(tempw2);*/
     
 	for(i = 0; i < shownum + 1; i++) {
 
@@ -456,33 +456,28 @@ Ewl_Widget *init_choicebox(const char *choicelist[], const char *values[], int n
 			ewl_label_text_set(EWL_LABEL(tempw2), info->choices[i]);
 		} else {
 			ewl_theme_data_str_set(EWL_WIDGET(tempw2), "/label/group",
-					"ewl/label/dlg_label");
+					"ewl/label/dlg_footer");
 			ewl_theme_data_str_set(EWL_WIDGET(tempw2), "/label/textpart",
-					"ewl/label/dlg_label/text");
+					"ewl/label/dlg_footer/text");
 			char *p;
 			asprintf(&p, "Page %d of %d", 1 + info->curindex / 8, (7 + info->numchoices) / 8);
 			ewl_label_text_set(EWL_LABEL(tempw2), p);
 			free(p);
 		}
 		ewl_widget_show(tempw2);
-
-		tempw2 = ewl_label_new();
-		ewl_container_child_append(EWL_CONTAINER(v2), tempw2);
-		ewl_object_fill_policy_set(EWL_OBJECT(tempw2), EWL_FLAG_FILL_HFILL);
-		if(i < shownum) { 
+        if(i < shownum) { 
+            tempw2 = ewl_label_new();
+            ewl_container_child_append(EWL_CONTAINER(v2), tempw2);
+            ewl_object_fill_policy_set(EWL_OBJECT(tempw2), EWL_FLAG_FILL_HFILL);
+		
 			ewl_theme_data_str_set(EWL_WIDGET(tempw2), "/label/group",
-					"ewl/label/dlg_optionlabel");
+					"ewl/label/dlg_valuelabel");
 			ewl_theme_data_str_set(EWL_WIDGET(tempw2), "/label/textpart",
-					"ewl/label/dlg_optionlabel/text");
+					"ewl/label/dlg_valuelabel/text");
 			ewl_label_text_set(EWL_LABEL(tempw2), info->values[i]);
-		} else {
-			ewl_theme_data_str_set(EWL_WIDGET(tempw2), "/label/group",
-					"ewl/label/dlg_label");
-			ewl_theme_data_str_set(EWL_WIDGET(tempw2), "/label/textpart",
-					"ewl/label/dlg_label/text");
-			ewl_label_text_set(EWL_LABEL(tempw2), "");
-		}
-		ewl_widget_show(tempw2);
+            ewl_widget_show(tempw2);
+		} 
+		
 	}
 	return win;
 }

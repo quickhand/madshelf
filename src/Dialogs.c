@@ -26,7 +26,7 @@
 #include "madshelf.h"
 
 // Options dialogs
-
+static int filterschanged=0;
 static long minl(long a, long b)
 {
    if(a < b) return a;
@@ -35,8 +35,11 @@ static long minl(long a, long b)
 
 void filters_dialog_closehandler(Ewl_Widget *widget)
 {
-    init_filelist();
-    update_filelist_in_gui();
+    if(filterschanged)
+    {
+        init_filelist();
+        update_filelist_in_gui();
+    }
     
     
 }
@@ -53,6 +56,7 @@ void filters_dialog_choicehandler(int choice, Ewl_Widget *parent)
         setFilterActive(choice,1);
         
     }
+    filterschanged=1;
 }
 
 void FiltersDialog()
@@ -83,7 +87,7 @@ void FiltersDialog()
     }
     
     
-	ewl_widget_show(init_choicebox(initchoices, values, getNumFilters(), filters_dialog_choicehandler, filters_dialog_closehandler,"filters to apply", w, TRUE));
+	ewl_widget_show(init_choicebox(initchoices, values, getNumFilters(), filters_dialog_choicehandler, filters_dialog_closehandler,"File Filters", w, TRUE));
     for(i=0;i<getNumFilters();i++)
     {
         free(initchoices[i]);
@@ -92,5 +96,6 @@ void FiltersDialog()
     }
     free(initchoices);
     free(values);
+    filterschanged=0;
 }
 
