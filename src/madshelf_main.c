@@ -108,6 +108,8 @@ char* current_dir;
 
 int sort_type=SORT_BY_NAME;
 int sort_order=ECORE_SORT_MIN;
+long filters_modtime=-1;
+int *filterstatus=NULL;
 //***********
 int num_books=8;
 
@@ -969,7 +971,13 @@ void filter_filelist()
     g_fileslist=new_g_fileslist;    
     
 }
-
+void update_filters()
+{
+    int i;
+    for(i=0;i<getNumFilters();i++)
+        filterstatus[i]=isFilterActive(i);
+    
+}
 void destroy_cb ( Ewl_Widget *w, void *event, void *data )
 {
     ewl_widget_destroy ( w );
@@ -1983,6 +1991,8 @@ void save_state()
     eet_write(state,"curdir",cwd,sizeof(char)*(strlen(cwd)+1),0);
     eet_write(state,"sort_type",(void *)&sort_type,sizeof(int),0);
     eet_write(state,"sort_order",(void *)&sort_order,sizeof(int),0);
+    eet_write(state,"filters_modtime",(void *)&filters_modtime,sizeof(long),0);
+    eet_write(state,"filterstatus",(void *)filterstatus,sizeof(int)*getNumFilters(),0);
     eet_close(state);
 
     free(cwd);
@@ -1997,7 +2007,7 @@ void refresh_state()
     if(!state || !eet_read(state, "statesaved", &size))
     {
         eet_close(state);
-        init_filelist();
+        //init_filelist();
         return;
     }
 
@@ -2011,13 +2021,16 @@ void refresh_state()
     }
 
     chdir_to((char*)eet_read(state, "curdir", &size));
-    init_filelist();
+    //init_filelist();
     current_index = *((int*)eet_read(state,"curindex", &size));
     if(current_index < 0 || current_index > g_nfileslist)
         current_index = 0;
 
     sort_type=*((int*)eet_read(state, "sort_type", &size));
     sort_order=*((int*)eet_read(state, "sort_order", &size));
+    
+    filters_modtime=*((int*)eet_read(state, "filters_modtime", &size));
+    filterstatus=(int *)eet_read(state, "filterstatus", &size);
     eet_close(state);
 }
 
@@ -2101,11 +2114,15 @@ int main ( int argc, char ** argv )
         ecore_file_mkpath(filterfile);
     }
     strcat(filterfile,"filters.xml");
-    if(ecore_file_exists(filterfile))
+
+    struct stat filterstat;
+    int filtexists;
+    filtexists = stat(filterfile, &filterstat);
+    if(filtexists>=0)
     {
         load_filters(filterfile);
-
     }
+    
     free(filterfile);
     
     configfile=(char *)calloc(strlen(homedir) + 1+18 + 1, sizeof(char));
@@ -2168,6 +2185,32 @@ int main ( int argc, char ** argv )
 
     refresh_state();
 
+    if(filtexists>=0)
+    {
+        if(filters_modtime!=filterstat.st_mtime)
+        {
+            if(filterstatus!=NULL)
+                free(filterstatus);
+            filterstatus=(int *)malloc(sizeof(int)*getNumFilters());
+            int i;
+            for(i=0;i<getNumFilters();i++)
+                filterstatus[i]=0;
+            current_index=0;
+            nav_sel=0;
+        }
+        filters_modtime=filterstat.st_mtime;
+        
+        
+        
+    }
+    int i;
+    for(i=0;i<getNumFilters();i++)
+        setFilterActive(i,filterstatus[i]);
+    
+    
+    init_filelist();
+    
+    
     win = ewl_window_new();
     ewl_window_title_set ( EWL_WINDOW ( win ), "EWL_WINDOW" );
     ewl_window_name_set ( EWL_WINDOW ( win ), "EWL_WINDOW" );
@@ -2549,7 +2592,7 @@ int main ( int argc, char ** argv )
     unload_extractors(extractors);
     if(action_filename)
         free(action_filename);
-    
+    free(filterstatus);
     
     if (g_file)
     {
@@ -2575,6 +2618,6 @@ int main ( int argc, char ** argv )
         perror("madshelf: execlp");
         return 1;
     }
-
+    
     return 0;
 }

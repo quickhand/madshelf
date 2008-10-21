@@ -39,6 +39,7 @@ void filters_dialog_closehandler(Ewl_Widget *widget)
     {
         init_filelist();
         update_filelist_in_gui();
+        update_filters();
     }
     
     
@@ -61,7 +62,7 @@ void filters_dialog_choicehandler(int choice, Ewl_Widget *parent)
 
 void FiltersDialog()
 {
-    if(getNumFilters<=0)
+    if(getNumFilters()<=0)
         return;
 	Ewl_Widget *w = ewl_widget_name_find("mainwindow");
     
