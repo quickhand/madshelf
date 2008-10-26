@@ -47,6 +47,7 @@
 #include "Keyhandler.h"
 #include "filefilter.h"
 #include "Dialogs.h"
+#include "database.h"
 #define BUFSIZE 4096
 
 /* Forward declarations */
@@ -520,28 +521,25 @@ int move_file(const char* old, const char* new)
 }
 
 /* Returns the string which need to be free(3) ed*/
-char* get_authors_string(EXTRACTOR_KeywordList* keywords)
+char* get_authors_string(char *authors[],int authornum)
 {
-    char* authors = calloc(1, sizeof(char));
-    size_t len = 1;
-
-    while(keywords)
+    char* authorstr;
+    
+    int length=0;
+    int i;
+    for(i=0;i<authornum;i++)
+        length+=strlen(authors[i])+2;
+    length--;
+    
+    authorstr=malloc(length*sizeof(char));
+    for(i=0;i<authornum;i++)
     {
-        if(keywords->keywordType == EXTRACTOR_AUTHOR)
-        {
-            if(authors[0])
-            {
-                authors = realloc(authors, len + 2);
-                len += 2;
-                strcat(authors, ", ");
-            }
-            authors = realloc(authors, len + strlen(keywords->keyword));
-            len += strlen(keywords->keyword);
-            strcat(authors, keywords->keyword);
-        }
-        keywords = keywords->next;
+        strcat(authorstr,authors[i]);
+        if(i<(authornum-1))
+            strcat(authorstr,", ");
     }
-    return authors;
+    
+    return authorstr;
 }
 
 void update_list()
@@ -643,17 +641,21 @@ void update_list()
             char* infostr;
             char* imagefile;
 
-            EXTRACTOR_KeywordList* mykeys;
-            mykeys = extractor_get_keywords(extractors, file);
-
-            extracted_title = extractor_get_last(EXTRACTOR_TITLE, mykeys);
+            char **titlearr=NULL;
+            int titlenum=get_titles(file,&titlearr);
 
 
-            if(extracted_title && extracted_title[0])
-                ewl_label_text_set(EWL_LABEL(titlelabel[count]), extracted_title);
+            if(titlenum>0)
+                ewl_label_text_set(EWL_LABEL(titlelabel[count]),titlearr[0]);
             else
                 ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));
-
+            int i;
+            for(i=0;i<titlenum;i++)
+                free(titlearr[i]);
+            if(titlearr)
+                free(titlearr);
+            
+            
             extension = strrchr(file, '.');
 
             asprintf(&infostr, "%s%s%s   %s",
@@ -664,10 +666,18 @@ void update_list()
 
             ewl_label_text_set(EWL_LABEL(infolabel[count]),infostr);
 
-            char* authors = get_authors_string(mykeys);
+            char **authorarr;
+            int numauthors=get_authors(file,&authorarr);
+            
+            char* authors = get_authors_string(authorarr,numauthors);
             ewl_label_text_set(EWL_LABEL(authorlabel[count]), authors);
             free(authors);
-
+            
+            for(i=0;i<numauthors;i++)
+                free(authorarr[i]);
+            if(titlearr)
+                free(authorarr);
+            
             pointptr=strrchr(file,'.');
             if(pointptr==NULL)
                 tempstr2=ReadString("icons",".","default.png");
@@ -927,7 +937,7 @@ void init_filelist()
 
         g_nfileslist = 0;
     }
-    
+    update_file_database();
     filter_filelist();
     
     
@@ -935,7 +945,70 @@ void init_filelist()
     current_index = 0;
     nav_sel = 0;
 }
+void update_file_database()
+{
+    int i;
+    for(i=0;i<g_nfileslist;i++)
+    {
+        if(!ecore_file_is_dir(g_fileslist[i]->d_name))
+        {
 
+            int recstatus=get_file_record_status(g_fileslist[i]->d_name);
+            if(recstatus==RECORD_STATUS_ERROR || recstatus==RECORD_STATUS_OK || recstatus==RECORD_STATUS_EXISTS_BUT_UNKNOWN) //will have to deal with some of these cases differently later
+            {
+                
+            }
+            else if(recstatus==RECORD_STATUS_OUT_OF_DATE)
+            {
+                clear_file_extractor_data(g_fileslist[i]->d_name);
+                update_file_mod_time(g_fileslist[i]->d_name);
+                extract_and_cache(g_fileslist[i]->d_name);
+            }
+            else if(recstatus==RECORD_STATUS_ABSENT)
+            {
+                extract_and_cache(g_fileslist[i]->d_name);
+            }
+        }
+        
+    }
+}
+void extract_and_cache(char *filename)
+{
+    EXTRACTOR_KeywordList* mykeys;
+    mykeys = extractor_get_keywords(extractors, filename);
+    //process titles
+    char *extracted_title = extractor_get_last(EXTRACTOR_TITLE, mykeys);
+    if(extracted_title && extracted_title[0])
+    {
+        const char *titlearr[]={extracted_title};
+        set_titles(filename,titlearr,1);
+    }
+    //process authors
+    EXTRACTOR_KeywordList* keypt=mykeys;
+    int authorcount=0;
+    while(keypt)
+    {
+        if(keypt->keywordType == EXTRACTOR_AUTHOR && keypt->keyword && keypt->keyword[0])
+            authorcount++;    
+        keypt = keypt->next;
+    }
+    keypt=mykeys;
+    char **authorarr=(char**)malloc(sizeof(char*)*authorcount);
+    int count=0;
+    while(keypt)
+    {
+        if(keypt->keywordType == EXTRACTOR_AUTHOR && keypt->keyword && keypt->keyword[0])
+        {
+            authorarr[count]=keypt->keyword;
+            count++;
+        }
+        keypt = keypt->next;
+    }
+    if(authorcount>0)
+        set_authors(filename,authorarr,authorcount);
+    free(authorarr);
+    
+}
 void filter_filelist()
 {
     struct dirent** new_g_fileslist=(struct dirent**)malloc(sizeof(struct dirent*)*g_nfileslist);
@@ -2085,6 +2158,7 @@ int main ( int argc, char ** argv )
     char *homedir;
     char *configfile;
     char *filterfile;
+    char *dbfile;
     int count=0;
     int count2=0;
     char *tempstr4;
@@ -2103,6 +2177,10 @@ int main ( int argc, char ** argv )
     setlocale(LC_ALL, "");
     textdomain("madshelf");
 
+    
+    
+    
+    //end database testing
     homedir=getenv("HOME");
     
     
@@ -2124,6 +2202,19 @@ int main ( int argc, char ** argv )
     }
     
     free(filterfile);
+    
+    
+    
+    
+   
+    
+    dbfile=(char *)calloc(strlen(homedir) + 23, sizeof(char));
+    strcat(dbfile,homedir);
+    strcat(dbfile,"/.madshelf/");
+    strcat(dbfile,"madshelf.db");
+    init_database(dbfile);
+    free(dbfile);
+    
     
     configfile=(char *)calloc(strlen(homedir) + 1+18 + 1, sizeof(char));
     strcat(configfile,homedir);
@@ -2580,8 +2671,9 @@ int main ( int argc, char ** argv )
 
     save_state();
     free(statefilename);
-    free_filters();
     
+    free_filters();
+    fini_database();
     eet_shutdown();
     CloseIniFile ();
     fini_filelist();
