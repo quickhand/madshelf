@@ -523,17 +523,24 @@ int move_file(const char* old, const char* new)
 /* Returns the string which need to be free(3) ed*/
 char* get_authors_string(char *authors[],int authornum)
 {
-    char* authorstr;
+     
+    char* authorstr=NULL;
     
     int length=0;
     int i;
     for(i=0;i<authornum;i++)
+    {
+        
         length+=strlen(authors[i])+2;
+        
+    }
     length--;
     
     authorstr=malloc(length*sizeof(char));
+    authorstr[0]='\0';
     for(i=0;i<authornum;i++)
     {
+        
         strcat(authorstr,authors[i]);
         if(i<(authornum-1))
             strcat(authorstr,", ");
@@ -620,6 +627,13 @@ void update_list()
             
         char* file = g_fileslist[current_index + count]->d_name;
 
+        char *rel_file;
+        char* cwd = get_current_dir_name();
+        asprintf(&rel_file, "%s/%s", cwd,file);
+        free(cwd);
+        
+        
+        
         struct stat stat_p;
         char* time_str;
         char *extension = strrchr(file, '.');
@@ -640,9 +654,9 @@ void update_list()
             char* size_str = format_size(stat_p.st_size);
             char* infostr;
             char* imagefile;
-
+            
             char **titlearr=NULL;
-            int titlenum=get_titles(file,&titlearr);
+            int titlenum=get_titles(rel_file,&titlearr);
 
 
             if(titlenum>0)
@@ -665,18 +679,27 @@ void update_list()
                      size_str);
 
             ewl_label_text_set(EWL_LABEL(infolabel[count]),infostr);
-
-            char **authorarr;
-            int numauthors=get_authors(file,&authorarr);
             
-            char* authors = get_authors_string(authorarr,numauthors);
-            ewl_label_text_set(EWL_LABEL(authorlabel[count]), authors);
-            free(authors);
+            char **authorarr=NULL;
+            int numauthors=get_authors(rel_file,&authorarr);
+            
+            
+            if(numauthors>0)
+            {
+                char* authors = get_authors_string(authorarr,numauthors);
+                ewl_label_text_set(EWL_LABEL(authorlabel[count]), authors);
+                
+                free(authors);
+            }
+            else
+                ewl_label_text_set(EWL_LABEL(authorlabel[count]),"");
             
             for(i=0;i<numauthors;i++)
                 free(authorarr[i]);
-            if(titlearr)
+            
+            if(authorarr)
                 free(authorarr);
+            
             
             pointptr=strrchr(file,'.');
             if(pointptr==NULL)
@@ -694,7 +717,7 @@ void update_list()
         showflag[count]=1;
 
         free(time_str);
-        
+        free(rel_file);
         
     }
 
@@ -952,31 +975,43 @@ void update_file_database()
     {
         if(!ecore_file_is_dir(g_fileslist[i]->d_name))
         {
-
-            int recstatus=get_file_record_status(g_fileslist[i]->d_name);
+            char *rel_file;
+            char* cwd = get_current_dir_name();
+            asprintf(&rel_file, "%s/%s", cwd,g_fileslist[i]->d_name);
+            free(cwd);
+            
+            
+            
+            int recstatus=get_file_record_status(rel_file);
             if(recstatus==RECORD_STATUS_ERROR || recstatus==RECORD_STATUS_OK || recstatus==RECORD_STATUS_EXISTS_BUT_UNKNOWN) //will have to deal with some of these cases differently later
             {
                 
             }
             else if(recstatus==RECORD_STATUS_OUT_OF_DATE)
             {
-                clear_file_extractor_data(g_fileslist[i]->d_name);
-                update_file_mod_time(g_fileslist[i]->d_name);
-                extract_and_cache(g_fileslist[i]->d_name);
+                clear_file_extractor_data(rel_file);
+                update_file_mod_time(rel_file);
+                extract_and_cache(rel_file);
             }
             else if(recstatus==RECORD_STATUS_ABSENT)
             {
-                extract_and_cache(g_fileslist[i]->d_name);
+                extract_and_cache(rel_file);
             }
+            free(rel_file);
         }
         
     }
 }
 void extract_and_cache(char *filename)
 {
+    
     EXTRACTOR_KeywordList* mykeys;
     mykeys = extractor_get_keywords(extractors, filename);
-    //process titles
+    
+    
+    
+    
+    //process titles    
     char *extracted_title = extractor_get_last(EXTRACTOR_TITLE, mykeys);
     if(extracted_title && extracted_title[0])
     {
@@ -1007,6 +1042,7 @@ void extract_and_cache(char *filename)
     if(authorcount>0)
         set_authors(filename,authorarr,authorcount);
     free(authorarr);
+
     
 }
 void filter_filelist()

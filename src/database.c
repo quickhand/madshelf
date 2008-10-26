@@ -296,9 +296,12 @@ int get_authors(char *filename,char ***authors)
     char **resultp;
     int rows,cols;
      
-    int result= sqlite_get_table_printf(madshelf_database,"SELECT ALL authorname FROM authors WHERE (SELECT authorid FROM bookauthors WHERE bookauthors.fileid IN (SELECT fileid FROM files WHERE \'%q\' = filename ))",&resultp,&rows,&cols,NULL,filename);
+    int result= sqlite_get_table_printf(madshelf_database,"SELECT authorname FROM authors WHERE authorid IN (SELECT authorid FROM bookauthors WHERE bookauthors.fileid = (SELECT fileid FROM files WHERE \'%q\' = filename ))",&resultp,&rows,&cols,NULL,filename);
     if(rows<=0)
+    {
         *authors=NULL;
+        return 0;
+    }
     else
         *authors=(char **)malloc(rows*sizeof(char*));
     int i;
@@ -317,9 +320,12 @@ int get_titles(char *filename,char ***titles)
     char **resultp;
     int rows,cols;
     
-    int result= sqlite_get_table_printf(madshelf_database,"SELECT ALL title FROM titles WHERE (SELECT titleid FROM booktitles WHERE booktitles.fileid IN (SELECT fileid FROM files WHERE \'%q\' = filename))",&resultp,&rows,&cols,NULL,filename);
+    int result= sqlite_get_table_printf(madshelf_database,"SELECT title FROM titles WHERE titleid IN (SELECT titleid FROM booktitles WHERE booktitles.fileid = (SELECT fileid FROM files WHERE \'%q\' = filename))",&resultp,&rows,&cols,NULL,filename);
     if(rows<=0)
+    {
         *titles=NULL;
+        return 0;
+    }
     else
         *titles=(char **)malloc(rows*sizeof(char*));
     int i;
@@ -339,11 +345,12 @@ int get_series(char *filename,char ***seriesname,int **seriesnum)
     char **resultp;
     int rows,cols;
     
-    int result= sqlite_get_table_printf(madshelf_database,"SELECT ALL seriesname FROM series WHERE (SELECT seriesid FROM bookseries WHERE bookseries.fileid IN (SELECT fileid FROM files WHERE \'%q\' = filename)) UNION SELECT seriesnum FROM bookseries WHERE bookseries.fileid IN (SELECT fileid FROM files WHERE \'%q\' = filename)",&resultp,&rows,&cols,NULL,filename,filename);
+    int result= sqlite_get_table_printf(madshelf_database,"SELECT seriesname FROM series WHERE seriedid IN (SELECT seriesid FROM bookseries WHERE bookseries.fileid = (SELECT fileid FROM files WHERE \'%q\' = filename)) UNION SELECT seriesnum FROM bookseries WHERE bookseries.fileid IN (SELECT fileid FROM files WHERE \'%q\' = filename)",&resultp,&rows,&cols,NULL,filename,filename);
     if(rows<=0)
     {
         *seriesname=NULL;
         *seriesnum=NULL;
+        return 0;
     }
     else
     {
@@ -370,9 +377,12 @@ int get_tags(char *filename,char ***tagnames)
     int rows,cols;
      
     
-    int result= sqlite_get_table_printf(madshelf_database,"SELECT ALL tagname FROM tags WHERE (SELECT tagid FROM booktags WHERE booktags.fileid IN (SELECT fileid FROM files WHERE \'%q\' = filename))",&resultp,&rows,&cols,NULL,filename);
+    int result= sqlite_get_table_printf(madshelf_database,"SELECT tagname FROM tags WHERE tagid IN (SELECT tagid FROM booktags WHERE booktags.fileid = (SELECT fileid FROM files WHERE \'%q\' = filename))",&resultp,&rows,&cols,NULL,filename);
     if(rows<=0)
+    {
         *tagnames=NULL;
+        return 0;    
+    }
     else
         *tagnames=(char **)malloc(rows*sizeof(char*));
     int i;
