@@ -995,16 +995,17 @@ void update_file_database()
             }
             else if(recstatus==RECORD_STATUS_ABSENT)
             {
-                extract_and_cache(rel_file);
+                if(!extract_and_cache(rel_file))
+                    create_empty_record(rel_file);
             }
             free(rel_file);
         }
         
     }
 }
-void extract_and_cache(char *filename)
+int extract_and_cache(char *filename)
 {
-    
+    int retval=0;
     EXTRACTOR_KeywordList* mykeys;
     mykeys = extractor_get_keywords(extractors, filename);
     
@@ -1017,6 +1018,7 @@ void extract_and_cache(char *filename)
     {
         const char *titlearr[]={extracted_title};
         set_titles(filename,titlearr,1);
+        retval=1;
     }
     //process authors
     EXTRACTOR_KeywordList* keypt=mykeys;
@@ -1040,9 +1042,12 @@ void extract_and_cache(char *filename)
         keypt = keypt->next;
     }
     if(authorcount>0)
+    {
         set_authors(filename,authorarr,authorcount);
+        retval=1;
+    }
     free(authorarr);
-
+    return retval;
     
 }
 void filter_filelist()

@@ -170,6 +170,41 @@ long get_file_index(char *filename,int create_entry_if_missing)
     sqlite_free_table(resultp);
     return retval;
 }
+int create_empty_record(char *filename)
+{
+    char **resultp=NULL;
+    int rows,cols;
+    int result= sqlite_get_table_printf(madshelf_database,"SELECT fileid FROM files WHERE filename = \'%q\'",&resultp,&rows,&cols,NULL,filename);
+    if(resultp)
+        sqlite_free_table(resultp);    
+    if(rows<=0)
+    {
+        struct stat filestat;
+        int fileexists;
+        fileexists = stat(filename, &filestat);
+        if(fileexists<0)
+        {
+            return -1;
+        }
+        
+        sqlite_exec_printf(madshelf_database,"INSERT INTO files (filename,mod_time) VALUES(\'%q\',%d)",NULL,NULL,NULL,filename,filestat.st_mtime);
+
+
+    }
+    if(rows<=0)
+    {
+        
+        return -1;
+    }
+    return 0;
+    
+    
+    
+    
+    
+    
+    
+}
 long get_table_index(char *value,char *tablename,char *idcolname,char *valcolname)
 {
     
