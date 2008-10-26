@@ -1063,12 +1063,19 @@ void filter_filelist()
             for(j=0;j<getNumFilters();j++)
             {
                 if(isFilterActive(j))
-                    if(!evaluateFilter(j,g_fileslist[i]->d_name))
+                {
+                    char *rel_file;
+                    char* cwd = get_current_dir_name();
+                    asprintf(&rel_file, "%s/%s", cwd,g_fileslist[i]->d_name);
+                    free(cwd);
+                    
+                    if(!evaluateFilter(j,rel_file))
                     {
                         flag=0;
                         break;
                     }
-                
+                    free(rel_file);
+                }
             }
         }
         if(flag)
