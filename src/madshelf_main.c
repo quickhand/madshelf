@@ -558,7 +558,9 @@ void update_list()
     Ewl_Widget **labelsbox;
     Ewl_Widget **titlelabel;
     Ewl_Widget **authorlabel;
+    Ewl_Widget **infobox;
     Ewl_Widget **infolabel;
+    Ewl_Widget **taglabel;
     Ewl_Widget **bookbox;
     Ewl_Widget **separator;
     Ewl_Widget **typeicon;
@@ -571,7 +573,9 @@ void update_list()
     labelsbox=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     titlelabel=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     authorlabel=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
+    infobox=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     infolabel=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
+    taglabel=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     bookbox=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     separator=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     typeicon=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
@@ -584,6 +588,10 @@ void update_list()
         titlelabel[count] = ewl_widget_name_find(tempname);
         sprintf (tempname, "authorlabel%d",count);
         authorlabel[count] = ewl_widget_name_find(tempname);
+        sprintf (tempname, "infobox%d",count);
+        infobox[count] = ewl_widget_name_find(tempname);
+        sprintf (tempname, "taglabel%d",count);
+        taglabel[count] = ewl_widget_name_find(tempname);
         sprintf (tempname, "infolabel%d",count);
         infolabel[count] = ewl_widget_name_find(tempname);
         sprintf (tempname, "bookbox%d",count);
@@ -605,6 +613,8 @@ void update_list()
         ewl_widget_hide(separator[count]);
         ewl_widget_hide(authorlabel[count]);
         ewl_widget_hide(titlelabel[count]);
+        ewl_widget_hide(infobox[count]);
+        ewl_widget_hide(taglabel[count]);
         ewl_widget_hide(infolabel[count]);
         ewl_widget_hide(typeicon[count]);
     }
@@ -740,8 +750,12 @@ void update_list()
             ewl_widget_configure(authorlabel[count]);
             ewl_widget_show(titlelabel[count]);
             ewl_widget_configure(titlelabel[count]);
+            ewl_widget_show(taglabel[count]);
+            ewl_widget_configure(taglabel[count]);
             ewl_widget_show(infolabel[count]);
             ewl_widget_configure(infolabel[count]);
+            ewl_widget_show(infobox[count]);
+            ewl_widget_configure(infobox[count]);
             ewl_widget_show(separator[count]);
             ewl_widget_configure(separator[count]);
             ewl_widget_show(labelsbox[count]);
@@ -1050,11 +1064,12 @@ int extract_and_cache(char *filename)
     return retval;
     
 }
-void filter_filelist()
+int filter_filelist()
 {
     struct dirent** new_g_fileslist=(struct dirent**)malloc(sizeof(struct dirent*)*g_nfileslist);
     int i,j;
     int count=0;
+    int retval=0;
     for(i=0;i<g_nfileslist;i++)
     {
         int flag=1;
@@ -1072,6 +1087,7 @@ void filter_filelist()
                     if(!evaluateFilter(j,rel_file))
                     {
                         flag=0;
+                        retval=1;
                         break;
                     }
                     free(rel_file);
@@ -1090,7 +1106,7 @@ void filter_filelist()
     g_nfileslist=count;
     free(g_fileslist);
     g_fileslist=new_g_fileslist;    
-    
+    return retval;
 }
 void update_filters()
 {
@@ -2193,9 +2209,11 @@ int main ( int argc, char ** argv )
     Ewl_Widget *box2=NULL;
     Ewl_Widget *box3=NULL;
     Ewl_Widget *box5=NULL;
+    Ewl_Widget *box6=NULL;
     Ewl_Widget *authorlabel;
     Ewl_Widget *titlelabel;
     Ewl_Widget *infolabel;
+    Ewl_Widget *taglabel;
     Ewl_Widget *iconimage;
     Ewl_Widget *menubar=NULL;
     Ewl_Widget *arrow_widget=NULL;
@@ -2598,15 +2616,32 @@ int main ( int argc, char ** argv )
         ewl_theme_data_str_set(EWL_WIDGET(titlelabel),"/label/textpart","ewl/oi_label/titletext/text");
         ewl_object_fill_policy_set(EWL_OBJECT(titlelabel), EWL_FLAG_FILL_VSHRINK| EWL_FLAG_FILL_HFILL);
 
+        
+        sprintf (tempname3, "infobox%d",count);
+        box6 = ewl_hbox_new();
+        ewl_container_child_append(EWL_CONTAINER(box5),box6);
+        ewl_widget_name_set(box6,tempname3 );
+        ewl_theme_data_str_set(EWL_WIDGET(box6),"/hbox/group","ewl/blank");
+        ewl_object_fill_policy_set(EWL_OBJECT(box6),EWL_FLAG_FILL_HFILL);
+        
+        
+        
+        sprintf (tempname3, "taglabel%d",count);
+        taglabel = ewl_label_new();
+        ewl_container_child_append(EWL_CONTAINER(box6), taglabel);
+        ewl_widget_name_set(taglabel,tempname3 );
+        ewl_theme_data_str_set(EWL_WIDGET(taglabel),"/label/group","ewl/oi_label/tagtext");
+        ewl_theme_data_str_set(EWL_WIDGET(taglabel),"/label/textpart","ewl/oi_label/tagtext/text");
+        ewl_object_fill_policy_set(EWL_OBJECT(taglabel), EWL_FLAG_FILL_HFILL);
+
+        
         sprintf (tempname3, "infolabel%d",count);
         infolabel = ewl_label_new();
-        ewl_container_child_append(EWL_CONTAINER(box5), infolabel);
+        ewl_container_child_append(EWL_CONTAINER(box6), infolabel);
         ewl_widget_name_set(infolabel,tempname3 );
-        ewl_object_padding_set(EWL_OBJECT(infolabel),0,3,0,0);
-        ewl_object_alignment_set(EWL_OBJECT(infolabel),EWL_FLAG_ALIGN_RIGHT|EWL_FLAG_ALIGN_BOTTOM);
         ewl_theme_data_str_set(EWL_WIDGET(infolabel),"/label/group","ewl/oi_label/infotext");
         ewl_theme_data_str_set(EWL_WIDGET(infolabel),"/label/textpart","ewl/oi_label/infotext/text");
-        ewl_object_fill_policy_set(EWL_OBJECT(infolabel), EWL_FLAG_FILL_VSHRINK| EWL_FLAG_FILL_HFILL);
+        ewl_object_fill_policy_set(EWL_OBJECT(infolabel), EWL_FLAG_FILL_HFILL);
 
         sprintf(tempname4,"separator%d",count);
         dividewidget = ewl_hseparator_new();
