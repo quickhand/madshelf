@@ -1375,6 +1375,22 @@ void popupContext(unsigned int num)
     
     ewl_popup_mouse_position_set(EWL_POPUP(curwidget),ewl_object_current_x_get(EWL_OBJECT(selected))+ewl_object_current_w_get(EWL_OBJECT(selected))-PREFERRED_W(curwidget),ewl_object_current_y_get(EWL_OBJECT(selected)));
     context_index=num-1;
+    
+    //Hide or show tags option, based on whether directory.
+    Ewl_Widget *tags_item=ewl_widget_name_find("mc_menuitem4");
+    char* file = g_fileslist[current_index + num-1]->d_name;
+    if(ecore_file_is_dir(file))
+    {
+        ewl_widget_hide(tags_item);    
+        
+    }
+    else
+    {
+        ewl_widget_show(tags_item);
+        ewl_widget_configure(tags_item);
+    }
+    
+    
     ewl_widget_show(curwidget);
     ewl_widget_configure(curwidget);
     ewl_window_raise(EWL_WINDOW(curwidget));
