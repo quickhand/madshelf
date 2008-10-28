@@ -27,7 +27,7 @@
 #include <expat.h>
 #include "filtertree.h"
 #include "filefilter.h"
-
+#include "database.h"
 typedef struct filter_struct {
     filter_node *headnode;
     int active;
@@ -215,6 +215,117 @@ int extension_match_filter_nocase(char *filename,char *textcontent)
     return retval;
 }
 
+int tag_substring_filter(char *filename,char *textcontent)
+{
+    int retval=0;
+    char **tagnames=NULL;
+    int numtags=get_tags(filename,&tagnames);
+    if(numtags==0)
+        return retval;
+    int i;
+    for(i=0;i<numtags;i++)
+    {
+        if(strstr(tagnames[i],textcontent)!=NULL)
+        {
+            retval=1;
+            break;
+        }
+    }
+    for(i=0;i<numtags;i++)
+    {
+        free(tagnames[i]);   
+        
+    }
+    if(tagnames)
+        free(tagnames);
+    return retval;
+}
+int tag_substring_filter_nocase(char *filename,char *textcontent)
+{
+    int retval=0;
+
+    char *textcontenti=strToLower(textcontent);
+    char **tagnames=NULL;
+    int numtags=get_tags(filename,&tagnames);
+    if(numtags==0)
+        return retval;
+    int i;
+    for(i=0;i<numtags;i++)
+    {
+        char *tagnamei=strToLower(tagnames[i]);
+        if(strstr(tagnamei,textcontenti)!=NULL)
+        {
+            retval=1;
+            break;
+        }
+        free(tagnamei);
+    }
+    for(i=0;i<numtags;i++)
+    {
+        free(tagnames[i]);   
+        
+    }
+    if(tagnames)
+        free(tagnames);
+    free(textcontenti);
+    return retval;
+}
+int tag_match_filter(char *filename,char *textcontent)
+{
+    int retval=0;
+    char **tagnames=NULL;
+    int numtags=get_tags(filename,&tagnames);
+    if(numtags==0)
+        return retval;
+    int i;
+    for(i=0;i<numtags;i++)
+    {
+        if(strcmp(tagnames[i],textcontent)==0)
+        {
+            retval=1;
+            break;
+        }
+    }
+    for(i=0;i<numtags;i++)
+    {
+        free(tagnames[i]);   
+        
+    }
+    if(tagnames)
+        free(tagnames);
+    return retval;
+}
+int tag_match_filter_nocase(char *filename,char *textcontent)
+{
+    int retval=0;
+
+    char *textcontenti=strToLower(textcontent);
+    char **tagnames=NULL;
+    int numtags=get_tags(filename,&tagnames);
+    if(numtags==0)
+        return retval;
+    int i;
+    for(i=0;i<numtags;i++)
+    {
+        char *tagnamei=strToLower(tagnames[i]);
+        if(strcmp(tagnamei,textcontenti)==0)
+        {
+            retval=1;
+            break;
+        }
+        free(tagnamei);
+    }
+    for(i=0;i<numtags;i++)
+    {
+        free(tagnames[i]);   
+        
+    }
+    if(tagnames)
+        free(tagnames);
+    free(textcontenti);
+    return retval;
+}
+
 
 
 
@@ -379,7 +490,23 @@ void handlestart(void *userData,const XML_Char *name,const XML_Char **atts)
                     setLeafFunction(newnode,extension_substring_filter);
             }
         }
-
+        else if(domain==3)
+        {
+            if(type==0)
+            {   
+                if(matchcase==0)
+                    setLeafFunction(newnode,tag_match_filter_nocase);       
+                if(matchcase==1)
+                    setLeafFunction(newnode,tag_match_filter);
+            }
+            else if(type==1)
+            {
+                if(matchcase==0)
+                    setLeafFunction(newnode,tag_substring_filter_nocase);       
+                if(matchcase==1)
+                    setLeafFunction(newnode,tag_substring_filter);
+            }
+        }
 
         
 

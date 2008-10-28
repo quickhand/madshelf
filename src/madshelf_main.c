@@ -692,6 +692,7 @@ void update_list()
 
             ewl_label_text_set(EWL_LABEL(infolabel[count]),time_str);
             ewl_label_text_set(EWL_LABEL(authorlabel[count]),"");
+            ewl_label_text_set(EWL_LABEL(taglabel[count]),"");
             ewl_image_file_path_set(EWL_IMAGE(typeicon[count]),"/usr/share/madshelf/folder.png");
         }
         else
