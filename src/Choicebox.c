@@ -46,6 +46,7 @@ typedef struct _choice_info_struct {
 	choice_handler handler;
     choicebox_close_handler close_handler;
 	Ewl_Widget *parent;
+    void *userdata;
 } choice_info_struct;
 
 /*
@@ -87,7 +88,7 @@ static void choicebox_unrealize_cb(Ewl_Widget *w, void *ev, void *data) {
 		ewl_window_keyboard_grab_set(EWL_WINDOW(win), 1);
     
 	
-    close_handler(w);
+    close_handler(w,infostruct->userdata);
 }
 
 void choicebox_change_selection(Ewl_Widget * widget, int new_navsel)
@@ -236,7 +237,7 @@ void choicebox_item(Ewl_Widget * widget, int item)
 		curchoice = infostruct->curindex + (item - 1);
 		if (curchoice < infostruct->numchoices) {
 			choicebox_change_selection(widget, item);
-			(infostruct->handler) (curchoice, widget);
+			(infostruct->handler) (curchoice, widget,infostruct->userdata);
 		}			
 	} else if (item == 9)
 		choicebox_previous_page(widget);
@@ -281,7 +282,7 @@ void choicebox_nav_sel(Ewl_Widget * widget)
 	choice_info_struct *infostruct =
 		(choice_info_struct *) ewl_widget_data_get(widget, (void *)"choice_info");
 	(infostruct->handler) (infostruct->curindex * noptions +
-			infostruct->navsel, widget);
+			infostruct->navsel, widget,infostruct->userdata);
 
 }
 
@@ -322,7 +323,7 @@ void choicebox_destroy_cb(Ewl_Widget * w, void *event, void *data)
 }
 
 Ewl_Widget *init_choicebox(const char *choicelist[], const char *values[], int numchoices,
-		choice_handler handler,choicebox_close_handler close_handler, char *header, Ewl_Widget *parent, int master)
+		choice_handler handler,choicebox_close_handler close_handler, char *header, Ewl_Widget *parent, void *userdata,int master)
 {
 	Ewl_Widget *win, *vbox, *tempw1, *tempw2, *w, *v1, *v2;
 
@@ -341,6 +342,7 @@ Ewl_Widget *init_choicebox(const char *choicelist[], const char *values[], int n
     info->close_handler=close_handler;
 	info->choices = (char **) malloc(sizeof(char *) * numchoices);
 	info->values = (char **) malloc(sizeof(char *) * numchoices);
+    info->userdata=userdata;
     int i=0;
 	for (i = 0; i < numchoices; i++) {
 		info->choices[i] =
@@ -527,3 +529,4 @@ void update_label(Ewl_Widget *w, int number, const char *value)
 			 (EWL_CONTAINER(v2), 0)),
 			value);
 }
+

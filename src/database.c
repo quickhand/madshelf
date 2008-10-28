@@ -137,6 +137,17 @@ int clear_tags(char *filename)
     return 0;
     
 }
+int remove_tag(char *filename,char *tagname)
+{
+    long fileindex=get_file_index(filename,0);
+    if(fileindex==-1)
+        return -1;
+    //erase titles
+    sqlite_exec_printf(madshelf_database,"DELETE FROM tags WHERE tagname = \'%q\' AND tags.tagid NOT IN (SELECT tagid FROM booktags WHERE fileid != %d) AND tags.tagid IN (SELECT tagid FROM booktags WHERE fileid=%d)",NULL,NULL,NULL,tagname,fileindex,fileindex);
+    sqlite_exec_printf(madshelf_database,"DELETE FROM booktags WHERE (tagid = (SELECT tagid FROM tags WHERE tagname= \'%q\')) AND (fileid = %d)",NULL,NULL,NULL,tagname,fileindex);
+    return 0;
+    
+}
 long get_file_index(char *filename,int create_entry_if_missing)
 {
     
@@ -326,6 +337,7 @@ void set_tags(char *filename,const char *tags[],int numtags)
         }
     }
 }
+
 int get_authors(char *filename,char ***authors)
 {
     char **resultp;
@@ -431,6 +443,7 @@ int get_tags(char *filename,char ***tagnames)
     
     return rows;    
 }
+
 void fini_database()
 {
     sqlite_close(madshelf_database);

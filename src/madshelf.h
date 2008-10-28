@@ -34,3 +34,5 @@ void update_filters();
 void destroy_cb ( Ewl_Widget *w, void *event, void *data );
 void doActionForNum(unsigned int num);
 char *getUpLevelDir(char *thedir);
+int filter_filelist();
+void reset_file_position();

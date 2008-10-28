@@ -24,4 +24,5 @@ int get_titles(char *filename,char ***titles);
 int get_series(char *filename,char ***seriesname,int **seriesnum);
 int get_tags(char *filename,char ***tagnames);
 int create_empty_record(char *filename);
+int remove_tag(char *filename,char *tagname);
 #endif

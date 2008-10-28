@@ -548,7 +548,42 @@ char* get_authors_string(char *authors[],int authornum)
     
     return authorstr;
 }
-
+char* get_tag_string(char *tags[],int tagnum)
+{
+     
+    char* tagstr=NULL;
+    
+    int length=2;
+    int i;
+    for(i=0;i<tagnum;i++)
+    {
+        
+        length+=strlen(tags[i])+2;
+        
+    }
+    length--;
+    
+    tagstr=malloc(length*sizeof(char));
+    tagstr[0]='[';
+    tagstr[1]='\0';
+    for(i=0;i<tagnum;i++)
+    {
+        
+        strcat(tagstr,tags[i]);
+        if(i<(tagnum-1))
+            strcat(tagstr,", ");
+        else
+            strcat(tagstr,"]");
+    }
+    
+    return tagstr;
+}
+void reset_file_position()
+{
+    current_index=0;
+    nav_sel=0;
+    
+}
 void update_list()
 {
     int count=0;
@@ -711,6 +746,30 @@ void update_list()
                 free(authorarr);
             
             
+            
+            char **tagarr=NULL;
+            int numtags=get_tags(rel_file,&tagarr);
+            
+            
+            if(numtags>0)
+            {
+                char* tags = get_tag_string(tagarr,numtags);
+                ewl_label_text_set(EWL_LABEL(taglabel[count]), tags);
+                
+                free(tags);
+            }
+            else
+                ewl_label_text_set(EWL_LABEL(taglabel[count]),"");
+            
+            for(i=0;i<numtags;i++)
+                free(tagarr[i]);
+            
+            if(tagarr)
+                free(tagarr);
+            
+            
+            
+            
             pointptr=strrchr(file,'.');
             if(pointptr==NULL)
                 tempstr2=ReadString("icons",".","default.png");
@@ -865,13 +924,13 @@ void update_menu()
 
 void update_context_menu()
 {
-    char *tempstrings[]={gettext("Cut"),gettext("Copy"),gettext("Delete")};
+    char *tempstrings[]={gettext("Cut"),gettext("Copy"),gettext("Delete"),gettext("Tags...")};
     char tempname[30];
     char temptext[40];
     int i=0;
     Ewl_Widget *curwidget;
     curwidget = ewl_widget_name_find("main_context");
-    for(i=0;i<3;i++)
+    for(i=0;i<4;i++)
     {
         sprintf(tempname,"mc_menuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
@@ -1928,7 +1987,7 @@ void mc_menu_delete_confirm_no(void)
 void mc_menu_item(Ewl_Widget *widget,int item)
 {
     Ewl_Widget *curwidget;
-    if(item <= 0 || item>3)
+    if(item <= 0 || item>4)
         return;
     char* cwd = get_current_dir_name();
     action_filename=(char *)malloc((strlen(g_fileslist[current_index+context_index]->d_name)+2+strlen(cwd))*sizeof(char));
@@ -1945,6 +2004,12 @@ void mc_menu_item(Ewl_Widget *widget,int item)
         show_confirm_dialog(mc_menu_delete_confirm_no,mc_menu_delete_confirm_yes,gettext("Delete file?"));
         file_action=FILE_NO_ACTION;
         
+    }
+    else if(item==4)
+    {
+        TagsDialog(action_filename);
+        free(action_filename);
+        action_filename=NULL;
     }
     
 }
@@ -2683,6 +2748,12 @@ int main ( int argc, char ** argv )
         
         cont_item=ewl_menu_item_new();
         ewl_widget_name_set(cont_item,"mc_menuitem3");
+        
+        ewl_container_child_append(EWL_CONTAINER(context),cont_item);
+        ewl_widget_show(cont_item);
+        
+        cont_item=ewl_menu_item_new();
+        ewl_widget_name_set(cont_item,"mc_menuitem4");
         
         ewl_container_child_append(EWL_CONTAINER(context),cont_item);
         ewl_widget_show(cont_item);
