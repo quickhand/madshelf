@@ -2333,14 +2333,31 @@ void refresh_state()
 
     chdir_to((char*)eet_read(state, "curdir", &size));
     //init_filelist();
-    current_index = *((int*)eet_read(state,"curindex", &size));
+    int *temppt=(int*)eet_read(state,"curindex", &size);
+    if(temppt)
+        current_index = *temppt;
+    else
+        current_index = 0;
     if(current_index < 0 || current_index > g_nfileslist)
         current_index = 0;
-
-    sort_type=*((int*)eet_read(state, "sort_type", &size));
-    sort_order=*((int*)eet_read(state, "sort_order", &size));
     
-    filters_modtime=*((int*)eet_read(state, "filters_modtime", &size));
+    temppt=(int*)eet_read(state, "sort_type", &size);
+    if(temppt)
+        sort_type=*temppt;
+    else
+        sort_type=SORT_BY_NAME;
+    temppt=(int*)eet_read(state, "sort_order", &size);
+    if(temppt)
+        sort_order=*temppt;
+    else
+        sort_order=ECORE_SORT_MIN;
+    
+    temppt=(int*)eet_read(state, "filters_modtime", &size);
+    if(temppt)
+        filters_modtime=*temppt;
+    else
+        filters_modtime=0;
+    
     filterstatus=(int *)eet_read(state, "filterstatus", &size);
     eet_close(state);
 }
