@@ -25,6 +25,7 @@
 
 #define FILE_LIST_FOLDER_MODE 0
 #define FILE_LIST_LOCATION_MODE 1
+#define FILE_LIST_ALL_MODE 2
 
 void update_list();
 void update_title();

@@ -865,17 +865,23 @@ void update_title()
     char* cwd = get_current_dir_name();
 
     int notroot;
-    if(file_list_mode==FILE_LIST_FOLDER_MODE)
-        notroot= strcmp(g_roots->roots[current_root].path, cwd);
-    else if(file_list_mode==FILE_LIST_LOCATION_MODE)
-        notroot=0;
-    
-    
-    asprintf(&titletext, "Madshelf | %s%s%s",
-             g_roots->roots[current_root].name,
-             notroot ? "://" : "",
-             notroot ? cwd + strlen(g_roots->roots[current_root].path) : "");
-
+    if(file_list_mode==FILE_LIST_FOLDER_MODE || file_list_mode==FILE_LIST_LOCATION_MODE)
+    {
+        if(file_list_mode==FILE_LIST_FOLDER_MODE)
+            notroot= strcmp(g_roots->roots[current_root].path, cwd);
+        else if(file_list_mode==FILE_LIST_LOCATION_MODE)
+            notroot=0;
+        
+        
+        asprintf(&titletext, "Madshelf | %s%s%s",
+                 g_roots->roots[current_root].name,
+                 notroot ? "://" : "",
+                 notroot ? cwd + strlen(g_roots->roots[current_root].path) : "");
+    }
+    else if(file_list_mode==FILE_LIST_ALL_MODE)
+    {
+        asprintf(&titletext, "Madshelf | %s",gettext("All Locations"));
+    }
     ewl_border_label_set(EWL_BORDER(ewl_widget_name_find("mainborder")),
                          titletext);
 
@@ -960,8 +966,8 @@ void update_menu()
         ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
     }
     
-    char *tempstrings4[]={gettext("Folder Mode"),gettext("Location Mode")};
-    for(i=0;i<2;i++)
+    char *tempstrings4[]={gettext("Folder Mode"),gettext("Location Mode"),gettext("All Locations Mode")};
+    for(i=0;i<3;i++)
     {
         sprintf(tempname,"filemodemenuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
@@ -1213,6 +1219,43 @@ void init_filelist()
         g_nfileslist=mad_scandir(current_dir,&g_fileslist,&filter_dotfiles,cmp,0);
     else if(file_list_mode==FILE_LIST_LOCATION_MODE)
         g_nfileslist=mad_scandir(g_roots->roots[current_root].path,&g_fileslist,&filter_dotfiles,cmp,1);
+    else if(file_list_mode==FILE_LIST_ALL_MODE)
+    {
+        g_nfileslist=0;
+        int i;
+        g_fileslist=NULL;
+        for(i=0;i<count_roots();i++)
+        {
+            mad_file **templist,**templist2;
+            int ntemplist=mad_scandir(g_roots->roots[i].path,&templist,&filter_dotfiles,cmp,1);
+            if(ntemplist<=0)
+                continue;
+            templist2=g_fileslist;
+            g_fileslist=(mad_file**)malloc((g_nfileslist+ntemplist)*sizeof(mad_file *));
+            int j;
+            for(j=0;j<g_nfileslist;j++)
+                g_fileslist[j]=templist2[j];
+            for(j=g_nfileslist;j<(g_nfileslist+ntemplist);j++)
+                g_fileslist[j]=templist[j-g_nfileslist];
+                
+            if(templist2)
+                free(templist2);
+            free(templist);
+            g_nfileslist+=ntemplist;
+        }
+        qsort ((void *)g_fileslist,g_nfileslist,sizeof(mad_file*),cmp);
+        
+        
+        
+        
+    }
+    
+    
+    
+    
+    
+    
+    
     if(g_nfileslist == -1)
     {
         /* FIXME: handle somehow */
@@ -1224,7 +1267,7 @@ void init_filelist()
         update_file_database();
         if(file_list_mode==FILE_LIST_FOLDER_MODE)
             filter_filelist(0);
-        else if(file_list_mode==FILE_LIST_LOCATION_MODE)
+        else if(file_list_mode==FILE_LIST_LOCATION_MODE || file_list_mode==FILE_LIST_ALL_MODE)
             filter_filelist(1);
     }
 
@@ -1627,6 +1670,8 @@ void change_root(int item)
 
 void main_esc(Ewl_Widget *widget)
 {
+    if(file_list_mode!=FILE_LIST_FOLDER_MODE)
+        return;
     int i;
     char* cwd = get_current_dir_name();
     char* cur_name = basename(cwd);
@@ -2481,7 +2526,7 @@ void filemode_menu_nav_down(Ewl_Widget *widget)
 
 void filemode_menu_item(Ewl_Widget *widget,int item)
 {
-    if(item < 0 || item >2)
+    if(item < 0 || item >3)
         return;
 
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem4")));
@@ -2500,6 +2545,16 @@ void filemode_menu_item(Ewl_Widget *widget,int item)
     else if(item==2)
     {
         file_list_mode=FILE_LIST_LOCATION_MODE;
+        
+        init_filelist();
+
+        update_list();
+        update_title();
+        
+     }
+     else if(item==3)
+     {
+        file_list_mode=FILE_LIST_ALL_MODE;
         
         init_filelist();
 
@@ -2969,6 +3024,10 @@ int main ( int argc, char ** argv )
         ewl_widget_name_set(temp3,"filemodemenuitem2");
         ewl_widget_show(temp3);
         
+        temp3=ewl_menu_item_new();
+        ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
+        ewl_widget_name_set(temp3,"filemodemenuitem3");
+        ewl_widget_show(temp3);
         
 
         temp2=ewl_menu_new();
