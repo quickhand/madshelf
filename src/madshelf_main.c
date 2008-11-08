@@ -1046,9 +1046,11 @@ static int mad_scandir (const char *dir, struct mad_file ***namelist, int (*sele
     //fprintf(stderr,"OKAY2\n");
     if(dorecurse)
     {
+        int flag=0;
         struct mad_file **old_namelist=*namelist;
         for(i=0;i<numfiles;i++)
         {
+            
             mad_file *temp=old_namelist[i];//*((*namelist)+i);
             char *tempfilename;
             asprintf(&tempfilename,"%s/%s",dir,temp->filestr->d_name);
@@ -1067,7 +1069,8 @@ static int mad_scandir (const char *dir, struct mad_file ***namelist, int (*sele
                     continue;
                     
                 }
-                
+
+                flag++;
                 tempnamelist2=(mad_file**)malloc(sizeof(mad_file*)*(total+curnumfiles));
                 
                 int j;
@@ -1082,10 +1085,11 @@ static int mad_scandir (const char *dir, struct mad_file ***namelist, int (*sele
                     *(tempnamelist2+j)=*(tempnamelist+j-total);
 
                 }
-                if(i>0)
+                if(flag>1)
                     free(*namelist);
                 *namelist=tempnamelist2;    
                 total+=curnumfiles;
+
                 free(tempnamelist);
                 
             }
@@ -1094,12 +1098,14 @@ static int mad_scandir (const char *dir, struct mad_file ***namelist, int (*sele
             
             
         }
+
         
-        
-        
+        if(flag>0)
+            free(old_namelist);
         
         
     }
+    
     qsort ((void *)(mad_file**)*namelist,total,sizeof(mad_file*),cmp);
     /*chdir(cwd);
     free(cwd);*/
