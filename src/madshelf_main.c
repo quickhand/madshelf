@@ -2192,10 +2192,10 @@ void mc_menu_item(Ewl_Widget *widget,int item)
     Ewl_Widget *curwidget;
     if(item <= 0 || item>4)
         return;
-    char* cwd = get_current_dir_name();
-    action_filename=(char *)malloc((strlen(get_mad_file(current_index+context_index)->filestr->d_name)+2+strlen(cwd))*sizeof(char));
-    sprintf(action_filename,"%s/%s",cwd,get_mad_file(current_index+context_index)->filestr->d_name);
-    free(cwd);
+
+    action_filename=(char *)malloc((strlen(get_mad_file(current_index+context_index)->filestr->d_name)+2+strlen(get_mad_file(current_index+context_index)->path))*sizeof(char));
+    sprintf(action_filename,"%s/%s",get_mad_file(current_index+context_index)->path,get_mad_file(current_index+context_index)->filestr->d_name);
+
     ewl_widget_hide(ewl_widget_name_find("main_context"));
     if(item==1)
         file_action=FILE_CUT;
