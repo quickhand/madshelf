@@ -80,7 +80,14 @@ char **scriptstrlist;
 char *statefilename=NULL;
 
 int g_nfileslist;
-struct dirent** g_fileslist;
+
+typedef struct _mad_file
+{
+    struct dirent *filestr;
+    char *path;
+} mad_file;
+struct mad_file** g_fileslist;
+//struct dirent** g_fileslist;
 
 /*
 * Not need to be freed.
@@ -111,6 +118,7 @@ int sort_type=SORT_BY_NAME;
 int sort_order=ECORE_SORT_MIN;
 long filters_modtime=-1;
 int *filterstatus=NULL;
+int file_list_mode=FILE_LIST_FOLDER_MODE;
 //***********
 int num_books=8;
 
@@ -121,6 +129,7 @@ int nav_goto_menu_sel=0;
 int nav_scripts_menu_sel=0;
 int nav_fileops_menu_sel=0;
 int nav_sort_menu_sel=0;
+int nav_filemode_menu_sel=0;
 int nav_mc_menu_sel=0;
 int key_shifted=0;
 int context_index=0;
@@ -241,6 +250,17 @@ void roots_destroy(roots_t* roots)
     free(roots->roots);
     free(roots);
 }
+
+
+/* File array convenience functions */
+mad_file *get_mad_file(int index)
+{
+    if(index<0 || index>=g_nfileslist)
+        return NULL;
+    //return ((mad_file *)(((mad_file *)*g_fileslist) + index));
+    return *(mad_file **)(g_fileslist+index);
+}
+
 
 #define KILOBYTE (1024)
 #define MEGABYTE (1024*1024)
@@ -671,12 +691,12 @@ void update_list()
                 ewl_widget_state_set(bookbox[count],"unselect",EWL_STATE_PERSISTENT);
         }
             
-        char* file = g_fileslist[current_index + count]->d_name;
-
+        //char* file = ((struct dirent*) g_fileslist[current_index + count]->filestr)->d_name;
+        char* file = get_mad_file(current_index+count)->filestr->d_name;
         char *rel_file;
-        char* cwd = get_current_dir_name();
-        asprintf(&rel_file, "%s/%s", cwd,file);
-        free(cwd);
+        
+        asprintf(&rel_file, "%s/%s", get_mad_file(current_index+count)->path,file);
+        
         
         
         
@@ -684,10 +704,10 @@ void update_list()
         char* time_str;
         char *extension = strrchr(file, '.');
 
-        stat(file, &stat_p);
+        stat(rel_file, &stat_p);
         time_str = format_time(stat_p.st_mtime);
 
-        if(ecore_file_is_dir(file))
+        if(ecore_file_is_dir(rel_file))
         {
             ewl_label_text_set(EWL_LABEL(titlelabel[count]),ecore_file_strip_ext(file));
 
@@ -844,8 +864,13 @@ void update_title()
     char* titletext;
     char* cwd = get_current_dir_name();
 
-    int notroot = strcmp(g_roots->roots[current_root].path, cwd);
-
+    int notroot;
+    if(file_list_mode==FILE_LIST_FOLDER_MODE)
+        notroot= strcmp(g_roots->roots[current_root].path, cwd);
+    else if(file_list_mode==FILE_LIST_LOCATION_MODE)
+        notroot=0;
+    
+    
     asprintf(&titletext, "Madshelf | %s%s%s",
              g_roots->roots[current_root].name,
              notroot ? "://" : "",
@@ -890,7 +915,7 @@ void update_sort_label()
 
 void update_menu()
 {
-    char *tempstrings[]={gettext("File Filters..."),gettext("Edit"),gettext("Go to"),gettext("Sorting Options"),gettext("Languages"),gettext("Scripts")};
+    char *tempstrings[]={gettext("File Filters..."),gettext("Edit"),gettext("Go to"),gettext("File Mode"),gettext("Sorting Options"),gettext("Languages"),gettext("Scripts")};
     char tempname[30];
     char temptext[40];
     int i=0;
@@ -899,7 +924,7 @@ void update_menu()
     curwidget = ewl_widget_name_find("okmenu");
     ewl_button_label_set(EWL_BUTTON(curwidget),gettext("Menu"));
 
-    for(i=0;i<6;i++)
+    for(i=0;i<7;i++)
     {
         sprintf(tempname,"menuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
@@ -934,6 +959,18 @@ void update_menu()
             sprintf(temptext,"%s",tempstrings3[i]);
         ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
     }
+    
+    char *tempstrings4[]={gettext("Folder Mode"),gettext("Location Mode")};
+    for(i=0;i<2;i++)
+    {
+        sprintf(tempname,"filemodemenuitem%d",i+1);
+        curwidget = ewl_widget_name_find(tempname);
+        if(get_nav_mode()==0)
+            sprintf(temptext,"%d. %s",i+1,tempstrings4[i]);
+        else
+            sprintf(temptext,"%s",tempstrings4[i]);
+        ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
+    }
 }
 
 void update_context_menu()
@@ -956,7 +993,7 @@ void update_context_menu()
     }
 }
 
-static char isdir(const struct dirent* e)
+/*static char is_dirent_dir(const struct dirent* e)
 {
     if(e->d_type != DT_UNKNOWN)
         return e->d_type == DT_DIR;
@@ -966,25 +1003,143 @@ static char isdir(const struct dirent* e)
         return 0;
 
     return S_ISDIR(st.st_mode);
+}*/
+
+
+static int mad_scandir (const char *dir, struct mad_file ***namelist, int (*selector) (const struct dirent *), int (*cmp) (const void *, const void *),int dorecurse)
+{
+    /*char* cwd = get_current_dir_name();
+    if(-1 == chdir(dir))
+    {
+        return 0;    
+    }*/
+    struct dirent **curnamelist=NULL;
+    int total=0;
+    
+    int numfiles=scandir (dir,&curnamelist,selector,alphasort);
+    if(numfiles<=0)
+    {
+        *namelist=NULL;
+        return 0;
+    }
+    //fprintf(stderr,"OKAY1.4\n");
+    total+=numfiles;
+    *namelist=(mad_file **)malloc(sizeof(mad_file*)*numfiles);
+    //fprintf(stderr,"OKAY1.5\n");
+    int i;
+    for(i=0;i<numfiles;i++)
+    {
+        
+        *((*namelist)+i)=(mad_file *)malloc(sizeof(mad_file));
+        mad_file *temp=*((*namelist)+i);
+        temp->filestr=curnamelist[i];
+        asprintf(&(temp->path),dir);
+        
+    }
+    free(curnamelist);
+    //fprintf(stderr,"OKAY2\n");
+    if(dorecurse)
+    {
+        struct mad_file **old_namelist=*namelist;
+        for(i=0;i<numfiles;i++)
+        {
+            mad_file *temp=old_namelist[i];//*((*namelist)+i);
+            char *tempfilename;
+            asprintf(&tempfilename,"%s/%s",dir,temp->filestr->d_name);
+            if(ecore_file_is_dir(tempfilename))
+            {
+                //fprintf(stderr,"SUPERGOSH! tempfilename=%s\n",tempfilename);
+                struct mad_file **tempnamelist,**tempnamelist2;
+                
+                int curnumfiles=mad_scandir(tempfilename,&tempnamelist,selector,cmp,1);
+                
+                if(curnumfiles<=0)
+                {
+
+                    free(tempfilename);
+
+                    continue;
+                    
+                }
+                
+                tempnamelist2=(mad_file**)malloc(sizeof(mad_file*)*(total+curnumfiles));
+                
+                int j;
+                for(j=0;j<total;j++)
+                {
+                    *(tempnamelist2+j)=*((*namelist)+j);
+    
+                }
+                for(j=total;j<(total+curnumfiles);j++)
+                {
+                    
+                    *(tempnamelist2+j)=*(tempnamelist+j-total);
+
+                }
+                if(i>0)
+                    free(*namelist);
+                *namelist=tempnamelist2;    
+                total+=curnumfiles;
+                free(tempnamelist);
+                
+            }
+            free(tempfilename);
+  
+            
+            
+        }
+        
+        
+        
+        
+        
+    }
+    qsort ((void *)(mad_file**)*namelist,total,sizeof(mad_file*),cmp);
+    /*chdir(cwd);
+    free(cwd);*/
+    return total;
+    
 }
 
 static int dir_alphasort(const void* lhs, const void* rhs)
 {
-    int lhsdir = isdir(*(const struct dirent**)lhs);
-    int rhsdir = isdir(*(const struct dirent**)rhs);
-
+    char *lhs_filename,*rhs_filename;
+    asprintf(&(lhs_filename),"%s/%s",(*(mad_file**)lhs)->path,(*(mad_file**)lhs)->filestr->d_name);
+    asprintf(&(rhs_filename),"%s/%s",(*(mad_file**)rhs)->path,(*(mad_file**)rhs)->filestr->d_name);
+    
+    int lhsdir = ecore_file_is_dir(lhs_filename);
+    int rhsdir = ecore_file_is_dir(rhs_filename);
+        
+    free(lhs_filename);
+    free(rhs_filename);
+    
     if(lhsdir == rhsdir)
-        return alphasort(lhs, rhs);
+    {
+        
+        return alphasort(&((*(mad_file**)lhs)->filestr),&((*(mad_file**)rhs)->filestr));
+
+    }
     return rhsdir - lhsdir;
 }
 
 static int rev_dir_alphasort(const void* lhs, const void* rhs)
 {
-    int lhsdir = isdir(*(const struct dirent**)lhs);
-    int rhsdir = isdir(*(const struct dirent**)rhs);
+    char *lhs_filename,*rhs_filename;
+    asprintf(&(lhs_filename),"%s/%s",(*(mad_file**)lhs)->path,(*(mad_file**)lhs)->filestr->d_name);
+    asprintf(&(rhs_filename),"%s/%s",(*(mad_file**)rhs)->path,(*(mad_file**)rhs)->filestr->d_name);
+    
+    int lhsdir = ecore_file_is_dir(lhs_filename);
+    int rhsdir = ecore_file_is_dir(rhs_filename);
 
+    free(lhs_filename);
+    free(rhs_filename);
+    
     if(lhsdir == rhsdir)
-        return alphasort(rhs, lhs);
+    {
+        
+        return alphasort(&((*(mad_file**)rhs)->filestr),&((*(mad_file**)lhs)->filestr));
+
+    }
     return rhsdir - lhsdir;
 }
 
@@ -997,8 +1152,17 @@ static long long rel_file_mtime(const char* f)
 
 static int date_cmp(const struct dirent** lhs, const struct dirent** rhs)
 {
-    long long lhs_mtime = rel_file_mtime((*lhs)->d_name);
-    long long rhs_mtime = rel_file_mtime((*rhs)->d_name);
+    char *lhs_filename,*rhs_filename;
+    asprintf(&(lhs_filename),"%s/%s",(*(mad_file**)lhs)->path,(*(mad_file**)lhs)->filestr->d_name);
+    asprintf(&(rhs_filename),"%s/%s",(*(mad_file**)rhs)->path,(*(mad_file**)rhs)->filestr->d_name);
+    
+    long long lhs_mtime = rel_file_mtime(lhs_filename);
+    long long rhs_mtime = rel_file_mtime(rhs_filename);
+    
+    free(lhs_filename);
+    free(rhs_filename);
+    
+    
 
     if(lhs_mtime > rhs_mtime) return 1;
     if(lhs_mtime < rhs_mtime) return -1;
@@ -1023,7 +1187,11 @@ void fini_filelist()
 {
     int i;
     for(i = 0; i < g_nfileslist; ++i)
-        free(g_fileslist[i]);
+    {
+        free(get_mad_file(i)->filestr);
+        free(get_mad_file(i)->path);
+        free(get_mad_file(i));
+    }
     free(g_fileslist);
 }
 
@@ -1038,18 +1206,28 @@ void init_filelist()
     else
         cmp = (compar_t)(sort_order == ECORE_SORT_MIN ? date_cmp : rev_date_cmp);
 
-    g_nfileslist = scandir(".", &g_fileslist,
+    /*g_nfileslist = scandir(".", &g_fileslist,
                            &filter_dotfiles,
-                           cmp);
+                           cmp);*/
+    if(file_list_mode==FILE_LIST_FOLDER_MODE)
+        g_nfileslist=mad_scandir(current_dir,&g_fileslist,&filter_dotfiles,cmp,0);
+    else if(file_list_mode==FILE_LIST_LOCATION_MODE)
+        g_nfileslist=mad_scandir(g_roots->roots[current_root].path,&g_fileslist,&filter_dotfiles,cmp,1);
     if(g_nfileslist == -1)
     {
         /* FIXME: handle somehow */
 
         g_nfileslist = 0;
     }
-    update_file_database();
-    filter_filelist();
-    
+    if(g_nfileslist>0)
+    {
+        update_file_database();
+        if(file_list_mode==FILE_LIST_FOLDER_MODE)
+            filter_filelist(0);
+        else if(file_list_mode==FILE_LIST_LOCATION_MODE)
+            filter_filelist(1);
+    }
+
     
 
     current_index = 0;
@@ -1060,12 +1238,10 @@ void update_file_database()
     int i;
     for(i=0;i<g_nfileslist;i++)
     {
-        if(!ecore_file_is_dir(g_fileslist[i]->d_name))
+        char *rel_file;
+        asprintf(&rel_file, "%s/%s",get_mad_file(i)->path,get_mad_file(i)->filestr->d_name);
+        if(!ecore_file_is_dir(rel_file))
         {
-            char *rel_file;
-            char* cwd = get_current_dir_name();
-            asprintf(&rel_file, "%s/%s", cwd,g_fileslist[i]->d_name);
-            free(cwd);
             
             
             
@@ -1077,17 +1253,22 @@ void update_file_database()
             else if(recstatus==RECORD_STATUS_OUT_OF_DATE)
             {
                 clear_file_extractor_data(rel_file);
+            
                 update_file_mod_time(rel_file);
+            
                 extract_and_cache(rel_file);
+            
             }
             else if(recstatus==RECORD_STATUS_ABSENT)
             {
                 if(!extract_and_cache(rel_file))
                     create_empty_record(rel_file);
+       
             }
-            free(rel_file);
+            
         }
-        
+        free(rel_file);
+       
     }
 }
 int extract_and_cache(char *filename)
@@ -1137,25 +1318,25 @@ int extract_and_cache(char *filename)
     return retval;
     
 }
-int filter_filelist()
+int filter_filelist(int removedirs)
 {
-    struct dirent** new_g_fileslist=(struct dirent**)malloc(sizeof(struct dirent*)*g_nfileslist);
+    struct mad_file** new_g_fileslist=(struct dirent**)malloc(sizeof(struct mad_file*)*g_nfileslist);
     int i,j;
     int count=0;
     int retval=0;
     for(i=0;i<g_nfileslist;i++)
     {
         int flag=1;
-        if(!ecore_file_is_dir(g_fileslist[i]->d_name))
+        char *rel_file;
+        asprintf(&rel_file, "%s/%s",get_mad_file(i)->path,get_mad_file(i)->filestr->d_name);
+
+        if(!ecore_file_is_dir(rel_file))
         {
             for(j=0;j<getNumFilters();j++)
             {
                 if(isFilterActive(j))
                 {
-                    char *rel_file;
-                    char* cwd = get_current_dir_name();
-                    asprintf(&rel_file, "%s/%s", cwd,g_fileslist[i]->d_name);
-                    free(cwd);
+                    
                     
                     if(!evaluateFilter(j,rel_file))
                     {
@@ -1163,9 +1344,14 @@ int filter_filelist()
                         retval=1;
                         break;
                     }
-                    free(rel_file);
+
                 }
             }
+        }
+        else if(removedirs)
+        {
+            flag=0;
+            retval=1;
         }
         if(flag)
         {
@@ -1173,8 +1359,12 @@ int filter_filelist()
             count++;
         }
         else
-            free(g_fileslist[i]);
-        
+        {
+            free(get_mad_file(i)->filestr);
+            free(get_mad_file(i)->path);
+            free(get_mad_file(i));
+        }
+        free(rel_file);
     }
     g_nfileslist=count;
     free(g_fileslist);
@@ -1346,8 +1536,8 @@ void doActionForNum(unsigned int num)
     if(file_index >= g_nfileslist)
         return;
 
-    file = g_fileslist[file_index]->d_name;
-
+    //file = g_fileslist[file_index]->d_name;
+    asprintf(&file,"%s/%s",get_mad_file(file_index)->path,get_mad_file(file_index)->filestr->d_name);
     if(!ecore_file_is_dir(file))
     {
         const char* handler = lookup_handler(file);
@@ -1368,6 +1558,7 @@ void doActionForNum(unsigned int num)
         chdir_to(file);
         change_dir_in_gui();
     }
+    free(file);
 }
 
 void popupContext(unsigned int num)
@@ -1391,7 +1582,9 @@ void popupContext(unsigned int num)
     
     //Hide or show tags option, based on whether directory.
     Ewl_Widget *tags_item=ewl_widget_name_find("mc_menuitem4");
-    char* file = g_fileslist[current_index + num-1]->d_name;
+    char* file;
+    asprintf(&file,"%s/%s",get_mad_file(current_index+num-1)->path,get_mad_file(current_index+num-1)->filestr->d_name);
+    
     if(ecore_file_is_dir(file))
     {
         ewl_widget_hide(tags_item);    
@@ -1408,6 +1601,7 @@ void popupContext(unsigned int num)
     ewl_widget_configure(curwidget);
     ewl_window_raise(EWL_WINDOW(curwidget));
     ewl_widget_focus_send(curwidget);
+    free(file);
 }
 void toggle_key_shifted()
 {
@@ -1441,7 +1635,7 @@ void main_esc(Ewl_Widget *widget)
     init_filelist();
 
     for(i = 0; i < g_nfileslist; i++)
-        if(!strcmp(cur_name, g_fileslist[i]->d_name))
+        if(!strcmp(cur_name,get_mad_file(i)->filestr->d_name))
         {
             nav_sel = i%num_books;
             current_index = i-nav_sel;
@@ -1640,7 +1834,11 @@ void main_menu_item(Ewl_Widget *widget,int item)
         ewl_menu_cb_expand(curwidget,NULL,NULL);
         ewl_widget_focus_send(EWL_WIDGET(EWL_MENU(curwidget)->popup));
         break;
-
+    case 7:
+        curwidget = ewl_widget_name_find("menuitem7");
+        ewl_menu_cb_expand(curwidget,NULL,NULL);
+        ewl_widget_focus_send(EWL_WIDGET(EWL_MENU(curwidget)->popup));
+        break;
     }
 }
 
@@ -1685,7 +1883,7 @@ static const int g_nlanguages = sizeof(g_languages)/sizeof(language_t);
 
 void lang_menu_esc(Ewl_Widget *widget)
 {
-    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem5")));
+    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem6")));
     hide_main_menu();
 }
 void lang_menu_nav_up(Ewl_Widget *widget)
@@ -1741,7 +1939,7 @@ void lang_menu_item(Ewl_Widget *widget,int item)
         ++_nl_msg_cat_cntr;
     }
 
-    curwidget = ewl_widget_name_find("menuitem5");
+    curwidget = ewl_widget_name_find("menuitem6");
     ewl_menu_collapse(EWL_MENU(curwidget));
     hide_main_menu();
     update_title();
@@ -1845,7 +2043,7 @@ static key_handler_info_t goto_menu_info =
 
 void scripts_menu_esc(Ewl_Widget *widget)
 {
-    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem6")));
+    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem7")));
     hide_main_menu();
 }
 
@@ -1892,7 +2090,7 @@ void scripts_menu_item(Ewl_Widget *widget,int item)
 
     item--;
 
-    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem6")));
+    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem7")));
     hide_main_menu();
 
     /* ?! */
@@ -1995,8 +2193,8 @@ void mc_menu_item(Ewl_Widget *widget,int item)
     if(item <= 0 || item>4)
         return;
     char* cwd = get_current_dir_name();
-    action_filename=(char *)malloc((strlen(g_fileslist[current_index+context_index]->d_name)+2+strlen(cwd))*sizeof(char));
-    sprintf(action_filename,"%s/%s",cwd,g_fileslist[current_index+context_index]->d_name);
+    action_filename=(char *)malloc((strlen(get_mad_file(current_index+context_index)->filestr->d_name)+2+strlen(cwd))*sizeof(char));
+    sprintf(action_filename,"%s/%s",cwd,get_mad_file(current_index+context_index)->filestr->d_name);
     free(cwd);
     ewl_widget_hide(ewl_widget_name_find("main_context"));
     if(item==1)
@@ -2135,7 +2333,7 @@ static key_handler_info_t fileops_menu_info =
 /* Sort menu */
 void sort_menu_esc(Ewl_Widget *widget)
 {
-    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem4")));
+    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem5")));
     hide_main_menu();
 }
 
@@ -2181,7 +2379,7 @@ void sort_menu_item(Ewl_Widget *widget,int item)
     if(item < 0 || item >3)
         return;
 
-    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem4")));
+    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem5")));
     hide_main_menu();
     
     if(item==1)
@@ -2194,7 +2392,7 @@ void sort_menu_item(Ewl_Widget *widget,int item)
 
         update_list();
         update_sort_label();
-        hide_main_menu();
+        
     }
     else if(item==2)
     {
@@ -2205,7 +2403,7 @@ void sort_menu_item(Ewl_Widget *widget,int item)
 
         update_list();
         update_sort_label();
-        hide_main_menu();
+        
      }
      else if(item==3)
      {
@@ -2218,7 +2416,7 @@ void sort_menu_item(Ewl_Widget *widget,int item)
 
         update_list();
         update_sort_label();
-        hide_main_menu();
+        
      }
 }
 
@@ -2235,6 +2433,96 @@ static key_handler_info_t sort_menu_info =
     .nav_down_handler=&sort_menu_nav_down,
     .nav_sel_handler=&sort_menu_nav_sel,
     .item_handler = &sort_menu_item,
+};
+
+/* File Mode menu */
+void filemode_menu_esc(Ewl_Widget *widget)
+{
+    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem4")));
+    hide_main_menu();
+}
+
+void filemode_menu_nav_up(Ewl_Widget *widget)
+{
+    char tempname[30];
+    Ewl_Widget *oldselwid=NULL;
+    Ewl_Widget *newselwid=NULL;
+    if((nav_filemode_menu_sel-1)>=0)
+    {
+        
+        sprintf (tempname, "filemodemenuitem%d",nav_filemode_menu_sel+1);
+        oldselwid = ewl_widget_name_find(tempname);
+        sprintf (tempname, "filemodemenuitem%d",nav_filemode_menu_sel);
+        newselwid = ewl_widget_name_find(tempname);
+        if(!oldselwid||!newselwid)
+            return;
+        ewl_widget_state_set((EWL_MENU_ITEM(oldselwid)->button).label_object,"unselect",EWL_STATE_PERSISTENT);
+        nav_filemode_menu_sel--;
+        ewl_widget_state_set((EWL_MENU_ITEM(newselwid)->button).label_object,"select",EWL_STATE_PERSISTENT);
+    }       
+}
+
+void filemode_menu_nav_down(Ewl_Widget *widget)
+{
+    char tempname[30];
+    Ewl_Widget *oldselwid=NULL;
+    Ewl_Widget *newselwid=NULL;
+    sprintf (tempname, "filemodemenuitem%d",nav_filemode_menu_sel+1);
+    oldselwid = ewl_widget_name_find(tempname);
+    sprintf (tempname, "filemodemenuitem%d",nav_filemode_menu_sel+2);
+    newselwid = ewl_widget_name_find(tempname);
+    if(!oldselwid||!newselwid)
+        return;
+    ewl_widget_state_set((EWL_MENU_ITEM(oldselwid)->button).label_object,"unselect",EWL_STATE_PERSISTENT);
+    nav_filemode_menu_sel++;
+    ewl_widget_state_set((EWL_MENU_ITEM(newselwid)->button).label_object,"select",EWL_STATE_PERSISTENT);
+}
+
+
+void filemode_menu_item(Ewl_Widget *widget,int item)
+{
+    if(item < 0 || item >2)
+        return;
+
+    ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem4")));
+    hide_main_menu();
+    
+    if(item==1)
+    {
+        
+        file_list_mode=FILE_LIST_FOLDER_MODE;
+        init_filelist();
+
+        update_list();
+        update_title();
+        
+    }
+    else if(item==2)
+    {
+        file_list_mode=FILE_LIST_LOCATION_MODE;
+        
+        init_filelist();
+
+        update_list();
+        update_title();
+        
+     }
+     
+}
+
+void filemode_menu_nav_sel(Ewl_Widget *widget)
+{
+    sort_menu_item(widget,nav_filemode_menu_sel+1);
+}
+
+static key_handler_info_t filemode_menu_info =
+{
+    .ok_handler = &filemode_menu_esc,
+    .esc_handler = &filemode_menu_esc,
+    .nav_up_handler=&filemode_menu_nav_up,
+    .nav_down_handler=&filemode_menu_nav_down,
+    .nav_sel_handler=&filemode_menu_nav_sel,
+    .item_handler = &filemode_menu_item,
 };
 /* Confirm dialog key handlers */
 
@@ -2302,8 +2590,10 @@ void save_state()
     eet_write(state,"curdir",cwd,sizeof(char)*(strlen(cwd)+1),0);
     eet_write(state,"sort_type",(void *)&sort_type,sizeof(int),0);
     eet_write(state,"sort_order",(void *)&sort_order,sizeof(int),0);
+    eet_write(state,"file_list_mode",(void *)&file_list_mode,sizeof(int),0);
     eet_write(state,"filters_modtime",(void *)&filters_modtime,sizeof(long),0);
     eet_write(state,"filterstatus",(void *)filterstatus,sizeof(int)*getNumFilters(),0);
+    
     eet_close(state);
 
     free(cwd);
@@ -2351,6 +2641,12 @@ void refresh_state()
         sort_order=*temppt;
     else
         sort_order=ECORE_SORT_MIN;
+    
+    temppt=(int*)eet_read(state, "file_list_mode", &size);
+    if(temppt)
+        file_list_mode=*temppt;
+    else
+        file_list_mode=FILE_LIST_FOLDER_MODE;
     
     temppt=(int*)eet_read(state, "filters_modtime", &size);
     if(temppt)
@@ -2655,10 +2951,29 @@ int main ( int argc, char ** argv )
             count++;
         }
 
-
         temp2=ewl_menu_new();
         ewl_container_child_append(EWL_CONTAINER(temp),temp2);
         ewl_widget_name_set(temp2,"menuitem4");
+        set_key_handler(EWL_MENU(temp2)->popup, &filemode_menu_info);
+        ewl_widget_show(temp2);
+
+        temp3=ewl_menu_item_new();
+        ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
+        if(get_nav_mode()==1)
+            ewl_widget_state_set((EWL_MENU_ITEM(temp3)->button).label_object,"select",EWL_STATE_PERSISTENT);
+        ewl_widget_name_set(temp3,"filemodemenuitem1");
+        ewl_widget_show(temp3);
+        
+        temp3=ewl_menu_item_new();
+        ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
+        ewl_widget_name_set(temp3,"filemodemenuitem2");
+        ewl_widget_show(temp3);
+        
+        
+
+        temp2=ewl_menu_new();
+        ewl_container_child_append(EWL_CONTAINER(temp),temp2);
+        ewl_widget_name_set(temp2,"menuitem5");
         set_key_handler(EWL_MENU(temp2)->popup, &sort_menu_info);
         ewl_widget_show(temp2);
 
@@ -2684,7 +2999,7 @@ int main ( int argc, char ** argv )
 
         ewl_container_child_append(EWL_CONTAINER(temp),temp2);
 
-        ewl_widget_name_set(temp2,"menuitem5");
+        ewl_widget_name_set(temp2,"menuitem6");
 
         set_key_handler(EWL_MENU(temp2)->popup, &lang_menu_info);
 
@@ -2709,7 +3024,7 @@ int main ( int argc, char ** argv )
 
         temp2=ewl_menu_new();
         ewl_container_child_append(EWL_CONTAINER(temp),temp2);
-        ewl_widget_name_set(temp2,"menuitem6");
+        ewl_widget_name_set(temp2,"menuitem7");
 
         set_key_handler(EWL_MENU(temp2)->popup, &scripts_menu_info);
         ewl_widget_show(temp2);
