@@ -769,7 +769,6 @@ void update_list()
                 char *series_str=get_series_string(seriesarr,seriesindex,seriesnum);
                 ewl_label_text_set(EWL_LABEL(serieslabel[count]),series_str);
                 seriesshowflag[count]=1;
-                fprintf(stderr,"Bla! seriesstr=%s\n",series_str);
                 free(series_str);
             }
             else
