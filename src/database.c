@@ -435,7 +435,7 @@ int get_series(char *filename,char ***seriesname,int **seriesnum)
     
     char **resultp;
     int rows,cols;
-    char *temp=sqlite3_mprintf("SELECT seriesname FROM series WHERE seriedid IN (SELECT seriesid FROM bookseries WHERE bookseries.fileid = (SELECT fileid FROM files WHERE \'%q\' = filename)) UNION SELECT seriesnum FROM bookseries WHERE bookseries.fileid IN (SELECT fileid FROM files WHERE \'%q\' = filename)",filename,filename);
+    char *temp=sqlite3_mprintf("SELECT seriesname FROM series WHERE seriesid IN (SELECT seriesid FROM bookseries WHERE bookseries.fileid = (SELECT fileid FROM files WHERE \'%q\' = filename)) UNION SELECT seriesnum FROM bookseries WHERE bookseries.fileid IN (SELECT fileid FROM files WHERE \'%q\' = filename)",filename,filename);
     int result= sqlite3_get_table(madshelf_database,temp,&resultp,&rows,&cols,NULL);
     sqlite3_free(temp);
     if(rows<=0)
