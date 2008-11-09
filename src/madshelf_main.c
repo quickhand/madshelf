@@ -700,6 +700,7 @@ void update_list()
         if(current_index + count >= g_nfileslist)
         {
             showflag[count]=0;
+            seriesshowflag[count]=0;
             continue;
         }
 
@@ -735,6 +736,7 @@ void update_list()
             ewl_label_text_set(EWL_LABEL(authorlabel[count]),"");
             ewl_label_text_set(EWL_LABEL(taglabel[count]),"");
             ewl_image_file_path_set(EWL_IMAGE(typeicon[count]),"/usr/share/madshelf/folder.png");
+            seriesshowflag[count]=0;
         }
         else
         {
@@ -3275,7 +3277,7 @@ int main ( int argc, char ** argv )
         serieslabel = ewl_label_new();
         ewl_container_child_append(EWL_CONTAINER(box5), serieslabel);
         ewl_widget_name_set(serieslabel,tempname3 );
-        ewl_label_text_set(EWL_LABEL(serieslabel), "Test book series #1");
+        ewl_label_text_set(EWL_LABEL(serieslabel), "");
         //ewl_object_padding_set(EWL_OBJECT(serieslabel),3,0,0,0);
         ewl_theme_data_str_set(EWL_WIDGET(serieslabel),"/label/group","ewl/oi_label/seriestext");
         ewl_theme_data_str_set(EWL_WIDGET(serieslabel),"/label/textpart","ewl/oi_label/seriestext/text");
