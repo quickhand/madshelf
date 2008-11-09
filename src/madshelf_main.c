@@ -3009,7 +3009,8 @@ int main ( int argc, char ** argv )
     ewl_object_fill_policy_set(EWL_OBJECT(border), EWL_FLAG_FILL_ALL);
     ewl_container_child_append(EWL_CONTAINER(box2),border);
     ewl_widget_name_set(border,"mainborder");
-    ewl_object_maximum_w_set(EWL_OBJECT(EWL_BORDER(border)->label),500);
+    //ewl_object_maximum_w_set(EWL_OBJECT(EWL_BORDER(border)->label),500);
+    ewl_object_fill_policy_set(EWL_OBJECT(EWL_BORDER(border)->label), EWL_FLAG_FILL_HSHRINK);//EWL_FLAG_FILL_VSHRINK|EWL_FLAG_FILL_HFILL);
     ewl_widget_show(border);
 
     update_title();
