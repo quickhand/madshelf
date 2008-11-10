@@ -1869,7 +1869,9 @@ static key_handler_info_t main_info =
 
 void show_main_menu()
 {
-    ewl_menu_cb_expand(ewl_widget_name_find("okmenu"),NULL,NULL);
+    Ewl_Widget *curwidget=ewl_widget_name_find("okmenu");
+    ewl_menu_cb_expand(curwidget,NULL,NULL);
+    ewl_widget_focus_send(EWL_WIDGET(EWL_MENU(curwidget)->popup));
 }
 
 void hide_main_menu()
@@ -3362,6 +3364,7 @@ int main ( int argc, char ** argv )
         
         update_context_menu();
         ewl_widget_realize(context);
+        update_context_menu();
         //ewl_object_init(EWL_OBJECT(context));
         //ewl_widget_configure(context);
     }
