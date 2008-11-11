@@ -570,18 +570,6 @@ char* get_authors_string(char *authors[],int authornum)
     return authorstr;
 }
 
-char* get_series_string(char *series[],int seriesindex[],int seriesnum)
-{
-    if(seriesnum<1)
-        return NULL;
-    char* seriesstr=NULL;
-    if(seriesindex[0]<=0)
-        asprintf(&seriesstr,seriesindex[0]);
-    else
-        asprintf(&seriesstr,"%s #%d",series[0],seriesindex[0]);
-        
-    return seriesstr;
-}
 char* get_tag_string(char *tags[],int tagnum)
 {
      
@@ -626,7 +614,9 @@ void update_list()
     const char *tempstr2;
     Ewl_Widget **labelsbox;
     Ewl_Widget **titlelabel;
+    Ewl_Widget **seriesbox;
     Ewl_Widget **serieslabel;
+    Ewl_Widget **seriesnumlabel;
     Ewl_Widget **authorlabel;
     Ewl_Widget **infobox;
     Ewl_Widget **infolabel;
@@ -643,7 +633,9 @@ void update_list()
 
     labelsbox=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     titlelabel=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
+    seriesbox=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     serieslabel=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
+    seriesnumlabel=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     authorlabel=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     infobox=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
     infolabel=(Ewl_Widget**)alloca(num_books*sizeof(Ewl_Widget*));
@@ -659,8 +651,12 @@ void update_list()
     {
         sprintf (tempname, "titlelabel%d",count);
         titlelabel[count] = ewl_widget_name_find(tempname);
+        sprintf (tempname, "seriesbox%d",count);
+        seriesbox[count] = ewl_widget_name_find(tempname);
         sprintf (tempname, "serieslabel%d",count);
         serieslabel[count] = ewl_widget_name_find(tempname);
+        sprintf (tempname, "seriesnumlabel%d",count);
+        seriesnumlabel[count] = ewl_widget_name_find(tempname);
         sprintf (tempname, "authorlabel%d",count);
         authorlabel[count] = ewl_widget_name_find(tempname);
         sprintf (tempname, "infobox%d",count);
@@ -688,7 +684,9 @@ void update_list()
         ewl_widget_hide(separator[count]);
         ewl_widget_hide(authorlabel[count]);
         ewl_widget_hide(titlelabel[count]);
+        ewl_widget_hide(seriesbox[count]);
         ewl_widget_hide(serieslabel[count]);
+        ewl_widget_hide(seriesnumlabel[count]);
         ewl_widget_hide(infobox[count]);
         ewl_widget_hide(taglabel[count]);
         ewl_widget_hide(infolabel[count]);
@@ -758,24 +756,32 @@ void update_list()
             if(titlearr)
                 free(titlearr);
             
-            
-            
-            
             char **seriesarr=NULL;
             int *seriesindex=NULL;
             int seriesnum=get_series(rel_file,&seriesarr,&seriesindex);
             
 
-            if(seriesnum>0)
+            if(seriesnum>0 && seriesarr && seriesarr[0])
             {
-                char *series_str=get_series_string(seriesarr,seriesindex,seriesnum);
-                ewl_label_text_set(EWL_LABEL(serieslabel[count]),series_str);
+                //char *series_str=get_series_string(seriesarr,seriesindex,seriesnum);
+                ewl_label_text_set(EWL_LABEL(serieslabel[count]),seriesarr[0]);//series_str);
+                
+                if(seriesindex[0]>0)
+                {
+                    char *tempstr;
+                    asprintf(&tempstr,"#%d",seriesindex[0]);
+                    ewl_label_text_set(EWL_LABEL(seriesnumlabel[count]),tempstr);
+                    free(tempstr);
+                }
+                else
+                    ewl_label_text_set(EWL_LABEL(seriesnumlabel[count]),"");
                 seriesshowflag[count]=1;
-                free(series_str);
+                //free(series_str);
             }
             else
             {
                 ewl_label_text_set(EWL_LABEL(serieslabel[count]),"");
+                ewl_label_text_set(EWL_LABEL(seriesnumlabel[count]),"");
                 seriesshowflag[count]=0;
             }
             for(i=0;i<seriesnum;i++)
@@ -784,8 +790,7 @@ void update_list()
                 free(seriesarr);
             if(seriesindex)
                 free(seriesindex);
-            
-            
+
             
             extension = strrchr(file, '.');
 
@@ -885,6 +890,10 @@ void update_list()
             {
                 ewl_widget_show(serieslabel[count]);
                 ewl_widget_configure(serieslabel[count]);
+                ewl_widget_show(seriesnumlabel[count]);
+                ewl_widget_configure(seriesnumlabel[count]);
+                ewl_widget_show(seriesbox[count]);
+                ewl_widget_configure(seriesbox[count]);
             }
             ewl_widget_show(taglabel[count]);
             ewl_widget_configure(taglabel[count]);
@@ -2832,9 +2841,11 @@ int main ( int argc, char ** argv )
     Ewl_Widget *box3=NULL;
     Ewl_Widget *box5=NULL;
     Ewl_Widget *box6=NULL;
+    Ewl_Widget *box7=NULL;
     Ewl_Widget *authorlabel;
     Ewl_Widget *titlelabel;
     Ewl_Widget *serieslabel;
+    Ewl_Widget *seriesnumlabel;
     Ewl_Widget *infolabel;
     Ewl_Widget *taglabel;
     Ewl_Widget *iconimage;
@@ -2996,6 +3007,7 @@ int main ( int argc, char ** argv )
     ewl_window_name_set ( EWL_WINDOW ( win ), "EWL_WINDOW" );
     ewl_window_class_set ( EWL_WINDOW ( win ), "EWLWindow" );
     ewl_object_size_request ( EWL_OBJECT ( win ), 600, 800 );
+    ewl_object_maximum_w_set(EWL_OBJECT(win),600);
     ewl_callback_append ( win, EWL_CALLBACK_DELETE_WINDOW, destroy_cb, NULL );
     set_key_handler(win, &main_info);
     ewl_widget_name_set(win,"mainwindow");
@@ -3276,15 +3288,33 @@ int main ( int argc, char ** argv )
         ewl_theme_data_str_set(EWL_WIDGET(titlelabel),"/label/textpart","ewl/oi_label/titletext/text");
         ewl_object_fill_policy_set(EWL_OBJECT(titlelabel), EWL_FLAG_FILL_VSHRINK| EWL_FLAG_FILL_HFILL);
 
+        sprintf (tempname3, "seriesbox%d",count);
+        box7 = ewl_hbox_new();
+        ewl_container_child_append(EWL_CONTAINER(box5),box7);
+        ewl_widget_name_set(box7,tempname3 );
+        ewl_theme_data_str_set(EWL_WIDGET(box7),"/hbox/group","ewl/blank");
+        ewl_object_fill_policy_set(EWL_OBJECT(box7),EWL_FLAG_FILL_HFILL|EWL_FLAG_FILL_VSHRINKABLE);
+        
         sprintf (tempname3, "serieslabel%d",count);
         serieslabel = ewl_label_new();
-        ewl_container_child_append(EWL_CONTAINER(box5), serieslabel);
+        ewl_container_child_append(EWL_CONTAINER(box7), serieslabel);
         ewl_widget_name_set(serieslabel,tempname3 );
-        ewl_label_text_set(EWL_LABEL(serieslabel), "");
-        //ewl_object_padding_set(EWL_OBJECT(serieslabel),3,0,0,0);
         ewl_theme_data_str_set(EWL_WIDGET(serieslabel),"/label/group","ewl/oi_label/seriestext");
         ewl_theme_data_str_set(EWL_WIDGET(serieslabel),"/label/textpart","ewl/oi_label/seriestext/text");
-        ewl_object_fill_policy_set(EWL_OBJECT(serieslabel), EWL_FLAG_FILL_VSHRINK| EWL_FLAG_FILL_HFILL);
+        ewl_object_fill_policy_set(EWL_OBJECT(serieslabel),EWL_FLAG_FILL_HSHRINK);
+        
+        
+        sprintf (tempname3, "seriesnumlabel%d",count);
+        seriesnumlabel = ewl_label_new();
+        ewl_container_child_append(EWL_CONTAINER(box7), seriesnumlabel);
+        ewl_widget_name_set(seriesnumlabel,tempname3 );
+        ewl_label_text_set(EWL_LABEL(seriesnumlabel), "");
+        ewl_theme_data_str_set(EWL_WIDGET(seriesnumlabel),"/label/group","ewl/oi_label/seriesnumtext");
+        ewl_theme_data_str_set(EWL_WIDGET(seriesnumlabel),"/label/textpart","ewl/oi_label/seriesnumtext/text");
+        ewl_label_text_set(EWL_LABEL(seriesnumlabel), "#78783");
+        
+        
+        
         
         sprintf (tempname3, "infobox%d",count);
         box6 = ewl_hbox_new();
