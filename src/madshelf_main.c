@@ -3308,10 +3308,8 @@ int main ( int argc, char ** argv )
         seriesnumlabel = ewl_label_new();
         ewl_container_child_append(EWL_CONTAINER(box7), seriesnumlabel);
         ewl_widget_name_set(seriesnumlabel,tempname3 );
-        ewl_label_text_set(EWL_LABEL(seriesnumlabel), "");
         ewl_theme_data_str_set(EWL_WIDGET(seriesnumlabel),"/label/group","ewl/oi_label/seriesnumtext");
         ewl_theme_data_str_set(EWL_WIDGET(seriesnumlabel),"/label/textpart","ewl/oi_label/seriesnumtext/text");
-        ewl_label_text_set(EWL_LABEL(seriesnumlabel), "#78783");
         
         
         
