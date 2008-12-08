@@ -1,0 +1,97 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.2\n"
+"PO-Revision-Date: 2008-10-02 23:13+0700\n"
+"Last-Translator: Chuong Le <chuongcamle@yahoọcom>\n"
+"Language-Team: Vietnamese <openinkpot-hackers@googlegroups.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: madshelf_main.c:266
+msgid "%m-%d-%y"
+msgstr "%d-%m-%y"
+
+#: madshelf_main.c:642
+msgid "Unknown Author"
+msgstr "Tác Giả Khuyết Danh"
+
+#: madshelf_main.c:698
+msgid "no books"
+msgstr "không có sách"
+
+#: madshelf_main.c:731
+msgid "reverse-sorted by name"
+msgstr "xếp thứ tự ngược theo tên"
+
+#: madshelf_main.c:733
+msgid "sorted by name"
+msgstr "xếp theo tên"
+
+#: madshelf_main.c:738
+msgid "reverse-sorted by time"
+msgstr "xếp thứ tự ngược theo thời gian"
+
+#: madshelf_main.c:740
+msgid "sorted by time"
+msgstr "xếp  theo thời gian"
+
+#: madshelf_main.c:758
+msgid "Sort by Name"
+msgstr "Xếp Thứ Tự theo Tên"
+
+#: madshelf_main.c:758
+msgid "Sort by Time"
+msgstr "Xếp Thứ Tự theo Thời Gian"
+
+#: madshelf_main.c:758
+msgid "Reverse Sort Order"
+msgstr "Xếp Thứ Tự Ngược Lại"
+
+#: madshelf_main.c:758
+msgid "Language Settings"
+msgstr "Định Dạng Ngôn Ngữ"
+
+#: madshelf_main.c:758
+msgid "Go to"
+msgstr Chuyển Đến""
+
+#: madshelf_main.c:758
+msgid "Scripts"
+msgstr "Scripts"
+
+#: madshelf_main.c:758
+msgid "Edit"
+msgstr "Hiệu Đính"
+
+#: madshelf_main.c:765
+msgid "Menu"
+msgstr "Menu "
+
+#: madshelf_main.c:779
+msgid "Paste"
+msgstr "Dán"
+
+#: madshelf_main.c:794
+msgid "Cut"
+msgstr "Cắt"
+
+#: madshelf_main.c:794
+msgid "Copy"
+msgstr "Chép"
+
+#: madshelf_main.c:794
+msgid "Delete"
+msgstr "Xóa"
+
+#: madshelf_main.c:943 madshelf_main.c:950
+msgid "No"
+msgstr "Không"
+
+#: madshelf_main.c:944 madshelf_main.c:951
+msgid "Yes"
+msgstr "Phải"
+
+#: madshelf_main.c:1757
+msgid "Delete file?"
+msgstr "Xóa tập tin?"
