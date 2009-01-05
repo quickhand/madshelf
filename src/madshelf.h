@@ -23,12 +23,19 @@
 #define FILE_COPY      1
 #define FILE_CUT       2
 
+#define FILE_LIST_FOLDER_MODE 0
+#define FILE_LIST_LOCATION_MODE 1
+#define FILE_LIST_ALL_MODE 2
 
 void update_list();
 void update_title();
 void cleanup();
 int file_date_compare(const void *data1, const void *data2);
 void init_filelist();
+void update_filelist_in_gui();
+void update_filters();
 void destroy_cb ( Ewl_Widget *w, void *event, void *data );
 void doActionForNum(unsigned int num);
 char *getUpLevelDir(char *thedir);
+int filter_filelist();
+void reset_file_position();
