@@ -86,7 +86,7 @@ typedef struct _mad_file
     struct dirent *filestr;
     char *path;
 } mad_file;
-struct mad_file** g_fileslist;
+mad_file** g_fileslist;
 //struct dirent** g_fileslist;
 
 /*
@@ -890,6 +890,7 @@ void update_list()
             {
                 ewl_widget_show(serieslabel[count]);
                 ewl_widget_configure(serieslabel[count]);
+                ewl_widget_reveal(serieslabel[count]);
                 ewl_widget_show(seriesnumlabel[count]);
                 ewl_widget_configure(seriesnumlabel[count]);
                 ewl_widget_show(seriesbox[count]);
@@ -1075,106 +1076,67 @@ void update_context_menu()
     return S_ISDIR(st.st_mode);
 }*/
 
-
-static int mad_scandir (const char *dir, struct mad_file ***namelist, int (*selector) (const struct dirent *), int (*cmp) (const void *, const void *),int dorecurse)
+static int mad_scandir(const char *dir, mad_file ***namelist, int (*selector) (const struct dirent *), int (*cmp) (const void *, const void *), int dorecurse)
 {
-    /*char* cwd = get_current_dir_name();
-    if(-1 == chdir(dir))
-    {
-        return 0;    
-    }*/
-    struct dirent **curnamelist=NULL;
-    int total=0;
-    
-    int numfiles=scandir (dir,&curnamelist,selector,alphasort);
-    if(numfiles<=0)
+    struct dirent** curnamelist = NULL;
+    mad_file** mad_namelist;
+
+    int numfiles = scandir(dir, &curnamelist, selector, alphasort);
+    if(numfiles == -1)
     {
         *namelist=NULL;
-        return 0;
+        return -1;
     }
-    //fprintf(stderr,"OKAY1.4\n");
-    total+=numfiles;
-    *namelist=(mad_file **)malloc(sizeof(mad_file*)*numfiles);
-    //fprintf(stderr,"OKAY1.5\n");
+
+    int total = numfiles;
+
+    mad_namelist = (mad_file **)malloc(sizeof(mad_file*) * numfiles);
+    
+
     int i;
-    for(i=0;i<numfiles;i++)
+    for(i = 0; i < numfiles; i++)
     {
-        
-        *((*namelist)+i)=(mad_file *)malloc(sizeof(mad_file));
-        mad_file *temp=*((*namelist)+i);
-        temp->filestr=curnamelist[i];
-        asprintf(&(temp->path),dir);
-        
+        mad_namelist[i] = (mad_file *)malloc(sizeof(mad_file));
+        mad_namelist[i]->filestr = curnamelist[i];
+        mad_namelist[i]->path = strdup(dir);
     }
     free(curnamelist);
-    //fprintf(stderr,"OKAY2\n");
+
     if(dorecurse)
     {
-        int flag=0;
-        struct mad_file **old_namelist=*namelist;
         for(i=0;i<numfiles;i++)
         {
-            
-            mad_file *temp=old_namelist[i];//*((*namelist)+i);
-            char *tempfilename;
-            asprintf(&tempfilename,"%s/%s",dir,temp->filestr->d_name);
-            if(ecore_file_is_dir(tempfilename))
+            mad_file *curr_mad_file = mad_namelist[i];
+            char *curr_file;
+            asprintf(&curr_file,"%s/%s", dir, curr_mad_file->filestr->d_name);
+            if(ecore_file_is_dir(curr_file))
             {
-                //fprintf(stderr,"SUPERGOSH! tempfilename=%s\n",tempfilename);
-                struct mad_file **tempnamelist,**tempnamelist2;
-                
-                int curnumfiles=mad_scandir(tempfilename,&tempnamelist,selector,cmp,1);
-                
-                if(curnumfiles<=0)
+                mad_file **subdir_filelist;
+                int subdir_files = mad_scandir(curr_file, &subdir_filelist, selector, cmp, 1);
+                if(subdir_files == -1)
+                    goto err_subdir;
+
+                mad_namelist = (mad_file**)realloc(mad_namelist, sizeof(mad_file*) * (total + subdir_files));
+                if(!mad_namelist)
                 {
-
-                    free(tempfilename);
-
-                    continue;
-                    
+                    perror("realloc");
+                    exit(17);
                 }
 
-                flag++;
-                tempnamelist2=(mad_file**)malloc(sizeof(mad_file*)*(total+curnumfiles));
-                
-                int j;
-                for(j=0;j<total;j++)
-                {
-                    *(tempnamelist2+j)=*((*namelist)+j);
-    
-                }
-                for(j=total;j<(total+curnumfiles);j++)
-                {
-                    
-                    *(tempnamelist2+j)=*(tempnamelist+j-total);
+                memcpy(mad_namelist + total, subdir_filelist, sizeof(mad_file*) * subdir_files);
 
-                }
-                if(flag>1)
-                    free(*namelist);
-                *namelist=tempnamelist2;    
-                total+=curnumfiles;
+                total += subdir_files;
 
-                free(tempnamelist);
-                
+                free(subdir_filelist);
             }
-            free(tempfilename);
-  
-            
-            
+        err_subdir:
+            free(curr_file);
         }
-
-        
-        if(flag>0)
-            free(old_namelist);
-        
-        
     }
-    
-    qsort ((void *)(mad_file**)*namelist,total,sizeof(mad_file*),cmp);
-    /*chdir(cwd);
-    free(cwd);*/
+
+    qsort(mad_namelist, total, sizeof(mad_file*), cmp);
+    *namelist = mad_namelist;
     return total;
-    
 }
 
 static int dir_alphasort(const void* lhs, const void* rhs)
@@ -1271,7 +1233,7 @@ void fini_filelist()
     free(g_fileslist);
 }
 
-void init_filelist()
+void init_filelist(int reset)
 {
     compar_t cmp;
 
@@ -1342,9 +1304,11 @@ void init_filelist()
     }
 
     
-
-    current_index = 0;
-    nav_sel = 0;
+    if(reset)
+    {
+        current_index = 0;
+        nav_sel = 0;
+    }
 }
 void update_file_database()
 {
@@ -1450,7 +1414,7 @@ int extract_and_cache(char *filename)
 }
 int filter_filelist(int removedirs)
 {
-    struct mad_file** new_g_fileslist=(struct dirent**)malloc(sizeof(struct mad_file*)*g_nfileslist);
+    mad_file** new_g_fileslist=(struct dirent**)malloc(sizeof(mad_file*)*g_nfileslist);
     int i,j;
     int count=0;
     int retval=0;
@@ -1535,7 +1499,7 @@ int sighup_signal_handler(void *data, int type, void *event)
         }
     }
 
-    init_filelist();
+    init_filelist(1);
     if(old_ci<g_nfileslist)
         current_index=old_ci;
     if((old_ci+old_ns)<g_nfileslist)
@@ -1654,7 +1618,7 @@ void update_filelist_in_gui()
 
 void change_dir_in_gui()
 {
-    init_filelist();
+    init_filelist(1);
     update_filelist_in_gui();
 }
 
@@ -1764,7 +1728,7 @@ void main_esc(Ewl_Widget *widget)
     char* cur_name = basename(cwd);
 
     chdir_to("..");
-    init_filelist();
+    init_filelist(1);
 
     for(i = 0; i < g_nfileslist; i++)
         if(!strcmp(cur_name,get_mad_file(i)->filestr->d_name))
@@ -2305,7 +2269,7 @@ void mc_menu_delete_confirm_yes(void)
         unlink (action_filename);
         free(action_filename);
         action_filename=NULL;
-        init_filelist();
+        init_filelist(1);
         update_filelist_in_gui();
     }
     
@@ -2444,7 +2408,7 @@ void fileops_menu_item(Ewl_Widget *widget,int item)
         free(target_filename);
         free(action_filename);
         action_filename=NULL;
-        init_filelist();
+        init_filelist(1);
         update_filelist_in_gui();
     }
 }
@@ -2522,7 +2486,7 @@ void sort_menu_item(Ewl_Widget *widget,int item)
         sort_order=ECORE_SORT_MIN;
         sort_type=SORT_BY_NAME;
 
-        init_filelist();
+        init_filelist(1);
 
         update_list();
         update_sort_label();
@@ -2533,7 +2497,7 @@ void sort_menu_item(Ewl_Widget *widget,int item)
         sort_order=ECORE_SORT_MIN;
         sort_type=SORT_BY_TIME;
 
-        init_filelist();
+        init_filelist(1);
 
         update_list();
         update_sort_label();
@@ -2546,7 +2510,7 @@ void sort_menu_item(Ewl_Widget *widget,int item)
         else
             sort_order=ECORE_SORT_MIN;
 
-        init_filelist();
+        init_filelist(1);
 
         update_list();
         update_sort_label();
@@ -2625,7 +2589,7 @@ void filemode_menu_item(Ewl_Widget *widget,int item)
     {
         
         file_list_mode=FILE_LIST_FOLDER_MODE;
-        init_filelist();
+        init_filelist(1);
 
         update_list();
         update_title();
@@ -2635,7 +2599,7 @@ void filemode_menu_item(Ewl_Widget *widget,int item)
     {
         file_list_mode=FILE_LIST_LOCATION_MODE;
         
-        init_filelist();
+        init_filelist(1);
 
         update_list();
         update_title();
@@ -2645,7 +2609,7 @@ void filemode_menu_item(Ewl_Widget *widget,int item)
      {
         file_list_mode=FILE_LIST_ALL_MODE;
         
-        init_filelist();
+        init_filelist(1);
 
         update_list();
         update_title();
@@ -2752,7 +2716,7 @@ void refresh_state()
     if(!state || !eet_read(state, "statesaved", &size))
     {
         eet_close(state);
-        //init_filelist();
+        //init_filelist(1);
         return;
     }
 
@@ -2766,13 +2730,14 @@ void refresh_state()
     }
 
     chdir_to((char*)eet_read(state, "curdir", &size));
-    //init_filelist();
+    //init_filelist(1);
     int *temppt=(int*)eet_read(state,"curindex", &size);
+ 
     if(temppt)
         current_index = *temppt;
     else
         current_index = 0;
-    if(current_index < 0 || current_index > g_nfileslist)
+    if(current_index < 0)// || current_index > g_nfileslist)
         current_index = 0;
     
     temppt=(int*)eet_read(state, "sort_type", &size);
@@ -2791,10 +2756,10 @@ void refresh_state()
         file_list_mode=*temppt;
     else
         file_list_mode=FILE_LIST_FOLDER_MODE;
-    
-    temppt=(int*)eet_read(state, "filters_modtime", &size);
-    if(temppt)
-        filters_modtime=*temppt;
+    long *temppt2;
+    temppt2=(long*)eet_read(state, "filters_modtime", &size);
+    if(temppt2)
+        filters_modtime=*temppt2;
     else
         filters_modtime=0;
     
@@ -2999,7 +2964,7 @@ int main ( int argc, char ** argv )
         setFilterActive(i,filterstatus[i]);
     
     
-    init_filelist();
+    init_filelist(0);
     
     
     win = ewl_window_new();
