@@ -236,6 +236,11 @@ roots_t* roots_create()
     return roots;
 }
 
+
+void set_g_handler(const char* new_g_handler)
+{
+    g_handler=new_g_handler;    
+}
 /*
 * Destroys the passed roots info.
 */
@@ -1638,9 +1643,16 @@ void doActionForNum(unsigned int num)
         if (handler)
         {
             /* Sin */
-            g_handler = handler;
             g_file = strdup(file);
-            ewl_main_quit();
+            if(!strrchr(handler,':'))
+            {
+                g_handler = strdup(handler);
+                ewl_main_quit();
+            }
+            else 
+                HandlerDialog(handler);
+            
+            
         }
         else
         {

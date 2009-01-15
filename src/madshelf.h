@@ -39,3 +39,4 @@ void doActionForNum(unsigned int num);
 char *getUpLevelDir(char *thedir);
 int filter_filelist();
 void reset_file_position();
+void set_g_handler(const char* new_g_handler);

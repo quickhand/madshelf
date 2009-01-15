@@ -24,6 +24,7 @@
 
 
 void FiltersDialog();
+HandlerDialog(char *handlerstr);
 //void redraw_text();
 
 #endif

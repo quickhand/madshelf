@@ -314,3 +314,94 @@ void TagsDialog(char *filename)
     free(initchoices);
     
 }
+// file handler dialog
+typedef struct _handler_dlg_info {
+    int nchoices;
+    char **choices;
+} handler_dlg_info;
+void handler_dialog_closehandler(Ewl_Widget *widget,void *userdata)
+{
+    handler_dlg_info *curinfo=(handler_dlg_info *)userdata;
+    int i,j;
+    for(i=0;i<curinfo->nchoices;i++)
+    {
+        free(curinfo->choices[i]);
+    }
+    free(curinfo->choices);
+}
+void handler_dialog_choicehandler(int choice, Ewl_Widget *parent,void *userdata)
+{
+    handler_dlg_info *curinfo=(handler_dlg_info *)userdata;
+    set_g_handler(strdup(curinfo->choices[choice]));
+    fini_choicebox(parent);
+    ewl_main_quit();
+}
+
+void HandlerDialog(char *handlerstr)
+{
+    if(getNumFilters()<=0)
+        return;
+	Ewl_Widget *w = ewl_widget_name_find("mainwindow");
+    
+    
+    int tokencount=0;
+    char *mod_handlerstr;
+    asprintf(&mod_handlerstr,"%s",handlerstr);
+    char *tok = strtok(mod_handlerstr, ":");
+    if(!tok || !tok[0])
+    {
+        free(mod_handlerstr);
+        return;
+    }
+    while (tok != NULL) {
+        // Do something with the tok
+        if(tok[0])
+        {
+        
+            tokencount++;
+        }
+        tok = strtok(NULL,":");
+    }
+    free(mod_handlerstr);
+       
+	char **initchoices,**choices;
+    initchoices=(char**)malloc(sizeof(char*)*tokencount);
+    choices=(char**)malloc(sizeof(char*)*tokencount);
+    
+    asprintf(&mod_handlerstr,handlerstr);
+    tok = strtok(mod_handlerstr, ":");
+    if(!tok || !tok[0])
+    {
+        free(mod_handlerstr);
+        return;
+    }
+    int count=0;
+    while (tok != NULL) {
+        // Do something with the tok
+        if(tok[0])
+        {
+            
+            asprintf(&(initchoices[count]),"%d. %s",count+1,tok);
+            asprintf(&(choices[count]),"%s",tok);
+            count++;
+        }
+        tok = strtok(NULL,":");
+        
+    }
+   
+    
+    free(mod_handlerstr);
+    handler_dlg_info *infostruct=malloc(sizeof(handler_dlg_info));
+    infostruct->nchoices=tokencount;
+    infostruct->choices=choices;
+    ewl_widget_show(init_choicebox(initchoices,NULL,tokencount,handler_dialog_choicehandler, handler_dialog_closehandler,"Open With:", w,infostruct,TRUE));
+    int i;
+    for(i=0;i<tokencount;i++)
+    {
+        free(initchoices[i]);
+        
+        
+    }
+    free(initchoices);
+    
+}
