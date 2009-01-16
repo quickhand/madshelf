@@ -21,9 +21,12 @@ static void _key_handler(Ewl_Widget* w, void *event, void *context)
     key_handler_info_t* handler_info = (key_handler_info_t*)context;
 
     const char* k = e->base.keyname;
-
-#define HANDLE_ITEM(h, params) { if(handler_info->h) (*handler_info->h)(w,params);}
-#define HANDLE_KEY(h) {if(handler_info->h) (*handler_info->h)(w);}
+    unsigned char lp = 0;
+    if(e->base.modifiers & EWL_KEY_MODIFIER_ALT)
+        lp=1;
+    
+#define HANDLE_ITEM(h, params) { if(handler_info->h) (*handler_info->h)(w,params,lp);}
+#define HANDLE_KEY(h) {if(handler_info->h) (*handler_info->h)(w,lp);}
     if(!strcmp(k, "Return")) {
         if(nav_mode == 1)            HANDLE_KEY(nav_sel_handler)
         else                         HANDLE_KEY(ok_handler)

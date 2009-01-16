@@ -1627,7 +1627,7 @@ void change_dir_in_gui()
     update_filelist_in_gui();
 }
 
-void doActionForNum(unsigned int num)
+void doActionForNum(unsigned int num, unsigned char lp)
 {
     char *file;
     int file_index = current_index + num - 1;
@@ -1649,9 +1649,16 @@ void doActionForNum(unsigned int num)
                 g_handler = strdup(handler);
                 ewl_main_quit();
             }
-            else 
+            else if(lp)
                 HandlerDialog(handler);
-            
+            else
+            {
+                char *copystring;
+                copystring=strdup(handler);
+                g_handler = strdup (strtok(copystring, ":"));
+                free(copystring);
+                ewl_main_quit();
+            }
             
         }
         else
@@ -1731,7 +1738,7 @@ void change_root(int item)
 
 /* Main key handler */
 
-void main_esc(Ewl_Widget *widget)
+void main_esc(Ewl_Widget *widget, unsigned char lp)
 {
     if(file_list_mode!=FILE_LIST_FOLDER_MODE)
         return;
@@ -1755,17 +1762,17 @@ void main_esc(Ewl_Widget *widget)
     update_filelist_in_gui();
 }
 
-void main_ok(Ewl_Widget *widget)
+void main_ok(Ewl_Widget *widget, unsigned char lp)
 {
     show_main_menu();
 }
 
-void main_shift(Ewl_Widget *widget)
+void main_shift(Ewl_Widget *widget, unsigned char lp)
 {
     toggle_key_shifted();
 }
 
-void main_nav_up(Ewl_Widget *widget)
+void main_nav_up(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *curwidget=NULL;
@@ -1781,7 +1788,7 @@ void main_nav_up(Ewl_Widget *widget)
     }       
 }
 
-void main_nav_down(Ewl_Widget *widget)
+void main_nav_down(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *curwidget=NULL;
@@ -1797,33 +1804,33 @@ void main_nav_down(Ewl_Widget *widget)
     }
 }
 
-void main_nav_left(Ewl_Widget *widget)
+void main_nav_left(Ewl_Widget *widget, unsigned char lp)
 {
     nav_sel=0;
     prev_page();
 }
 
-void main_nav_right(Ewl_Widget *widget)
+void main_nav_right(Ewl_Widget *widget, unsigned char lp)
 {
     nav_sel=0;
     next_page();
 }
 
-void main_nav_sel(Ewl_Widget *widget)
+void main_nav_sel(Ewl_Widget *widget, unsigned char lp)
 {
     if(key_shifted)
         popupContext(nav_sel+1);
     else
-        doActionForNum(nav_sel+1);
+        doActionForNum(nav_sel+1,lp);
     
 }
-void main_nav_menubtn(Ewl_Widget *widget)
+void main_nav_menubtn(Ewl_Widget *widget, unsigned char lp)
 {
     
     show_main_menu();
     
 }
-void main_item(Ewl_Widget *widget,int item)
+void main_item(Ewl_Widget *widget,int item, unsigned char lp)
 {
     if(item == 0)
         next_page();
@@ -1832,7 +1839,7 @@ void main_item(Ewl_Widget *widget,int item)
     else if(key_shifted)
         popupContext(item);
     else
-        doActionForNum(item);
+        doActionForNum(item,lp);
     
 }
 
@@ -1864,7 +1871,7 @@ void hide_main_menu()
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("okmenu")));
 }
 
-void main_menu_nav_up(Ewl_Widget *widget)
+void main_menu_nav_up(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1884,7 +1891,7 @@ void main_menu_nav_up(Ewl_Widget *widget)
     }       
 }
 
-void main_menu_nav_down(Ewl_Widget *widget)
+void main_menu_nav_down(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -1903,12 +1910,12 @@ void main_menu_nav_down(Ewl_Widget *widget)
     }
 }
 
-void main_menu_esc(Ewl_Widget *widget)
+void main_menu_esc(Ewl_Widget *widget, unsigned char lp)
 {
     hide_main_menu();
 }
 
-void main_menu_item(Ewl_Widget *widget,int item)
+void main_menu_item(Ewl_Widget *widget,int item, unsigned char lp)
 {
     Ewl_Widget* curwidget;
 
@@ -1952,9 +1959,9 @@ void main_menu_item(Ewl_Widget *widget,int item)
     }
 }
 
-void main_menu_nav_sel(Ewl_Widget *widget)
+void main_menu_nav_sel(Ewl_Widget *widget, unsigned char lp)
 {
-    main_menu_item(widget,nav_menu_sel+1);
+    main_menu_item(widget,nav_menu_sel+1,lp);
 }
 
 static key_handler_info_t main_menu_info =
@@ -1992,12 +1999,12 @@ static language_t g_languages[] =
 
 static const int g_nlanguages = sizeof(g_languages)/sizeof(language_t);
 
-void lang_menu_esc(Ewl_Widget *widget)
+void lang_menu_esc(Ewl_Widget *widget, unsigned char lp)
 {
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem6")));
     hide_main_menu();
 }
-void lang_menu_nav_up(Ewl_Widget *widget)
+void lang_menu_nav_up(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2017,7 +2024,7 @@ void lang_menu_nav_up(Ewl_Widget *widget)
     }       
 }
 
-void lang_menu_nav_down(Ewl_Widget *widget)
+void lang_menu_nav_down(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2034,7 +2041,7 @@ void lang_menu_nav_down(Ewl_Widget *widget)
     ewl_widget_state_set((EWL_MENU_ITEM(newselwid)->button).label_object,"select",EWL_STATE_PERSISTENT);
 }
 
-void lang_menu_item(Ewl_Widget *widget,int item)
+void lang_menu_item(Ewl_Widget *widget,int item, unsigned char lp)
 {
     Ewl_Widget* curwidget;
 
@@ -2058,9 +2065,9 @@ void lang_menu_item(Ewl_Widget *widget,int item)
     update_menu();
 }
 
-void lang_menu_nav_sel(Ewl_Widget *widget)
+void lang_menu_nav_sel(Ewl_Widget *widget, unsigned char lp)
 {
-    lang_menu_item(widget,nav_lang_menu_sel+1);
+    lang_menu_item(widget,nav_lang_menu_sel+1,lp);
 }
 
 static key_handler_info_t lang_menu_info =
@@ -2075,13 +2082,13 @@ static key_handler_info_t lang_menu_info =
 
 /* "Go to" menu */
 
-void goto_menu_esc(Ewl_Widget *widget)
+void goto_menu_esc(Ewl_Widget *widget, unsigned char lp)
 {
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem3")));
     hide_main_menu();
 }
 
-void goto_menu_nav_up(Ewl_Widget *widget)
+void goto_menu_nav_up(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2101,7 +2108,7 @@ void goto_menu_nav_up(Ewl_Widget *widget)
     }       
 }
 
-void goto_menu_nav_down(Ewl_Widget *widget)
+void goto_menu_nav_down(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2118,7 +2125,7 @@ void goto_menu_nav_down(Ewl_Widget *widget)
 }
 
 
-void goto_menu_item(Ewl_Widget *widget,int item)
+void goto_menu_item(Ewl_Widget *widget,int item, unsigned char lp)
 {
     if(item == 0)
         item = 10;
@@ -2135,9 +2142,9 @@ void goto_menu_item(Ewl_Widget *widget,int item)
     change_dir_in_gui();
 }
 
-void goto_menu_nav_sel(Ewl_Widget *widget)
+void goto_menu_nav_sel(Ewl_Widget *widget, unsigned char lp)
 {
-    goto_menu_item(widget,nav_goto_menu_sel+1);
+    goto_menu_item(widget,nav_goto_menu_sel+1,lp);
 }
 
 static key_handler_info_t goto_menu_info =
@@ -2152,13 +2159,13 @@ static key_handler_info_t goto_menu_info =
 
 /* "Scripts" menu */
 
-void scripts_menu_esc(Ewl_Widget *widget)
+void scripts_menu_esc(Ewl_Widget *widget, unsigned char lp)
 {
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem7")));
     hide_main_menu();
 }
 
-void scripts_menu_nav_up(Ewl_Widget *widget)
+void scripts_menu_nav_up(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2177,7 +2184,7 @@ void scripts_menu_nav_up(Ewl_Widget *widget)
     }       
 }
 
-void scripts_menu_nav_down(Ewl_Widget *widget)
+void scripts_menu_nav_down(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2194,7 +2201,7 @@ void scripts_menu_nav_down(Ewl_Widget *widget)
 }
 
 
-void scripts_menu_item(Ewl_Widget *widget,int item)
+void scripts_menu_item(Ewl_Widget *widget,int item, unsigned char lp)
 {
     const char* tempstr;
     char* handler_path;
@@ -2217,9 +2224,9 @@ void scripts_menu_item(Ewl_Widget *widget,int item)
     free(handler_path);
 }
 
-void scripts_menu_nav_sel(Ewl_Widget *widget)
+void scripts_menu_nav_sel(Ewl_Widget *widget, unsigned char lp)
 {
-    scripts_menu_item(widget,nav_scripts_menu_sel+1);
+    scripts_menu_item(widget,nav_scripts_menu_sel+1,lp);
 }
 
 static key_handler_info_t scripts_menu_info =
@@ -2234,12 +2241,12 @@ static key_handler_info_t scripts_menu_info =
 
 /* Main Context menu */
 
-void mc_menu_esc(Ewl_Widget *widget)
+void mc_menu_esc(Ewl_Widget *widget, unsigned char lp)
 {
     ewl_widget_hide(ewl_widget_name_find("main_context"));
 }
 
-void mc_menu_nav_up(Ewl_Widget *widget)
+void mc_menu_nav_up(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2259,7 +2266,7 @@ void mc_menu_nav_up(Ewl_Widget *widget)
     }       
 }
 
-void mc_menu_nav_down(Ewl_Widget *widget)
+void mc_menu_nav_down(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2298,7 +2305,7 @@ void mc_menu_delete_confirm_no(void)
         
 }
 
-void mc_menu_item(Ewl_Widget *widget,int item)
+void mc_menu_item(Ewl_Widget *widget,int item, unsigned char lp)
 {
     Ewl_Widget *curwidget;
     if(item <= 0 || item>4)
@@ -2328,9 +2335,9 @@ void mc_menu_item(Ewl_Widget *widget,int item)
     
 }
 
-void mc_menu_nav_sel(Ewl_Widget *widget)
+void mc_menu_nav_sel(Ewl_Widget *widget, unsigned char lp)
 {
-    mc_menu_item(widget,nav_mc_menu_sel+1);
+    mc_menu_item(widget,nav_mc_menu_sel+1,lp);
 }
 
 
@@ -2347,13 +2354,13 @@ static key_handler_info_t mc_menu_info =
 };
 
 /* FileOps menu */
-void fileops_menu_esc(Ewl_Widget *widget)
+void fileops_menu_esc(Ewl_Widget *widget, unsigned char lp)
 {
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem2")));
     hide_main_menu();
 }
 
-void fileops_menu_nav_up(Ewl_Widget *widget)
+void fileops_menu_nav_up(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2373,7 +2380,7 @@ void fileops_menu_nav_up(Ewl_Widget *widget)
     }       
 }
 
-void fileops_menu_nav_down(Ewl_Widget *widget)
+void fileops_menu_nav_down(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2390,7 +2397,7 @@ void fileops_menu_nav_down(Ewl_Widget *widget)
 }
 
 
-void fileops_menu_item(Ewl_Widget *widget,int item)
+void fileops_menu_item(Ewl_Widget *widget,int item, unsigned char lp)
 {
     if(item < 0 || item >1)
         return;
@@ -2426,9 +2433,9 @@ void fileops_menu_item(Ewl_Widget *widget,int item)
     }
 }
 
-void fileops_menu_nav_sel(Ewl_Widget *widget)
+void fileops_menu_nav_sel(Ewl_Widget *widget, unsigned char lp)
 {
-    fileops_menu_item(widget,nav_fileops_menu_sel+1);
+    fileops_menu_item(widget,nav_fileops_menu_sel+1,lp);
 }
 
 static key_handler_info_t fileops_menu_info =
@@ -2442,13 +2449,13 @@ static key_handler_info_t fileops_menu_info =
 };
 
 /* Sort menu */
-void sort_menu_esc(Ewl_Widget *widget)
+void sort_menu_esc(Ewl_Widget *widget, unsigned char lp)
 {
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem5")));
     hide_main_menu();
 }
 
-void sort_menu_nav_up(Ewl_Widget *widget)
+void sort_menu_nav_up(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2468,7 +2475,7 @@ void sort_menu_nav_up(Ewl_Widget *widget)
     }       
 }
 
-void sort_menu_nav_down(Ewl_Widget *widget)
+void sort_menu_nav_down(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2485,7 +2492,7 @@ void sort_menu_nav_down(Ewl_Widget *widget)
 }
 
 
-void sort_menu_item(Ewl_Widget *widget,int item)
+void sort_menu_item(Ewl_Widget *widget,int item, unsigned char lp)
 {
     if(item < 0 || item >3)
         return;
@@ -2531,9 +2538,9 @@ void sort_menu_item(Ewl_Widget *widget,int item)
      }
 }
 
-void sort_menu_nav_sel(Ewl_Widget *widget)
+void sort_menu_nav_sel(Ewl_Widget *widget, unsigned char lp)
 {
-    sort_menu_item(widget,nav_sort_menu_sel+1);
+    sort_menu_item(widget,nav_sort_menu_sel+1,lp);
 }
 
 static key_handler_info_t sort_menu_info =
@@ -2547,13 +2554,13 @@ static key_handler_info_t sort_menu_info =
 };
 
 /* File Mode menu */
-void filemode_menu_esc(Ewl_Widget *widget)
+void filemode_menu_esc(Ewl_Widget *widget, unsigned char lp)
 {
     ewl_menu_collapse(EWL_MENU(ewl_widget_name_find("menuitem4")));
     hide_main_menu();
 }
 
-void filemode_menu_nav_up(Ewl_Widget *widget)
+void filemode_menu_nav_up(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2573,7 +2580,7 @@ void filemode_menu_nav_up(Ewl_Widget *widget)
     }       
 }
 
-void filemode_menu_nav_down(Ewl_Widget *widget)
+void filemode_menu_nav_down(Ewl_Widget *widget, unsigned char lp)
 {
     char tempname[30];
     Ewl_Widget *oldselwid=NULL;
@@ -2590,7 +2597,7 @@ void filemode_menu_nav_down(Ewl_Widget *widget)
 }
 
 
-void filemode_menu_item(Ewl_Widget *widget,int item)
+void filemode_menu_item(Ewl_Widget *widget,int item, unsigned char lp)
 {
     if(item < 0 || item >3)
         return;
@@ -2631,9 +2638,9 @@ void filemode_menu_item(Ewl_Widget *widget,int item)
      
 }
 
-void filemode_menu_nav_sel(Ewl_Widget *widget)
+void filemode_menu_nav_sel(Ewl_Widget *widget, unsigned char lp)
 {
-    sort_menu_item(widget,nav_filemode_menu_sel+1);
+    sort_menu_item(widget,nav_filemode_menu_sel+1,lp);
 }
 
 static key_handler_info_t filemode_menu_info =
@@ -2647,29 +2654,29 @@ static key_handler_info_t filemode_menu_info =
 };
 /* Confirm dialog key handlers */
 
-void confirm_dialog_nav_sel(Ewl_Widget *widget)
+void confirm_dialog_nav_sel(Ewl_Widget *widget, unsigned char lp)
 {
     confirm_dialog_action_perform();
 }
 
-void confirm_dialog_nav_right(Ewl_Widget *widget)
+void confirm_dialog_nav_right(Ewl_Widget *widget, unsigned char lp)
 {
     if(confirm_dialog_choice_get()!=CONFIRM_DIALOG_YES)
         confirm_dialog_choice_set(CONFIRM_DIALOG_YES);
 }
 
-void confirm_dialog_nav_left(Ewl_Widget *widget)
+void confirm_dialog_nav_left(Ewl_Widget *widget, unsigned char lp)
 {
     if(confirm_dialog_choice_get()!=CONFIRM_DIALOG_NO)
         confirm_dialog_choice_set(CONFIRM_DIALOG_NO);
 }
 
-void confirm_dialog_ok(Ewl_Widget *widget)
+void confirm_dialog_ok(Ewl_Widget *widget, unsigned char lp)
 {
     confirm_dialog_action_perform();
 }
 
-void confirm_dialog_item(Ewl_Widget *widget,int item)
+void confirm_dialog_item(Ewl_Widget *widget,int item, unsigned char lp)
 {
     if(item <1 || item >2)
         return;

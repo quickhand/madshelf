@@ -225,12 +225,12 @@ void choicebox_previous_page(Ewl_Widget * widget)
 	choicebox_change_selection(widget, 0);
 }
 
-void choicebox_esc(Ewl_Widget * widget)
+void choicebox_esc(Ewl_Widget * widget, unsigned char lp)
 {
 	fini_choicebox(widget);
 }
 
-void choicebox_item(Ewl_Widget * widget, int item)
+void choicebox_item(Ewl_Widget * widget, int item, unsigned char lp)
 {
 	choice_info_struct *infostruct;
 	if (item >= 1 && item <= 8) {
@@ -250,7 +250,7 @@ void choicebox_item(Ewl_Widget * widget, int item)
 }
 
 
-void choicebox_nav_up(Ewl_Widget * widget)
+void choicebox_nav_up(Ewl_Widget * widget, unsigned char lp)
 {
 	choice_info_struct *infostruct =
 		(choice_info_struct *) ewl_widget_data_get(widget, (void *)"choice_info");
@@ -260,7 +260,7 @@ void choicebox_nav_up(Ewl_Widget * widget)
 	choicebox_change_selection(widget, infostruct->navsel - 1);
 }
 
-void choicebox_nav_down(Ewl_Widget * widget)
+void choicebox_nav_down(Ewl_Widget * widget, unsigned char lp)
 {
 	choice_info_struct *infostruct =
 		(choice_info_struct *) ewl_widget_data_get(widget, (void *)"choice_info");
@@ -271,17 +271,17 @@ void choicebox_nav_down(Ewl_Widget * widget)
 	choicebox_change_selection(widget, infostruct->navsel + 1);
 }
 
-void choicebox_nav_left(Ewl_Widget * widget)
+void choicebox_nav_left(Ewl_Widget * widget, unsigned char lp)
 {
 	choicebox_previous_page(widget);
 }
 
-void choicebox_nav_right(Ewl_Widget * widget)
+void choicebox_nav_right(Ewl_Widget * widget, unsigned char lp)
 {
 	choicebox_next_page(widget);
 }
 
-void choicebox_nav_sel(Ewl_Widget * widget)
+void choicebox_nav_sel(Ewl_Widget * widget, unsigned char lp)
 {
 	choice_info_struct *infostruct =
 		(choice_info_struct *) ewl_widget_data_get(widget, (void *)"choice_info");

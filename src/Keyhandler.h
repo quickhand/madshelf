@@ -1,8 +1,8 @@
 #ifndef KEYHANDLER_H
 #define KEYHANDLER_H
 
-typedef void (*key_handler_t)(Ewl_Widget *widget);
-typedef void (*item_handler_t)(Ewl_Widget *widget,int index);
+typedef void (*key_handler_t)(Ewl_Widget *widget,unsigned char lp);
+typedef void (*item_handler_t)(Ewl_Widget *widget,int index,unsigned char lp);
 
 typedef struct {
     key_handler_t ok_handler;
