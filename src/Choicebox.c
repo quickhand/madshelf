@@ -225,7 +225,7 @@ void choicebox_previous_page(Ewl_Widget * widget)
 	choicebox_change_selection(widget, 0);
 }
 
-void choicebox_esc(Ewl_Widget * widget, unsigned char lp)
+void choicebox_back(Ewl_Widget * widget, unsigned char lp)
 {
 	fini_choicebox(widget);
 }
@@ -303,14 +303,15 @@ void choicebox_nav_sel(Ewl_Widget * widget, unsigned char lp)
 
 static key_handler_info_t choicebox_handlers = {
 	NULL,
-	choicebox_esc,
+	choicebox_back,//choicebox_esc
+    NULL,
 	choicebox_nav_up,
 	choicebox_nav_down,
 	choicebox_nav_left,
 	choicebox_nav_right,
 	choicebox_nav_sel,
-	NULL,
-	NULL,
+	choicebox_nav_right,
+	choicebox_nav_left,
 	choicebox_item
 };
 

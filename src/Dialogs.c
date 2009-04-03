@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Alexander Kerner <lunohod@openinkpot.org>
+ * Copyright (C) 2008 Marc Lajoie
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include "madshelf.h"
 #include "database.h"
 #include "IniFile.h"
+#include "tags.h"
 // Options dialogs
 static int filterschanged=0;
 static long minl(long a, long b)
@@ -216,6 +217,14 @@ void tags_dialog_choicehandler(int choice, Ewl_Widget *parent,void *userdata)
     curinfo->tagschanged=1;
 }
 
+/*const int num_predef_tags=1;
+const char *predef_tags[] = { 		
+		"_favorite",
+	};
+const char *predef_tag_names[] = {
+        "Favorite",
+    };*/
+
 void TagsDialog(char *filename)
 {
     if(getNumFilters()<=0)
@@ -243,7 +252,7 @@ void TagsDialog(char *filename)
         }
         tok = strtok(NULL,",");
     }
-    
+    tagcount+=get_num_predef_tags();
     free(tempo);
 	char **initchoices,**values,**choices;
     initchoices=(char**)malloc(sizeof(char*)*tagcount);
@@ -259,26 +268,54 @@ void TagsDialog(char *filename)
     int count=0;
     
     asprintf(&tempo,tagstring);
+    
+    //loop for predefined tags
+      
+    for(;count<get_num_predef_tags();count++)
+    {
+        asprintf(&(initchoices[count]),"%d. %s",count+1,get_predef_tag_display_name(get_predef_tag(count)));
+        asprintf(&(choices[count]),"%s",get_predef_tag(count));
+        int j;
+        for(j=0;j<numfiletags;j++)
+        {
+            if(strcmp(choices[count],filetags[j])==0)
+            {
+                asprintf(&(values[count]),"assigned");
+                break;
+            }
+                
+        }
+        if(j==numfiletags)
+        {
+            asprintf(&(values[count]),"");
+        
+        }
+        
+    }
+    
+    
+    
     tok = strtok(tempo, ",");
     if(!tok || !tok[0])
         return;
     while (tok != NULL) {
         // Do something with the tok
+        while(*tok=='_')tok++;
         if(tok[0])
         {
             
-            asprintf(&(initchoices[count]),"%d. %s",count+1,tok);
-            asprintf(&(choices[count]),tok);
             int j;
+            
+            asprintf(&(initchoices[count]),"%d. %s",count+1,tok);
+            asprintf(&(choices[count]),"%s",tok);
             for(j=0;j<numfiletags;j++)
             {
-                if(strcmp(tok,filetags[j])==0)
+                
+                if(strcmp(choices[count],filetags[j])==0)
                 {
                     asprintf(&(values[count]),"assigned");
-            
                     break;
                 }
-                
                 
             }
             if(j==numfiletags)
