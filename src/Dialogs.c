@@ -86,7 +86,7 @@ void FiltersDialog()
             
             asprintf(&values[i],"inactive");
         }
-        asprintf(&initchoices[i],"%d. %s",i+1,getFilterName(i));
+        asprintf(&initchoices[i],"%s",getFilterName(i));
     }
     
     
@@ -273,7 +273,7 @@ void TagsDialog(char *filename)
       
     for(;count<get_num_predef_tags();count++)
     {
-        asprintf(&(initchoices[count]),"%d. %s",count+1,get_predef_tag_display_name(get_predef_tag(count)));
+        asprintf(&(initchoices[count]),"%s",get_predef_tag_display_name(get_predef_tag(count)));
         asprintf(&(choices[count]),"%s",get_predef_tag(count));
         int j;
         for(j=0;j<numfiletags;j++)
@@ -306,7 +306,7 @@ void TagsDialog(char *filename)
             
             int j;
             
-            asprintf(&(initchoices[count]),"%d. %s",count+1,tok);
+            asprintf(&(initchoices[count]),"%s",tok);
             asprintf(&(choices[count]),"%s",tok);
             for(j=0;j<numfiletags;j++)
             {
@@ -418,7 +418,7 @@ void HandlerDialog(char *handlerstr)
         if(tok[0])
         {
             
-            asprintf(&(initchoices[count]),"%d. %s",count+1,tok);
+            asprintf(&(initchoices[count]),"%s",tok);
             asprintf(&(choices[count]),"%s",tok);
             count++;
         }
