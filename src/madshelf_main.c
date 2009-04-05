@@ -576,6 +576,47 @@ char* get_authors_string(char *authors[],int authornum)
     return authorstr;
 }
 
+int get_item_labels_array(char ***stringarr)
+{
+    const char *item_labels_const=ReadString("general","item_labels",NULL);
+    char* item_labels=NULL;
+    if(item_labels_const)
+        item_labels=strdup(item_labels_const);
+    char *tok;
+    if(item_labels)
+        tok = strtok(item_labels, ",");
+    else
+        return 0;
+    int count=0;
+    while(tok)
+    {
+        count++;
+        tok=strtok(NULL,",");    
+    }
+    free(item_labels);
+    item_labels=strdup(item_labels_const);
+    tok=strtok(item_labels,",");
+    char **retarr=malloc(sizeof(char*)*count);
+    int i=0;
+    while(tok)
+    {
+        asprintf(&(retarr[i]),"%s",tok);
+        i++;
+        tok=strtok(NULL,",");
+        
+    }
+    free(item_labels);
+    *stringarr=retarr;
+    return count;
+}
+void free_item_labels_array(char **stringarr,int num)
+{
+    int i;
+    for(i=0;i<num;i++)
+        free(stringarr[i]);    
+    free(stringarr);
+    
+}
 char* get_tag_string(char *tags[],int tagnum)
 {
      
@@ -998,22 +1039,31 @@ void update_menu()
 {
     char *tempstrings[]={gettext("File Filters..."),gettext("Edit"),gettext("Go to"),gettext("File Mode"),gettext("Sorting Options"),gettext("Languages"),gettext("Scripts")};
     char tempname[30];
-    char temptext[40];
+    char *temptext;
     int i=0;
     int realwidth=0;
     Ewl_Widget *curwidget;
     curwidget = ewl_widget_name_find("okmenu");
     ewl_button_label_set(EWL_BUTTON(curwidget),gettext("Menu"));
-
+    char **item_labels;
+    int nitem_labels=get_item_labels_array(&item_labels);
     for(i=0;i<7;i++)
     {
         sprintf(tempname,"menuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
         if(get_nav_mode()==0)
-            sprintf(temptext,"%d. %s",i+1,tempstrings[i]);
+        {
+            if(!nitem_labels)
+                asprintf(&temptext,"%d. %s",i+1,tempstrings[i]);
+            else if(i<nitem_labels)
+                asprintf(&temptext,"%s. %s",item_labels[i],tempstrings[i]);
+            else
+                asprintf(&temptext,"%s",tempstrings[i]);
+        }
         else
-            sprintf(temptext,"%s",tempstrings[i]);
+            asprintf(&temptext,"%s",tempstrings[i]);
         ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
+        free(temptext);
     }
     
     
@@ -1023,10 +1073,18 @@ void update_menu()
         sprintf(tempname,"fileopsmenuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
         if(get_nav_mode()==0)
-            sprintf(temptext,"%d. %s",i+1,tempstrings2[i]);
+        {
+            if(!nitem_labels)
+                asprintf(&temptext,"%d. %s",i+1,tempstrings2[i]);
+            else if(i<nitem_labels)
+                asprintf(&temptext,"%s. %s",item_labels[i],tempstrings2[i]);
+            else
+                asprintf(&temptext,"%s",tempstrings2[i]);
+        }
         else
-            sprintf(temptext,"%s",tempstrings2[i]);
+            asprintf(&temptext,"%s",tempstrings2[i]);
         ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
+        free(temptext);
     }
     
     char *tempstrings3[]={gettext("Sort by Name"),gettext("Sort by Time"),gettext("Reverse Sort Order")};
@@ -1035,10 +1093,18 @@ void update_menu()
         sprintf(tempname,"sortmenuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
         if(get_nav_mode()==0)
-            sprintf(temptext,"%d. %s",i+1,tempstrings3[i]);
+        {
+            if(!nitem_labels)
+                asprintf(&temptext,"%d. %s",i+1,tempstrings3[i]);
+            else if(i<nitem_labels)
+                asprintf(&temptext,"%s. %s",item_labels[i],tempstrings3[i]);
+            else
+                asprintf(&temptext,"%s",tempstrings3[i]);
+        }
         else
-            sprintf(temptext,"%s",tempstrings3[i]);
+            asprintf(&temptext,"%s",tempstrings3[i]);
         ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
+        free(temptext);
     }
     
     char *tempstrings4[]={gettext("Folder Mode"),gettext("Location Mode"),gettext("All Locations Mode")};
@@ -1047,18 +1113,29 @@ void update_menu()
         sprintf(tempname,"filemodemenuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
         if(get_nav_mode()==0)
-            sprintf(temptext,"%d. %s",i+1,tempstrings4[i]);
+        {
+            if(!nitem_labels)
+                asprintf(&temptext,"%d. %s",i+1,tempstrings4[i]);
+            else if(i<nitem_labels)
+                asprintf(&temptext,"%s. %s",item_labels[i],tempstrings4[i]);
+            else
+                asprintf(&temptext,"%s",tempstrings4[i]);
+        }
         else
-            sprintf(temptext,"%s",tempstrings4[i]);
+            sprintf(&temptext,"%s",tempstrings4[i]);
         ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
+        free(temptext);
     }
+    free_item_labels_array(item_labels,nitem_labels);
 }
 
 void update_context_menu()
 {
     char *tempstrings[]={gettext("Cut"),gettext("Copy"),gettext("Delete"),gettext("Tags...")};
     char tempname[30];
-    char temptext[40];
+    char *temptext;
+    char **item_labels;
+    int nitem_labels=get_item_labels_array(&item_labels);
     int i=0;
     Ewl_Widget *curwidget;
     curwidget = ewl_widget_name_find("main_context");
@@ -1067,11 +1144,20 @@ void update_context_menu()
         sprintf(tempname,"mc_menuitem%d",i+1);
         curwidget = ewl_widget_name_find(tempname);
         if(get_nav_mode()==0)
-            sprintf(temptext,"%d. %s",i+1,tempstrings[i]);
+        {
+            if(!nitem_labels)
+                asprintf(&temptext,"%d. %s",i+1,tempstrings[i]);
+            else if(i<nitem_labels)
+                asprintf(&temptext,"%s. %s",item_labels[i],tempstrings[i]);
+            else
+                asprintf(&temptext,"%s",tempstrings[i]);
+        }
         else
-            sprintf(temptext,"%s",tempstrings[i]);
+            asprintf(&temptext,"%s",tempstrings[i]);
         ewl_button_label_set(EWL_BUTTON(curwidget),temptext);
+        free(temptext);
     }
+    free_item_labels_array(item_labels,nitem_labels);
 }
 
 /*static char is_dirent_dir(const struct dirent* e)
@@ -3038,6 +3124,8 @@ int main ( int argc, char ** argv )
     ewl_object_fill_policy_set(EWL_OBJECT(box3), EWL_FLAG_FILL_FILL);//EWL_FLAG_FILL_VSHRINK|EWL_FLAG_FILL_HFILL);
     ewl_widget_show(box3);
 
+    char **item_labels;
+    int nitem_labels=get_item_labels_array(&item_labels);
     
     menubar=ewl_hmenubar_new();
 
@@ -3088,11 +3176,18 @@ int main ( int argc, char ** argv )
         for(i = 0; i < MIN(g_roots->nroots, 8); ++i)
         {
             temp3=ewl_menu_item_new();
-            tempstr4=(char *)calloc(strlen(g_roots->roots[i].name)+3+1,sizeof(char));
+            //tempstr4=(char *)calloc(strlen(g_roots->roots[i].name)+3+1,sizeof(char));
             if(get_nav_mode()==0)
-                sprintf(tempstr4,"%d. %s",i+1, g_roots->roots[i].name);
+            {
+                if(!nitem_labels)    
+                    asprintf(&tempstr4,"%d. %s",i+1, g_roots->roots[i].name);
+                else if(i<nitem_labels)
+                    asprintf(&tempstr4,"%s. %s",item_labels[i], g_roots->roots[i].name);
+                else
+                    asprintf(&tempstr4,"%s",g_roots->roots[i].name);
+            }
             else
-                sprintf(tempstr4,"%s",g_roots->roots[i].name);
+                asprintf(&tempstr4,"%s",g_roots->roots[i].name);
             ewl_button_label_set(EWL_BUTTON(temp3),tempstr4);
             free(tempstr4);
             ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
@@ -3165,12 +3260,20 @@ int main ( int argc, char ** argv )
         for(i = 0; i < g_nlanguages; ++i)
         {
             Ewl_Widget* lang_menu_item = ewl_menu_item_new();
-            tempstr4=(char *)calloc(strlen(g_languages[i].name)+3+1,sizeof(char));
+            //tempstr4=(char *)calloc(strlen(g_languages[i].name)+3+1,sizeof(char));
             if(get_nav_mode()==0)
-                sprintf(tempstr4,"%d. %s",i+1, g_languages[i].name);
+            {
+                if(!nitem_labels)
+                    asprintf(&tempstr4,"%d. %s",i+1, g_languages[i].name);
+                else if(i<nitem_labels)
+                    asprintf(&tempstr4,"%s. %s",item_labels[i], g_languages[i].name);
+                else
+                    asprintf(&tempstr4,"%s",g_languages[i].name);
+            }
             else
-                sprintf(tempstr4,"%s",g_languages[i].name);
+                asprintf(&tempstr4,"%s",g_languages[i].name);
             ewl_button_label_set(EWL_BUTTON(lang_menu_item),tempstr4);
+            free(tempstr4);
             ewl_container_child_append(EWL_CONTAINER(temp2), lang_menu_item);
             if(get_nav_mode()==1 && i==0)
                 ewl_widget_state_set((EWL_MENU_ITEM(lang_menu_item)->button).label_object,"select",EWL_STATE_PERSISTENT);
@@ -3192,9 +3295,16 @@ int main ( int argc, char ** argv )
             temp3=ewl_menu_item_new();
             tempstr4=(char *)calloc(strlen(scriptstrlist[count])+3+1,sizeof(char));
             if(get_nav_mode()==0)
-                sprintf(tempstr4,"%d. %s",count+1,scriptstrlist[count]);
+            {
+                if(!nitem_labels)
+                    asprintf(&tempstr4,"%d. %s",count+1,scriptstrlist[count]);
+                else if(count<nitem_labels)
+                    asprintf(&tempstr4,"%s. %s",item_labels[i],scriptstrlist[count]);
+                else
+                    asprintf(&tempstr4,"%s",scriptstrlist[count]);
+            }
             else
-                sprintf(tempstr4,"%s",scriptstrlist[count]);
+                asprintf(&tempstr4,"%s",scriptstrlist[count]);
             ewl_button_label_set(EWL_BUTTON(temp3),tempstr4);
             free(tempstr4);
             ewl_container_child_append(EWL_CONTAINER(temp2),temp3);
@@ -3242,24 +3352,18 @@ int main ( int argc, char ** argv )
     ewl_object_alignment_set(EWL_OBJECT(sorttypetext),EWL_FLAG_ALIGN_RIGHT);
     update_sort_label();
     ewl_widget_show(sorttypetext);
-    const char *item_labels_const=ReadString("general","item_labels",NULL);
-    char* item_labels=NULL;
-    if(item_labels_const)
-        item_labels=strdup(item_labels_const);
-    char *tok;
-    if(item_labels)
-        tok = strtok(item_labels, ",");
+    
     for(count=0;count<num_books;count++)
     {
         sprintf(tempname1,"bookbox%d",count);
         box = ewl_hbox_new();
         ewl_container_child_append(EWL_CONTAINER(box3), box);
-        if(!item_labels)
+        if(!nitem_labels)
             asprintf(&tempname5,"%d",count+1);
-        else if(tok && tok[0])
+        else if(count<nitem_labels)
         {
-            asprintf(&tempname5,"%s",tok);
-            tok=strtok(NULL,",");    
+            asprintf(&tempname5,"%s",item_labels[count]);
+            
         }
         else
             asprintf(&tempname5,"");
@@ -3364,8 +3468,8 @@ int main ( int argc, char ** argv )
 
         ewl_widget_name_set(dividewidget,tempname4 );
     }
-    if(item_labels)
-        free(item_labels);
+    free_item_labels_array(item_labels,nitem_labels);
+    
     arrow_widget = ewl_widget_new();
     ewl_container_child_append(EWL_CONTAINER(box3), arrow_widget);
     ewl_widget_name_set(arrow_widget,"arrow_widget");
