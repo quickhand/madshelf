@@ -3299,7 +3299,7 @@ int main ( int argc, char ** argv )
                 if(!nitem_labels)
                     asprintf(&tempstr4,"%d. %s",count+1,scriptstrlist[count]);
                 else if(count<nitem_labels)
-                    asprintf(&tempstr4,"%s. %s",item_labels[i],scriptstrlist[count]);
+                    asprintf(&tempstr4,"%s. %s",item_labels[count],scriptstrlist[count]);
                 else
                     asprintf(&tempstr4,"%s",scriptstrlist[count]);
             }
